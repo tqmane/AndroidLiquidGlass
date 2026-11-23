@@ -1,6 +1,8 @@
 package com.kyant.backdrop.catalog.components
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.ui.graphics.drawscope.clipPath
+import androidx.compose.ui.graphics.ClipOp
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.RoundRect
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -75,11 +77,15 @@ fun LiquidGlassEffectContainer(
                 .matchParentSize()
                 .drawWithContent {
                     drawContent()
-                    drawPath(
-                        group.edges,
-                        Color.White.copy(alpha = if (isLight) 0.55f else 0.22f),
-                        style = Stroke(1.dp.toPx())
-                    )
+                    // Only the part of the rim outside the members: overlapping members (a held circle that grows
+                    // into its neighbours) would otherwise show the neck curve as a hook inside them.
+                    clipPath(group.memberOutline, ClipOp.Difference) {
+                        drawPath(
+                            group.edges,
+                            Color.White.copy(alpha = if (isLight) 0.55f else 0.22f),
+                            style = Stroke(1.dp.toPx())
+                        )
+                    }
                 }
                 .drawBackdrop(
                     backdrop = backdrop,
@@ -141,6 +147,10 @@ internal class LiquidGlassGroup {
     var edges = Path()
         private set
 
+    /** Union of the members' capsules from the last [bridgeShape]. */
+    var memberOutline = Path()
+        private set
+
     fun bridgeShape(density: Density, spacing: Float, rimInset: Float): Shape {
         val rects = members.values.map { with(it) { density.transform(rect) } }.sortedBy { it.left }
         val neck = Path()
@@ -149,6 +159,9 @@ internal class LiquidGlassGroup {
             addBridge(neck, outline, rects[i], rects[j], spacing)
         }
         edges = outline
+        memberOutline = Path().apply {
+            for (r in rects) addRoundRect(RoundRect(r, CornerRadius(r.height / 2f)))
+        }
         if (neck.isEmpty) return PathShape(neck)
         val inner = Path()
         for (r in rects) {
