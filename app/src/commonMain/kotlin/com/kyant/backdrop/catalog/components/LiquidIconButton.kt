@@ -124,6 +124,7 @@ fun LiquidGlassContainer(
     content: @Composable () -> Unit,
 ) {
     val glass = LocalLiquidGlassStyle.current
+    val isLightTheme = !isGlassDark()
     val animationScope = rememberCoroutineScope()
     val interactiveHighlight = remember(animationScope) { InteractiveHighlight(animationScope) }
     Box(
@@ -147,7 +148,7 @@ fun LiquidGlassContainer(
                     scaleY = scale
                 },
                 onDrawSurface = {
-                    if (surfaceColor.isSpecified) drawRect(surfaceColor.copy(alpha = (surfaceColor.alpha * glass.opacity).coerceIn(0f, 1f)))
+                    drawRect(glassSurfaceFill(surfaceColor, tint, isLightTheme, glass.opacity))
                     if (tint.isSpecified) {
                         drawRect(tint, blendMode = BlendMode.Hue)
                         drawRect(tint.copy(alpha = 0.75f))

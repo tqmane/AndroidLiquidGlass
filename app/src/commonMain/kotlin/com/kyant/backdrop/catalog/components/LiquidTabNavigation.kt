@@ -1,6 +1,26 @@
 package com.kyant.backdrop.catalog.components
 
 import com.kyant.backdrop.catalog.utils.BackHandler
+import androidx.compose.animation.core.Animatable
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.runtime.mutableStateMapOf
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.layout.onPlaced
+import androidx.compose.ui.layout.positionInParent
+import androidx.compose.ui.semantics.onClick
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.util.lerp
+import com.kyant.backdrop.backdrops.rememberCombinedBackdrop
+import com.kyant.backdrop.drawBackdrop
+import com.kyant.backdrop.effects.blur
+import com.kyant.backdrop.effects.lens
+import com.kyant.backdrop.effects.vibrancy
+import com.kyant.backdrop.highlight.Highlight
+import com.kyant.backdrop.shadow.InnerShadow
+import com.kyant.backdrop.shadow.Shadow
+import kotlinx.coroutines.launch
+import kotlin.math.abs
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.SideEffect
 import androidx.compose.animation.animateColorAsState
@@ -84,9 +104,10 @@ data class LiquidSidebarSection(val title: String?, val items: List<LiquidTabIte
 val RegularWidthBreakpoint = 600.dp
 
 /**
- * iPadOS 26 floating tab bar: a glass capsule centered at the top of the window with an optional
- * leading sidebar toggle, text tabs with a neutral pill behind the selected one and an icon-only
- * search tab at the end.
+ * iPadOS 26 floating tab bar: a Liquid Glass capsule (the same refracting material as [LiquidBottomTabs])
+ * centered at the top of the window with an optional leading sidebar toggle, text tabs and an icon-only
+ * search tab at the end. The selection is a glass droplet that slides between tabs; press it to swell it
+ * and drag it across the bar to pick a tab, as on iPad.
  */
 @Composable
 fun LiquidTopTabBar(
@@ -97,10 +118,53 @@ fun LiquidTopTabBar(
     modifier: Modifier = Modifier,
     onToggleSidebar: (() -> Unit)? = null,
 ) {
+    val glass = LocalLiquidGlassStyle.current
+    val dark = isGlassDark()
+    val containerColor = if (dark) Color(0xFF121212).copy(0.4f) else Color(0xFFFAFAFA).copy(0.4f)
+    val barBackdrop = rememberLayerBackdrop()
+    val scope = rememberCoroutineScope()
+    val bounds = remember { mutableStateMapOf<String, Pair<Float, Float>>() }
+    val indicatorX = remember { Animatable(0f) }
+    val indicatorWidth = remember { Animatable(0f) }
+    val press = remember { Animatable(0f) }
+    var dragX by remember { mutableStateOf<Float?>(null) }
+    val currentSelected by rememberUpdatedState(selectedKey)
+    val currentOnSelect by rememberUpdatedState(onSelect)
+    val selected = bounds[selectedKey]
+    LaunchedEffect(selected) {
+        val (x, w) = selected ?: return@LaunchedEffect
+        if (indicatorWidth.value == 0f) {
+            indicatorX.snapTo(x); indicatorWidth.snapTo(w)
+        } else {
+            launch { indicatorX.animateTo(x, spring(0.72f, 420f)) }
+            indicatorWidth.animateTo(w, spring(0.72f, 420f))
+        }
+    }
+    fun keyAt(x: Float): String? = bounds.entries.minByOrNull { (_, b) ->
+        val (l, w) = b
+        if (x < l) l - x else if (x > l + w) x - l - w else 0f
+    }?.key
+    val hovered = dragX?.let(::keyAt) ?: selectedKey
+
     Row(
         modifier
             .height(46.dp)
-            .liquidGlassPanel(backdrop, { Capsule() })
+            .drawBackdrop(
+                backdrop = backdrop,
+                shape = { Capsule() },
+                effects = {
+                    vibrancy()
+                    blur(8.dp.toPx() * glass.blur)
+                    lens(16.dp.toPx() * glass.refraction, 24.dp.toPx() * glass.refraction)
+                },
+                layerBlock = {
+                    val s = lerp(1f, 1f + 8.dp.toPx() / size.width, press.value)
+                    scaleX = s
+                    scaleY = s
+                },
+                exportedBackdrop = barBackdrop,
+                onDrawSurface = { drawRect(containerColor.copy(alpha = containerColor.alpha * glass.opacity)) }
+            )
             .padding(4.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -115,22 +179,96 @@ fun LiquidTopTabBar(
                 contentAlignment = Alignment.Center
             ) { GlassIcon(GlassIcons.SidebarLeft, GlassColors.label(), Modifier.size(22.dp)) }
         }
-        tabs.forEach { tab ->
-            val selected = tab.key == selectedKey
-            val pill by animateColorAsState(if (selected) GlassColors.fill() else Color.Transparent)
-            val color = if (selected) GlassColors.accent() else GlassColors.label()
-            Box(
-                Modifier
-                    .fillMaxHeight()
-                    .clip(Capsule())
-                    .background(pill)
-                    .clickable(role = Role.Tab) { onSelect(tab.key) }
-                    .semantics { this.selected = selected; contentDescription = tab.title }
-                    .padding(horizontal = if (tab.search) 11.dp else 13.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                if (tab.search) GlassIcon(tab.icon, color, Modifier.size(20.dp))
-                else BasicText(tab.title, style = TextStyle(color, 15.sp, FontWeight.Medium))
+        Box(
+            Modifier
+                .fillMaxHeight()
+                .pointerInput(Unit) {
+                    awaitEachGesture {
+                        val down = awaitFirstDown()
+                        val onIndicator = bounds[currentSelected]?.let { (l, w) -> down.position.x in l..(l + w) } == true
+                        scope.launch { press.animateTo(1f, spring(0.6f, 500f)) }
+                        var moved = false
+                        while (true) {
+                            val event = awaitPointerEvent()
+                            val change = event.changes.firstOrNull { it.id == down.id } ?: break
+                            if (!change.pressed) break
+                            if (onIndicator && (moved || abs(change.position.x - down.position.x) > viewConfiguration.touchSlop)) {
+                                moved = true
+                                change.consume()
+                                val x = change.position.x
+                                dragX = x
+                                scope.launch {
+                                    val w = indicatorWidth.value
+                                    indicatorX.snapTo(x - w / 2f)
+                                }
+                            }
+                        }
+                        val target = if (moved) dragX?.let(::keyAt) else keyAt(down.position.x)
+                        dragX = null
+                        scope.launch { press.animateTo(0f, spring(0.5f, 300f)) }
+                        if (target != null) {
+                            if (target == currentSelected) {
+                                bounds[target]?.let { (x, _) -> scope.launch { indicatorX.animateTo(x, spring(0.72f, 420f)) } }
+                            } else currentOnSelect(target)
+                        }
+                    }
+                }
+        ) {
+            if (indicatorWidth.value > 0f) {
+                val density = LocalDensity.current
+                Box(
+                    Modifier
+                        .graphicsLayer {
+                            translationX = indicatorX.value
+                            val s = lerp(1f, 1.18f, press.value)
+                            scaleX = s
+                            scaleY = s
+                        }
+                        .width(with(density) { indicatorWidth.value.toDp() })
+                        .fillMaxHeight()
+                        .drawBackdrop(
+                            backdrop = rememberCombinedBackdrop(backdrop, barBackdrop),
+                            shape = { Capsule() },
+                            effects = {
+                                lens(
+                                    10.dp.toPx() * press.value * glass.refraction,
+                                    14.dp.toPx() * press.value * glass.refraction,
+                                    chromaticAberration = true
+                                )
+                            },
+                            highlight = { Highlight.Default.copy(alpha = press.value) },
+                            shadow = { Shadow(alpha = press.value) },
+                            innerShadow = { InnerShadow(radius = 8.dp * press.value, alpha = press.value) },
+                            onDrawSurface = {
+                                drawRect(
+                                    if (dark) Color.White.copy(0.1f) else Color.Black.copy(0.08f),
+                                    alpha = 1f - press.value
+                                )
+                            }
+                        )
+                )
+            }
+            Row(Modifier.fillMaxHeight(), verticalAlignment = Alignment.CenterVertically) {
+                tabs.forEach { tab ->
+                    val active = tab.key == hovered
+                    val color by animateColorAsState(if (active) GlassColors.accent() else GlassColors.label())
+                    Box(
+                        Modifier
+                            .fillMaxHeight()
+                            .onPlaced { bounds[tab.key] = it.positionInParent().x to it.size.width.toFloat() }
+                            .semantics {
+                                role = Role.Tab
+                                this.selected = tab.key == selectedKey
+                                contentDescription = tab.title
+                                onClick { onSelect(tab.key); true }
+                            }
+                            .padding(horizontal = if (tab.search) 11.dp else 13.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        if (tab.search) GlassIcon(tab.icon, color, Modifier.size(20.dp))
+                        else BasicText(tab.title, style = TextStyle(color, 15.sp, FontWeight.Medium))
+                    }
+                }
             }
         }
     }
@@ -155,10 +293,14 @@ fun LiquidSidebar(
     val collapsed = rememberSaveable(saver = listSaver<MutableList<String>, String>({ it.toList() }, { it.toMutableStateList() })) {
         mutableStateListOf()
     }
-    val surface = if (isGlassDark()) Color(0xFF1C1C1E).copy(alpha = 0.82f) else Color(0xFFF7F7FA).copy(alpha = 0.86f)
+    // Same refracting glass as the tab bars; a little denser so rows stay legible over busy content.
+    val surface = if (isGlassDark()) Color(0xFF121212).copy(alpha = 0.5f) else Color(0xFFFAFAFA).copy(alpha = 0.55f)
     Column(
         modifier
-            .liquidGlassPanel(backdrop, { RoundedRectangle(26.dp) }, containerColor = surface, blurRadius = 24.dp)
+            .liquidGlassPanel(
+                backdrop, { RoundedRectangle(26.dp) },
+                containerColor = surface, blurRadius = 16.dp, refractionHeight = 20.dp, refractionAmount = 40.dp
+            )
             .padding(horizontal = 12.dp, vertical = 4.dp)
     ) {
         Box(Modifier.fillMaxWidth().height(44.dp)) {

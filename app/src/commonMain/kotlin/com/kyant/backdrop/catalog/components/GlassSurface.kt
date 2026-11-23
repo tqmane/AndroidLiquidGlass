@@ -104,11 +104,21 @@ fun Modifier.liquidGlass(
                 drawRect(tint, blendMode = androidx.compose.ui.graphics.BlendMode.Hue)
                 drawRect(tint.copy(alpha = (0.75f * glass.opacity).coerceIn(0f, 1f)))
             }
-            if (surfaceColor.isSpecified) {
-                drawRect(surfaceColor.copy(alpha = (surfaceColor.alpha * glass.opacity).coerceIn(0f, 1f)))
-            }
+            drawRect(glassSurfaceFill(surfaceColor, tint, isLightTheme, glass.opacity))
         }
     )
+}
+
+/**
+ * Fill of the regular material. Untinted glass gets the same neutral 40 % fill as the tab bars, so a button
+ * beside a bar (search circle, X beside the search field) reads as the same material instead of a brighter one.
+ */
+internal fun glassSurfaceFill(surfaceColor: Color, tint: Color, isLightTheme: Boolean, opacity: Float): Color {
+    val surface = if (surfaceColor.isSpecified) surfaceColor
+    else if (tint.isSpecified) Color.Transparent
+    else if (isLightTheme) Color(0xFFFAFAFA).copy(alpha = 0.4f)
+    else Color(0xFF121212).copy(alpha = 0.4f)
+    return surface.copy(alpha = (surface.alpha * opacity).coerceIn(0f, 1f))
 }
 
 /**

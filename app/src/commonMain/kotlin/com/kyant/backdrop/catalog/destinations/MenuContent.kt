@@ -37,7 +37,7 @@ fun MenuContent() {
         var popover by remember { mutableStateOf(false) }
         var favorite by remember { mutableStateOf(false) }
         var sort by remember { mutableStateOf("Date") }
-        var anchor by remember { mutableStateOf(Rect.Zero) }
+        val contextState = rememberLiquidContextMenuState()
         val entries = listOf(
             MenuEntry.Action("Copy", GlassIcons.Copy),
             MenuEntry.Action("Add to Favorites", GlassIcons.Heart, checked = favorite) { favorite = !favorite },
@@ -59,9 +59,8 @@ fun MenuContent() {
             Spacer(Modifier.height(48.dp))
             Box(
                 Modifier.align(Alignment.CenterHorizontally).size(220.dp, 160.dp)
-                    .contextMenuAnchor { anchor = it }
+                    .liquidContextMenuSource(contextState, onLongPress = { context = true })
                     .clip(RoundedRectangle(24.dp))
-                    .pointerInput(Unit) { detectTapGestures(onLongPress = { context = true }) }
             ) { card() }
             Spacer(Modifier.height(16.dp))
             BasicText("Sort: $sort, favorite: $favorite", Modifier.align(Alignment.CenterHorizontally), style = TextStyle(Color.White, 15.sp))
@@ -73,17 +72,17 @@ fun MenuContent() {
         LiquidPopover(
             popover, { popover = false }, backdrop, Alignment.TopStart,
             Modifier.systemBarsPadding().width(260.dp), offset = DpOffset(16.dp, 68.dp), transformOrigin = TransformOrigin(0f, 0f)
-        ) {
+        ) { panel ->
             Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 BasicText("Popover", style = TextStyle(GlassColors.label(), 17.sp, FontWeight.SemiBold))
                 BasicText("Popovers present arbitrary content in a Liquid Glass panel anchored to their source.", style = TextStyle(GlassColors.secondaryLabel(), 15.sp))
                 var on by remember { mutableStateOf(true) }
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     BasicText("Show badges", Modifier.weight(1f), style = TextStyle(GlassColors.label(), 17.sp))
-                    LiquidToggle({ on }, { on = it }, backdrop)
+                    LiquidToggle({ on }, { on = it }, panel)
                 }
             }
         }
-        LiquidContextMenu(context, { context = false }, backdrop, anchor, entries, card)
+        LiquidContextMenu(context, { context = false }, backdrop, contextState.bounds, entries, contextState, card)
     }
 }

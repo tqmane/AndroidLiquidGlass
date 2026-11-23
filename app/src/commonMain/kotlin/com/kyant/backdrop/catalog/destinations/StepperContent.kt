@@ -41,13 +41,14 @@ fun StepperContent() {
         }
         SectionLabel("On glass")
         BoxWithWallpaper { glass ->
+            val panel = rememberLayerBackdrop()
             Row(
                 Modifier.align(Alignment.Center).padding(24.dp).fillMaxWidth()
-                    .liquidGlassPanel(glass, { RoundedRectangle(26.dp) }).padding(16.dp),
+                    .liquidGlassPanel(glass, { RoundedRectangle(26.dp) }, exportedBackdrop = panel).padding(16.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 BasicText("Quantity $count", Modifier.weight(1f), style = TextStyle(GlassColors.label(), 17.sp))
-                LiquidStepper(count, { count = it }, glass)
+                LiquidStepper(count, { count = it }, panel)
             }
         }
     }

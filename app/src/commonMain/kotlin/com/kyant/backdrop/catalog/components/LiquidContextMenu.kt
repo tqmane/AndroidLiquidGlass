@@ -1,5 +1,21 @@
 package com.kyant.backdrop.catalog.components
 
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.LinearOutSlowInEasing
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.waitForUpOrCancellation
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.Stable
+import androidx.compose.ui.input.pointer.pointerInput
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
+import kotlin.math.abs
+
 import com.kyant.backdrop.catalog.utils.BackHandler
 import androidx.compose.ui.zIndex
 import androidx.compose.foundation.clickable
@@ -38,6 +54,61 @@ import com.kyant.backdrop.effects.blur
 import com.kyant.shapes.RoundedRectangle
 import kotlin.math.roundToInt
 
+/**
+ * Press state of a context-menu source, shared by [liquidContextMenuSource] and [LiquidContextMenu]:
+ * the source swells while held, and the lifted preview settles back from that swollen size when the menu opens.
+ */
+@Stable
+class LiquidContextMenuState {
+    internal val scale = Animatable(1f)
+    var bounds by mutableStateOf(Rect.Zero)
+        internal set
+}
+
+@Composable
+fun rememberLiquidContextMenuState(): LiquidContextMenuState = remember { LiquidContextMenuState() }
+
+/** Scale the source swells to by the time the long press fires (measured on iOS 26: +3.8 % over ~0.55 s). */
+internal const val ContextMenuPressedScale = 1.038f
+
+/**
+ * Long-press source for [LiquidContextMenu]: records its bounds, swells toward [ContextMenuPressedScale]
+ * while the finger is held and calls [onLongPress] at the long-press timeout; a short press calls [onClick].
+ */
+fun Modifier.liquidContextMenuSource(
+    state: LiquidContextMenuState,
+    onLongPress: () -> Unit,
+    onClick: (() -> Unit)? = null,
+): Modifier = this
+    .onGloballyPositioned { state.bounds = it.boundsInRoot() }
+    .graphicsLayer {
+        scaleX = state.scale.value
+        scaleY = state.scale.value
+    }
+    .pointerInput(state) {
+        coroutineScope {
+            awaitEachGesture {
+                val down = awaitFirstDown(requireUnconsumed = false)
+                val timeout = viewConfiguration.longPressTimeoutMillis
+                val swell = launch {
+                    delay(timeout / 5)
+                    state.scale.animateTo(ContextMenuPressedScale, tween((timeout * 4 / 5).toInt(), easing = LinearOutSlowInEasing))
+                }
+                val up = withTimeoutOrNull(timeout) { waitForUpOrCancellation() }
+                swell.cancel()
+                if (up == null) {
+                    onLongPress()
+                    // The source is covered by the lifted preview; restore it underneath.
+                    launch { state.scale.snapTo(ContextMenuPressedScale); delay(120); state.scale.snapTo(1f) }
+                    waitForUpOrCancellation()
+                } else {
+                    launch { state.scale.animateTo(1f, spring(0.5f, 500f)) }
+                    if (abs(up.position.x - down.position.x) < viewConfiguration.touchSlop) onClick?.invoke()
+                }
+            }
+        }
+    }
+
 /** Records the root bounds of a long-press target for [LiquidContextMenu]. */
 fun Modifier.contextMenuAnchor(onBounds: (Rect) -> Unit): Modifier =
     onGloballyPositioned { onBounds(it.boundsInRoot()) }
@@ -54,6 +125,7 @@ fun BoxScope.LiquidContextMenu(
     backdrop: Backdrop,
     anchorBounds: Rect,
     entries: List<MenuEntry>,
+    state: LiquidContextMenuState? = null,
     preview: @Composable () -> Unit,
 ) {
     val glass = LocalLiquidGlassStyle.current
@@ -66,6 +138,14 @@ fun BoxScope.LiquidContextMenu(
         var menuHeight by remember { mutableStateOf(0) }
         var submenu by remember(expanded) { mutableStateOf<MenuEntry.Submenu?>(null) }
         val p = progress.value
+        // The preview takes over at the swollen press size and settles back to its own size as the menu grows (iOS 26: ~0.17 s, no overshoot).
+        val lift = remember { Animatable(1f) }
+        LaunchedEffect(expanded) {
+            if (expanded) {
+                lift.snapTo(if (state != null) ContextMenuPressedScale else 1f)
+                lift.animateTo(1f, spring(1f, 600f))
+            } else lift.animateTo(1f, spring(1f, 600f))
+        }
 
         Box(
             Modifier
@@ -94,7 +174,7 @@ fun BoxScope.LiquidContextMenu(
                     .offset { IntOffset(left.roundToInt(), top.roundToInt()) }
                     .size(anchorBounds.width.toDp(), anchorBounds.height.toDp())
                     .graphicsLayer {
-                        val s = lerp(1f, 1.04f, p)
+                        val s = lift.value
                         scaleX = s
                         scaleY = s
                         shadowElevation = 24.dp.toPx() * p.coerceIn(0f, 1f)

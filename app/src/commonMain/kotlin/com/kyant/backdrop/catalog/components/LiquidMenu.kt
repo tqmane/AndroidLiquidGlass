@@ -50,6 +50,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.util.lerp
 import com.kyant.backdrop.Backdrop
+import com.kyant.backdrop.backdrops.rememberLayerBackdrop
 import com.kyant.shapes.RoundedRectangle
 
 /** An entry of a [LiquidMenu] / [LiquidContextMenu]. */
@@ -90,9 +91,10 @@ fun BoxScope.LiquidGlassPopup(
     cornerRadius: Dp = 26.dp,
     dim: Boolean = false,
     paneTitle: String = "Menu",
-    content: @Composable ColumnScope.() -> Unit,
+    content: @Composable ColumnScope.(panelBackdrop: Backdrop) -> Unit,
 ) {
     BackHandler(visible) { onDismissRequest() }
+    val panelBackdrop = rememberLayerBackdrop()
     Box(Modifier.matchParentSize().zIndex(1f)) {
         val progress = remember { Animatable(0f) }
         var shown by remember { mutableStateOf(false) }
@@ -128,10 +130,9 @@ fun BoxScope.LiquidGlassPopup(
                     scaleY = lerp(0.2f, 1f, p)
                     alpha = p.coerceIn(0f, 1f)
                 }
-                .liquidGlassPanel(backdrop, { RoundedRectangle(cornerRadius) })
-                .clickable(interactionSource = null, indication = null) {},
-            content = content
-        )
+                .liquidGlassPanel(backdrop, { RoundedRectangle(cornerRadius) }, exportedBackdrop = panelBackdrop)
+                .clickable(interactionSource = null, indication = null) {}
+        ) { content(panelBackdrop) }
     }
 }
 
@@ -282,7 +283,7 @@ fun BoxScope.LiquidPopover(
     modifier: Modifier = Modifier,
     offset: DpOffset = DpOffset.Zero,
     transformOrigin: TransformOrigin = TransformOrigin(0.5f, 0f),
-    content: @Composable ColumnScope.() -> Unit,
+    content: @Composable ColumnScope.(panelBackdrop: Backdrop) -> Unit,
 ) {
     LiquidGlassPopup(
         visible = visible,

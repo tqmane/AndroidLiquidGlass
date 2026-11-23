@@ -43,6 +43,7 @@ fun LiquidButton(
     content: @Composable RowScope.() -> Unit
 ) {
     val glass = LocalLiquidGlassStyle.current
+    val isLightTheme = !isGlassDark()
     val animationScope = rememberCoroutineScope()
 
     val interactiveHighlight = remember(animationScope) {
@@ -94,9 +95,7 @@ fun LiquidButton(
                         drawRect(tint, blendMode = BlendMode.Hue)
                         drawRect(tint.copy(alpha = 0.75f))
                     }
-                    if (surfaceColor.isSpecified) {
-                        drawRect(surfaceColor)
-                    }
+                    drawRect(glassSurfaceFill(surfaceColor, tint, isLightTheme, glass.opacity))
                 }
             )
             .clickable(

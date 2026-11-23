@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
+import com.kyant.backdrop.backdrops.rememberLayerBackdrop
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -53,11 +54,13 @@ fun GlassSettingsContent() {
         val preset = if (matched >= 0) matched else lastPreset
         var toggle by remember { mutableStateOf(true) }
         var segment by remember { mutableIntStateOf(0) }
+        // Controls sit on the panel, so they refract the panel (exported below), not the wallpaper behind it.
+        val panel = rememberLayerBackdrop()
         Column(
             Modifier
                 .safeDrawingPadding()
                 .padding(16.dp)
-                .liquidGlassPanel(backdrop, { RoundedRectangle(32.dp) })
+                .liquidGlassPanel(backdrop, { RoundedRectangle(32.dp) }, exportedBackdrop = panel)
                 .padding(20.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
@@ -73,15 +76,15 @@ fun GlassSettingsContent() {
                     style.opacity = target.opacity
                 },
                 Modifier.fillMaxWidth(),
-                backdrop = backdrop
+                backdrop = panel
             )
-            StyleSlider("Refraction", { style.refraction }, { style.refraction = it }, backdrop)
-            StyleSlider("Blur", { style.blur }, { style.blur = it }, backdrop)
-            StyleSlider("Opacity", { style.opacity }, { style.opacity = it }, backdrop)
+            StyleSlider("Refraction", { style.refraction }, { style.refraction = it }, panel)
+            StyleSlider("Blur", { style.blur }, { style.blur = it }, panel)
+            StyleSlider("Opacity", { style.opacity }, { style.opacity = it }, panel)
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                LiquidIconButton(GlassIcons.Heart, "Favorite", {}, backdrop)
-                LiquidToggle({ toggle }, { toggle = it }, backdrop)
-                LiquidButton({ style.reset(); lastPreset = 0 }, backdrop) {
+                LiquidIconButton(GlassIcons.Heart, "Favorite", {}, panel)
+                LiquidToggle({ toggle }, { toggle = it }, panel)
+                LiquidButton({ style.reset(); lastPreset = 0 }, panel) {
                     BasicText("Reset", style = TextStyle(GlassColors.label(), 15.sp))
                 }
             }
@@ -90,7 +93,7 @@ fun GlassSettingsContent() {
                 segment,
                 { segment = it },
                 Modifier.fillMaxWidth(),
-                backdrop = backdrop
+                backdrop = panel
             )
         }
     }
