@@ -46,6 +46,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.dismiss
@@ -108,6 +109,8 @@ fun BoxScope.LiquidAlert(
                     scaleX = s
                     scaleY = s
                     alpha = p.coerceIn(0f, 1f)
+                    // Per-draw alpha: an offscreen alpha layer drops the glass outline clip and flashes a rectangle.
+                    compositingStrategy = CompositingStrategy.ModulateAlpha
                 }
                 .liquidGlassPanel(backdrop, { RoundedRectangle(34.dp) })
                 .padding(horizontal = 16.dp, vertical = 16.dp)
@@ -199,7 +202,7 @@ fun BoxScope.LiquidActionSheet(
                         )
                     }
                     .size(ActionSheetArrow)
-                    .graphicsLayer { alpha = p.coerceIn(0f, 1f); rotationZ = if (above) 0f else 180f }
+                    .graphicsLayer { alpha = p.coerceIn(0f, 1f); compositingStrategy = CompositingStrategy.ModulateAlpha; rotationZ = if (above) 0f else 180f }
                     .background(arrowColor, ArrowShape)
             )
         }
@@ -224,6 +227,8 @@ fun BoxScope.LiquidActionSheet(
                         if (anchored) transformOrigin = TransformOrigin(0.5f, if (above) 1f else 0f)
                     } else translationY = (1f - p) * size.height
                     alpha = p.coerceIn(0f, 1f)
+                    // Per-draw alpha: an offscreen alpha layer drops the glass outline clip and flashes a rectangle.
+                    compositingStrategy = CompositingStrategy.ModulateAlpha
                 }
                 .liquidGlassPanel(backdrop, { RoundedRectangle(34.dp) })
                 .padding(16.dp)

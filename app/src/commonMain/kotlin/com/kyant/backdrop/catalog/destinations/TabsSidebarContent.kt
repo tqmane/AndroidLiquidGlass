@@ -81,7 +81,7 @@ fun TabsSidebarContent() {
         DemoPage(TabSections.flatMap { it.items }.first { it.key == selected }, split, { split = it }, padding)
     }
     if (split) {
-        LiquidSplitView(SplitSections, selected, { selected = it }, "Library", Modifier.background(background), page)
+        LiquidSplitView(SplitSections, selected, { selected = it }, "Library", Modifier.background(background), content = page)
     } else {
         LiquidAdaptiveTabScaffold(
             tabs = Tabs,

@@ -154,6 +154,7 @@ Rules:
 - Measure width from the layout (`BoxWithConstraints`), never from the display metrics: split screen and freeform windows on Android tablets are narrower than the screen.
 - Check both orientations. In portrait a 13-inch iPad is still regular width, so it keeps the form sheet.
 - Use `LiquidAdaptiveTabScaffold` (SwiftUI `TabView` + `.sidebarAdaptable`) for app-level tabs: pass `tabs` for the bar and `sidebarSections` for the sidebar (the first section with a null title is normally the same tabs; later sections are extra destinations that only the sidebar shows). Draw page content inside its `content` lambda and apply the `PaddingValues` it gives you: it already clears the top bar, the sidebar and the system bars. Do not wrap the scaffold in another backdrop scaffold; it records `content` into its own `LayerBackdrop`.
+- Pass your app's tint as `selectedColor` (`LiquidAdaptiveTabScaffold`, `LiquidSplitView`, `LiquidTopTabBar`, `LiquidSidebar`) or `accentColor` (`LiquidBottomTabs`) to color the selected tab, sidebar row and search tab; it defaults to the system blue.
 - Use `LiquidSplitView` (SwiftUI `NavigationSplitView`) for a two-column app; its sections are not collapsible, while the tab scaffold's titled sidebar sections collapse with their chevron.
 - On regular width the top bar and the sidebar are alternatives: showing the sidebar fades the top bar out, like iPadOS. Selecting a sidebar-only destination leaves no pill selected in the top bar.
 

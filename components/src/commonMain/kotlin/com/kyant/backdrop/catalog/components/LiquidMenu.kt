@@ -43,6 +43,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.TransformOrigin
+import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.semantics.Role
@@ -136,6 +137,8 @@ fun BoxScope.LiquidGlassPopup(
                     scaleX = lerp(0.3f, 1f, p)
                     scaleY = lerp(0.2f, 1f, p)
                     alpha = p.coerceIn(0f, 1f)
+                    // Per-draw alpha: an offscreen alpha layer drops the glass outline clip and flashes a rectangle.
+                    compositingStrategy = CompositingStrategy.ModulateAlpha
                 }
                 .liquidGlassPanel(backdrop, { RoundedRectangle(cornerRadius) }, exportedBackdrop = panelBackdrop)
                 .clickable(interactionSource = null, indication = null) {}

@@ -67,6 +67,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.zIndex
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.input.pointer.pointerInput
@@ -123,16 +124,17 @@ fun LiquidTopTabBar(
     backdrop: Backdrop,
     modifier: Modifier = Modifier,
     onToggleSidebar: (() -> Unit)? = null,
+    selectedColor: Color = GlassColors.accent(),
 ) {
     val glass = LocalLiquidGlassStyle.current
     val dark = isGlassDark()
     val containerColor = if (dark) Color(0xFF121212).copy(0.4f) else Color(0xFFFAFAFA).copy(0.4f)
-    val barBackdrop = rememberLayerBackdrop()
     val scope = rememberCoroutineScope()
     val bounds = remember { mutableStateMapOf<String, Pair<Float, Float>>() }
     val indicatorX = remember { Animatable(0f) }
     val indicatorWidth = remember { Animatable(0f) }
     val press = remember { Animatable(0f) }
+    val barBackdrop = rememberLayerBackdrop()
     var dragX by remember { mutableStateOf<Float?>(null) }
     val currentSelected by rememberUpdatedState(selectedKey)
     val currentOnSelect by rememberUpdatedState(onSelect)
@@ -152,9 +154,12 @@ fun LiquidTopTabBar(
     }?.key
     val hovered = dragX?.let(::keyAt) ?: selectedKey
 
-    Row(
-        modifier
-            .height(46.dp)
+    // The glass is a sibling behind the row rather than the row itself: drawBackdrop clips its content to the
+    // capsule, and the held pill has to swell past the bar the way it does on iPadOS.
+    Box(modifier.height(46.dp)) {
+        Box(
+            Modifier
+            .matchParentSize()
             .drawBackdrop(
                 backdrop = backdrop,
                 shape = { Capsule() },
@@ -164,19 +169,23 @@ fun LiquidTopTabBar(
                     lens(16.dp.toPx() * glass.refraction, 24.dp.toPx() * glass.refraction)
                 },
                 layerBlock = {
-                    val s = lerp(1f, 1f + 8.dp.toPx() / size.width, press.value)
+                    val s = lerp(1f, 1f + 16.dp.toPx() / size.width, press.value)
                     scaleX = s
                     scaleY = s
                 },
                 exportedBackdrop = barBackdrop,
                 onDrawSurface = { if (dark) drawDarkGlass(glass.opacity) else drawRect(containerColor.copy(alpha = containerColor.alpha * glass.opacity)) }
             )
-            .padding(4.dp),
+        )
+        Row(
+            Modifier.fillMaxHeight().padding(4.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         if (onToggleSidebar != null) {
             Box(
                 Modifier
+                    // Kept above the held pill when it swells over the toggle.
+                    .zIndex(1f)
                     .fillMaxHeight()
                     .clip(Capsule())
                     .clickable(role = Role.Button, onClick = onToggleSidebar)
@@ -207,7 +216,7 @@ fun LiquidTopTabBar(
                                 dragX = x
                                 scope.launch {
                                     val w = indicatorWidth.value
-                                    indicatorX.snapTo(x - w / 2f)
+                                    indicatorX.animateTo(x - w / 2f, spring(1f, 1500f))
                                 }
                             }
                         }
@@ -227,15 +236,11 @@ fun LiquidTopTabBar(
                 val density = LocalDensity.current
                 Box(
                     Modifier
-                        .graphicsLayer {
-                            translationX = indicatorX.value
-                            val s = lerp(1f, 1.18f, press.value)
-                            scaleX = s
-                            scaleY = s
-                        }
+                        .graphicsLayer { translationX = indicatorX.value }
                         .width(with(density) { indicatorWidth.value.toDp() })
                         .fillMaxHeight()
                         .drawBackdrop(
+                            // As in the bottom tab pill: refracts the bar glass, and the page where it overhangs the bar.
                             backdrop = rememberCombinedBackdrop(backdrop, barBackdrop),
                             shape = { Capsule() },
                             effects = {
@@ -246,11 +251,23 @@ fun LiquidTopTabBar(
                                 )
                             },
                             highlight = { Highlight.Default.copy(alpha = press.value) },
-                            shadow = { Shadow(alpha = press.value) },
-                            innerShadow = { InnerShadow(radius = 8.dp * press.value, alpha = press.value) },
+                            // The bar is thinner than the bottom tabs, so the full-strength shadows there read as a
+                            // gray slab here; the iPad pill is a clear lens with a bright rim and barely any shade.
+                            shadow = { Shadow(alpha = 0.4f * press.value) },
+                            innerShadow = { InnerShadow(radius = 6.dp * press.value, alpha = 0.35f * press.value) },
+                            // Scaled through layerBlock so the backdrop is sampled unscaled under the swollen pill;
+                            // scaling an outer layer would magnify the page and the pill would read as an opaque slab.
+                            // Like the bottom tab pill it overhangs the bar by 7 dp above and below (38 -> 60 dp),
+                            // squashed along the drag.
+                            layerBlock = {
+                                val s = lerp(1f, (size.height + 22.dp.toPx()) / size.height, press.value)
+                                val v = (indicatorX.velocity / 10_000f).coerceIn(-0.2f, 0.2f)
+                                scaleX = s / (1f - abs(v) * 0.75f)
+                                scaleY = s * (1f - abs(v) * 0.25f)
+                            },
                             onDrawSurface = {
                                 drawRect(
-                                    if (dark) Color.White.copy(0.1f) else Color.Black.copy(0.08f),
+                                    if (dark) Color.White.copy(0.1f) else Color.Black.copy(0.1f),
                                     alpha = 1f - press.value
                                 )
                             }
@@ -260,7 +277,7 @@ fun LiquidTopTabBar(
             Row(Modifier.fillMaxHeight(), verticalAlignment = Alignment.CenterVertically) {
                 tabs.forEach { tab ->
                     val active = tab.key == hovered
-                    val color by animateColorAsState(if (active) GlassColors.accent() else GlassColors.label())
+                    val color by animateColorAsState(if (active) selectedColor else GlassColors.label())
                     Box(
                         Modifier
                             .fillMaxHeight()
@@ -281,12 +298,19 @@ fun LiquidTopTabBar(
                             .padding(horizontal = if (tab.search) 11.dp else 13.dp),
                         contentAlignment = Alignment.Center
                     ) {
-                        if (tab.search) GlassIcon(tab.icon, color, Modifier.size(20.dp))
-                        else BasicText(tab.title, style = TextStyle(color, 15.sp, FontWeight.Medium))
+                        // The held pill magnifies the label under it, as the bottom tab pill does.
+                        val magnify = Modifier.graphicsLayer {
+                            val k = if (active) lerp(1f, 1.2f, press.value) else 1f
+                            scaleX = k
+                            scaleY = k
+                        }
+                        if (tab.search) GlassIcon(tab.icon, color, magnify.size(20.dp))
+                        else BasicText(tab.title, magnify, style = TextStyle(color, 15.sp, FontWeight.Medium))
                     }
                 }
             }
         }
+    }
     }
 }
 
@@ -305,6 +329,7 @@ fun LiquidSidebar(
     title: String? = null,
     onToggleSidebar: (() -> Unit)? = null,
     collapsibleSections: Boolean = true,
+    selectedColor: Color = GlassColors.accent(),
 ) {
     val collapsed = rememberSaveable(saver = listSaver<MutableList<String>, String>({ it.toList() }, { it.toMutableStateList() })) {
         mutableStateListOf()
@@ -374,7 +399,7 @@ fun LiquidSidebar(
                 if (open) section.items.forEach { item ->
                     val selected = item.key == selectedKey
                     val fill by animateColorAsState(if (selected) GlassColors.fill() else Color.Transparent)
-                    val color = if (selected) GlassColors.accent() else GlassColors.label()
+                    val color = if (selected) selectedColor else GlassColors.label()
                     Row(
                         Modifier
                             .fillMaxWidth()
@@ -458,6 +483,7 @@ fun LiquidAdaptiveTabScaffold(
     onSelect: (String) -> Unit,
     modifier: Modifier = Modifier,
     sidebarSections: List<LiquidSidebarSection> = listOf(LiquidSidebarSection(null, tabs)),
+    selectedColor: Color = GlassColors.accent(),
     content: @Composable (PaddingValues) -> Unit,
 ) {
     val backdrop = rememberLayerBackdrop()
@@ -473,7 +499,8 @@ fun LiquidAdaptiveTabScaffold(
                 sidebar = { m ->
                     LiquidSidebar(
                         sidebarSections, selectedKey, onSelect, backdrop, m,
-                        onToggleSidebar = { sidebarVisible = false }
+                        onToggleSidebar = { sidebarVisible = false },
+                        selectedColor = selectedColor
                     )
                 }
             ) { start ->
@@ -495,7 +522,8 @@ fun LiquidAdaptiveTabScaffold(
                             .systemBarsPadding()
                             .padding(top = 8.dp)
                             .graphicsLayer { alpha = barAlpha.coerceIn(0f, 1f) },
-                        onToggleSidebar = { sidebarVisible = true }
+                        onToggleSidebar = { sidebarVisible = true },
+                        selectedColor = selectedColor
                     )
                 }
             }
@@ -528,7 +556,8 @@ fun LiquidAdaptiveTabScaffold(
                     onTabSelected = { onSelect(barTabs[it].key) },
                     backdrop = backdrop,
                     tabsCount = barTabs.size,
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f),
+                    accentColor = selectedColor
                 ) {
                     barTabs.forEach { tab ->
                         LiquidBottomTab({ onSelect(tab.key) }) {
@@ -541,7 +570,7 @@ fun LiquidAdaptiveTabScaffold(
                     LiquidIconButton(
                         searchTab.icon, searchTab.title, { onSelect(searchTab.key) }, backdrop,
                         size = 64.dp, iconSize = 24.dp,
-                        tint = if (searchTab.key == selectedKey) GlassColors.accent() else Color.Unspecified
+                        tint = if (searchTab.key == selectedKey) selectedColor else Color.Unspecified
                     )
                 }
             }
@@ -562,6 +591,7 @@ fun LiquidSplitView(
     onSelect: (String) -> Unit,
     title: String,
     modifier: Modifier = Modifier,
+    selectedColor: Color = GlassColors.accent(),
     content: @Composable (PaddingValues) -> Unit,
 ) {
     val backdrop = rememberLayerBackdrop()
@@ -579,7 +609,8 @@ fun LiquidSplitView(
                     backdrop, m,
                     title = title,
                     onToggleSidebar = { sidebarVisible = false },
-                    collapsibleSections = false
+                    collapsibleSections = false,
+                    selectedColor = selectedColor
                 )
             }
         ) { start ->

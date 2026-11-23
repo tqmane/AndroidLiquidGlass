@@ -86,9 +86,9 @@ fun LiquidGlassEffectContainer(
                     shadow = null,
                     onDrawSurface = {
                         drawGlassFill(Color.Unspecified, Color.Unspecified, isLight, glass.opacity)
-                        // Same lift a held member gets from its press highlight, so the neck has no colour step.
+                        // Same additive lift a held member gets from InteractiveHighlight, so the joined part does not read darker.
                         val glow = group.members.values.maxOfOrNull { it.glow() } ?: 0f
-                        if (glow > 0f) drawRect(Color.White.copy(alpha = 0.1f * glow))
+                        if (glow > 0f) drawRect(Color.White.copy(alpha = 0.2f * glow), blendMode = androidx.compose.ui.graphics.BlendMode.Plus)
                     }
                 )
         )
