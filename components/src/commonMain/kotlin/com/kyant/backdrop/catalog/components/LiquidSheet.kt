@@ -118,10 +118,11 @@ fun BoxScope.LiquidSheet(
             // iPadOS form sheet: every detent is centered vertically; large is ~635 pt tall, medium ~366 pt.
             val formMinTop = topInset + formMargin
             // Centered within the safe area, so a taller detent always has a higher top even in a short window.
-            val formAvailable = maxH - formMinTop - formMargin - WindowInsets.safeDrawing.getBottom(density)
+            val bottomInset = WindowInsets.safeDrawing.getBottom(density).toFloat()
+            val formAvailable = maxH - formMinTop - formMargin - bottomInset
             val formLargeHeight = minOf(with(density) { 635.dp.toPx() }, formAvailable)
             // (top, bottom) of each detent, lowest sheet first.
-            val bounds = remember(detents, maxH, topInset, formSheet) {
+            val bounds = remember(detents, maxH, topInset, bottomInset, formSheet) {
                 detents.map { d ->
                     when (d) {
                         is SheetDetent.Fraction -> {
