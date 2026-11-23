@@ -30,6 +30,9 @@ class DampedDragAnimation(
 
     private val valueAnimationSpec =
         spring(1f, 1000f, visibilityThreshold)
+    // A tap glides the thumb over ~0.2 s like iOS 26 instead of jumping with the drag-tracking spring.
+    private val tapValueAnimationSpec =
+        spring(1f, 300f, visibilityThreshold)
     private val velocityAnimationSpec =
         spring(0.5f, 300f, visibilityThreshold * 10f)
     private val pressProgressAnimationSpec =
@@ -38,6 +41,10 @@ class DampedDragAnimation(
         spring(0.6f, 250f, 0.001f)
     private val scaleYAnimationSpec =
         spring(0.7f, 250f, 0.001f)
+
+    // iOS 26 lands a lifted thumb in under 0.1 s rather than relaxing slowly with a wobble.
+    private val releaseScaleAnimationSpec =
+        spring(0.8f, 700f, 0.001f)
 
     private val valueAnimation =
         Animatable(initialValue, visibilityThreshold)
@@ -100,8 +107,8 @@ class DampedDragAnimation(
                     .first()
             }
             launch { pressProgressAnimation.animateTo(0f, pressProgressAnimationSpec) }
-            launch { scaleXAnimation.animateTo(initialScale, scaleXAnimationSpec) }
-            launch { scaleYAnimation.animateTo(initialScale, scaleYAnimationSpec) }
+            launch { scaleXAnimation.animateTo(initialScale, releaseScaleAnimationSpec) }
+            launch { scaleYAnimation.animateTo(initialScale, releaseScaleAnimationSpec) }
         }
     }
 
@@ -117,7 +124,7 @@ class DampedDragAnimation(
             mutatorMutex.mutate {
                 press()
                 val targetValue = value.coerceIn(valueRange)
-                launch { valueAnimation.animateTo(targetValue, valueAnimationSpec) }
+                launch { valueAnimation.animateTo(targetValue, tapValueAnimationSpec) }
                 if (velocity != 0f) {
                     launch { velocityAnimation.animateTo(0f, velocityAnimationSpec) }
                 }
