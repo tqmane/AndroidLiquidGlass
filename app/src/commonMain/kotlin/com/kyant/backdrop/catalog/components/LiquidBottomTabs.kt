@@ -178,7 +178,7 @@ fun LiquidBottomTabs(
                         scaleX = scale
                         scaleY = scale
                     },
-                    onDrawSurface = { drawRect(containerColor) }
+                    onDrawSurface = { if (isLightTheme) drawRect(containerColor) else drawDarkGlass(1f) }
                 )
                 .then(interactiveHighlight.modifier)
                 .height(64f.dp)
@@ -217,7 +217,7 @@ fun LiquidBottomTabs(
                             val progress = dampedDragAnimation.pressProgress
                             Highlight.Default.copy(alpha = progress)
                         },
-                        onDrawSurface = { drawRect(containerColor) }
+                        onDrawSurface = { if (isLightTheme) drawRect(containerColor) else drawDarkGlass(1f) }
                     )
                     .then(interactiveHighlight.modifier)
                     .height(56f.dp)

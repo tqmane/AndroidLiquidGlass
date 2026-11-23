@@ -69,7 +69,7 @@ fun LiquidGlassEffectContainer(
                     },
                     highlight = null,
                     shadow = null,
-                    onDrawSurface = { drawRect(glassSurfaceFill(androidx.compose.ui.graphics.Color.Unspecified, androidx.compose.ui.graphics.Color.Unspecified, isLight, glass.opacity)) }
+                    onDrawSurface = { drawGlassFill(androidx.compose.ui.graphics.Color.Unspecified, androidx.compose.ui.graphics.Color.Unspecified, isLight, glass.opacity) }
                 )
         )
         CompositionLocalProvider(LocalLiquidGlassGroup provides group) { content() }

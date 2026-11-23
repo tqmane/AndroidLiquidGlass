@@ -221,7 +221,7 @@ fun BoxScope.LiquidSheet(
                         backdrop = backdrop,
                         shape = { RoundedRectangle(lerp(36f, 30f, expansion).dp) },
                         containerColor = if (isLightTheme) lerpColor(Color(0xFFFAFAFA).copy(alpha = 0.62f), Color(0xFFF2F2F7), expansion)
-                        else lerpColor(Color(0xFF2C2C2E).copy(alpha = 0.62f), Color(0xFF1C1C1E), expansion),
+                        else lerpColor(Color(0xFF2A2A2A).copy(alpha = 0.72f), Color(0xFF1C1C1E), expansion),
                         blurRadius = lerp(10f, 24f, expansion).dp,
                         exportedBackdrop = sheetBackdrop
                     )
@@ -240,7 +240,7 @@ fun BoxScope.LiquidSheet(
                             .align(Alignment.CenterHorizontally)
                             .size(36.dp, 5.dp)
                             .clip(Capsule())
-                            .background(if (isLightTheme) Color(0xFF3C3C43).copy(alpha = 0.3f) else Color(0xFFEBEBF5).copy(alpha = 0.3f))
+                            .background(if (isLightTheme) Color(0xFF3C3C43).copy(alpha = 0.3f) else Color(0xFFEBEBF5).copy(alpha = 0.36f))
                     )
                 }
                 val sheetScope = remember(this, sheetBackdrop, formSheet) { LiquidSheetScope(this, sheetBackdrop, expansionState, formSheet) }
@@ -291,7 +291,7 @@ fun LiquidSheetScope.SheetSection(
 ) {
     val isLightTheme = !isGlassDark()
     val cell = if (isLightTheme) lerpColor(Color.Black.copy(alpha = 0.05f), Color.White, expansion)
-    else lerpColor(Color.Black.copy(alpha = 0.3f), Color(0xFF2C2C2E), expansion)
+    else Color(0xFF2C2C2E)
     GroupedSection(title, cell, modifier, content = content)
 }
 

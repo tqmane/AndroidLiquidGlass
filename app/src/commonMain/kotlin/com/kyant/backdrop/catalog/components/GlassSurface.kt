@@ -1,5 +1,6 @@
 package com.kyant.backdrop.catalog.components
 
+import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.runtime.staticCompositionLocalOf
 import com.kyant.backdrop.backdrops.LayerBackdrop
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -104,7 +105,7 @@ fun Modifier.liquidGlass(
                 drawRect(tint, blendMode = androidx.compose.ui.graphics.BlendMode.Hue)
                 drawRect(tint.copy(alpha = (0.75f * glass.opacity).coerceIn(0f, 1f)))
             }
-            drawRect(glassSurfaceFill(surfaceColor, tint, isLightTheme, glass.opacity))
+            drawGlassFill(surfaceColor, tint, isLightTheme, glass.opacity)
         }
     )
 }
@@ -119,6 +120,21 @@ internal fun glassSurfaceFill(surfaceColor: Color, tint: Color, isLightTheme: Bo
     else if (isLightTheme) Color(0xFFFAFAFA).copy(alpha = 0.4f)
     else Color(0xFF121212).copy(alpha = 0.4f)
     return surface.copy(alpha = (surface.alpha * opacity).coerceIn(0f, 1f))
+}
+
+/**
+ * iOS 26 dark regular glass: content behind is dimmed, then lifted, so over black it reads as the native
+ * (25, 25, 25) and over colour it darkens instead of turning into a flat grey film.
+ */
+internal fun DrawScope.drawDarkGlass(opacity: Float, dim: Float = 0.35f, lift: Float = 0.1f) {
+    drawRect(Color.Black.copy(alpha = (dim * opacity).coerceIn(0f, 1f)))
+    drawRect(Color.White.copy(alpha = (lift * opacity).coerceIn(0f, 1f)), blendMode = androidx.compose.ui.graphics.BlendMode.Plus)
+}
+
+/** Draws the regular-material fill: [glassSurfaceFill], or [drawDarkGlass] for untinted dark glass. */
+internal fun DrawScope.drawGlassFill(surfaceColor: Color, tint: Color, isLightTheme: Boolean, opacity: Float) {
+    if (!isLightTheme && !surfaceColor.isSpecified && !tint.isSpecified) drawDarkGlass(opacity)
+    else drawRect(glassSurfaceFill(surfaceColor, tint, isLightTheme, opacity))
 }
 
 /**
@@ -139,7 +155,7 @@ fun Modifier.liquidGlassPanel(
     val isLightTheme = !isGlassDark()
     val surface = if (containerColor.isSpecified) containerColor
     else if (isLightTheme) Color(0xFFFAFAFA).copy(alpha = 0.6f)
-    else Color(0xFF1C1C1E).copy(alpha = 0.55f)
+    else Color.Unspecified
     return drawBackdrop(
         backdrop = backdrop,
         shape = shape,
@@ -151,6 +167,10 @@ fun Modifier.liquidGlassPanel(
         highlight = { Highlight.Plain },
         shadow = { Shadow(radius = 40.dp, color = Color.Black.copy(alpha = if (isLightTheme) 0.14f else 0.4f)) },
         exportedBackdrop = exportedBackdrop,
-        onDrawSurface = { drawRect(surface.copy(alpha = (surface.alpha * glass.opacity).coerceIn(0f, 1f))) }
+        onDrawSurface = {
+            // Dark panels (menus, popovers, alerts) measure ~(24, 26, 24) over black on iOS 26.
+            if (surface.isSpecified) drawRect(surface.copy(alpha = (surface.alpha * glass.opacity).coerceIn(0f, 1f)))
+            else drawDarkGlass(glass.opacity, dim = 0.45f, lift = 0.095f)
+        }
     )
 }

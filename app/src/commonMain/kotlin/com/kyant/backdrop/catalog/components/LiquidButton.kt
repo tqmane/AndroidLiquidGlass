@@ -95,7 +95,7 @@ fun LiquidButton(
                         drawRect(tint, blendMode = BlendMode.Hue)
                         drawRect(tint.copy(alpha = 0.75f))
                     }
-                    drawRect(glassSurfaceFill(surfaceColor, tint, isLightTheme, glass.opacity))
+                    drawGlassFill(surfaceColor, tint, isLightTheme, glass.opacity)
                 }
             )
             .clickable(

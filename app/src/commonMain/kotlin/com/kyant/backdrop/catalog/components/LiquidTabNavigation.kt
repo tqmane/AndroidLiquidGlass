@@ -169,7 +169,7 @@ fun LiquidTopTabBar(
                     scaleY = s
                 },
                 exportedBackdrop = barBackdrop,
-                onDrawSurface = { drawRect(containerColor.copy(alpha = containerColor.alpha * glass.opacity)) }
+                onDrawSurface = { if (dark) drawDarkGlass(glass.opacity) else drawRect(containerColor.copy(alpha = containerColor.alpha * glass.opacity)) }
             )
             .padding(4.dp),
         verticalAlignment = Alignment.CenterVertically
