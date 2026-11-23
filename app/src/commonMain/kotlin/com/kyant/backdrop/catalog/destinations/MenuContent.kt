@@ -1,5 +1,6 @@
 package com.kyant.backdrop.catalog.destinations
 
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -71,7 +72,7 @@ fun MenuContent() {
                 BasicText("Long-press for context menu", style = TextStyle(Color.Black.copy(0.6f), 13.sp))
             }
         }
-        Column(Modifier.align(Alignment.TopCenter).systemBarsPadding().padding(16.dp).fillMaxWidth()) {
+        Column(Modifier.align(Alignment.TopCenter).fillMaxSize().verticalScroll(rememberScrollState()).systemBarsPadding().padding(16.dp)) {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                 LiquidIconButton(GlassIcons.Star, "Popover", { popover = true }, backdrop)
                 LiquidIconButton(GlassIcons.Ellipsis, "More", { menu = true }, backdrop)
