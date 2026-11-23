@@ -68,7 +68,7 @@ fun LiquidGlassEffectContainer(
     val density = LocalDensity.current
     Box(modifier.onPlaced { group.coordinates = it }) {
         CompositionLocalProvider(LocalLiquidGlassGroup provides group) { content() }
-        // Drawn above the members: the neck plus a thin band over their facing rims, so the joined glass
+        // Drawn above the members: the neck plus a 1.5 dp band over their facing rims, so the joined glass
         // reads as one blob (as on iOS) instead of two outlined shapes with a strip between them.
         Box(
             Modifier
@@ -83,7 +83,7 @@ fun LiquidGlassEffectContainer(
                 }
                 .drawBackdrop(
                     backdrop = backdrop,
-                    shape = { group.bridgeShape(density, with(density) { spacing.toPx() }, with(density) { 3.dp.toPx() }) },
+                    shape = { group.bridgeShape(density, with(density) { spacing.toPx() }, with(density) { 1.5.dp.toPx() }) },
                     effects = {
                         vibrancy()
                         blur(2.dp.toPx() * glass.blur)
@@ -94,7 +94,7 @@ fun LiquidGlassEffectContainer(
                         drawGlassFill(Color.Unspecified, Color.Unspecified, isLight, glass.opacity)
                         // Same lift a held member gets from its press highlight, so the neck has no colour step.
                         val glow = group.members.values.maxOfOrNull { it.glow() } ?: 0f
-                        if (glow > 0f) drawRect(Color.White.copy(alpha = 0.2f * glow))
+                        if (glow > 0f) drawRect(Color.White.copy(alpha = 0.1f * glow))
                     }
                 )
         )
