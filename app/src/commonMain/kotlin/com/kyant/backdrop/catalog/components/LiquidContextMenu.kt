@@ -94,16 +94,17 @@ fun Modifier.liquidContextMenuSource(
                     delay(timeout / 5)
                     state.scale.animateTo(ContextMenuPressedScale, tween((timeout * 4 / 5).toInt(), easing = LinearOutSlowInEasing))
                 }
-                val up = withTimeoutOrNull(timeout) { waitForUpOrCancellation() }
+                var ended = false
+                val up = withTimeoutOrNull(timeout) { waitForUpOrCancellation().also { ended = true } }
                 swell.cancel()
-                if (up == null) {
+                if (!ended) {
                     onLongPress()
                     // The source is covered by the lifted preview; restore it underneath.
                     launch { state.scale.snapTo(ContextMenuPressedScale); delay(120); state.scale.snapTo(1f) }
                     waitForUpOrCancellation()
                 } else {
                     launch { state.scale.animateTo(1f, spring(0.5f, 500f)) }
-                    if (abs(up.position.x - down.position.x) < viewConfiguration.touchSlop) onClick?.invoke()
+                    if (up != null && abs(up.position.x - down.position.x) < viewConfiguration.touchSlop) onClick?.invoke()
                 }
             }
         }
