@@ -67,7 +67,7 @@ fun LiquidBottomTabs(
     backdrop: Backdrop,
     tabsCount: Int,
     modifier: Modifier = Modifier,
-    accentColor: Color = if (isGlassDark()) Color(0xFF0091FF) else Color(0xFF0088FF),
+    accentColor: Color = GlassColors.accent(),
     height: Dp = 64f.dp,
     pillHeight: Dp = 56f.dp,
     leadingWidth: Dp = 0f.dp,

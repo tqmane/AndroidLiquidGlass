@@ -125,6 +125,7 @@ fun LiquidTopTabBar(
     modifier: Modifier = Modifier,
     onToggleSidebar: (() -> Unit)? = null,
     selectedColor: Color = GlassColors.accent(),
+    sidebarIcon: ImageVector = GlassIcons.SidebarLeft,
     tabWidth: Dp = 92.dp,
 ) {
     // LiquidBottomTabs keys its state on the lambda's identity, so the lambda must be stable and read a State.
@@ -155,7 +156,7 @@ fun LiquidTopTabBar(
                         .clickable(role = Role.Button, onClick = onToggleSidebar)
                         .semantics { contentDescription = "Show sidebar" },
                     contentAlignment = Alignment.Center
-                ) { GlassIcon(GlassIcons.SidebarLeft, GlassColors.label(), Modifier.size(22.dp)) }
+                ) { GlassIcon(sidebarIcon, GlassColors.label(), Modifier.size(22.dp)) }
             }
         }
     ) {
