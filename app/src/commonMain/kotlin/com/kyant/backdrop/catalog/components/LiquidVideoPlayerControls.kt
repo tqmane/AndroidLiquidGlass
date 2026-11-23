@@ -4,7 +4,9 @@ import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.foundation.layout.safeDrawingPadding
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
@@ -170,7 +172,7 @@ fun BoxScope.LiquidVideoPlayerControls(
             captionText(captionLanguage),
             Modifier
                 .align(Alignment.BottomCenter)
-                .then(if (full) Modifier.safeDrawingPadding() else Modifier)
+                .then(if (full) Modifier.symmetricSafeDrawingPadding() else Modifier)
                 .padding(bottom = if (full) 76.dp else 56.dp)
                 .background(Color.Black.copy(alpha = if (state.captionStyle == "Default") 0.8f else 0.45f), RoundedRectangle(6.dp))
                 .padding(horizontal = 8.dp, vertical = 2.dp),
@@ -183,7 +185,7 @@ fun BoxScope.LiquidVideoPlayerControls(
     Box(
         modifier
             .matchParentSize()
-            .then(if (full) Modifier.safeDrawingPadding() else Modifier)
+            .then(if (full) Modifier.symmetricSafeDrawingPadding() else Modifier)
             .graphicsLayer { this.alpha = alpha }
             .onSizeChanged { chromeHeight = with(density) { it.height.toDp() } }
     ) {
@@ -435,4 +437,19 @@ private fun speedLabel(speed: Float): String =
 private fun formatTime(seconds: Float): String {
     val s = seconds.coerceAtLeast(0f).toInt()
     return "${s / 60}:${(s % 60).toString().padStart(2, '0')}"
+}
+
+/**
+ * Safe-drawing padding with equal left and right insets. A landscape camera cutout only insets one
+ * side; AVKit keeps its chrome centered, so both sides take the larger inset.
+ */
+@Composable
+private fun Modifier.symmetricSafeDrawingPadding(): Modifier {
+    val insets = WindowInsets.safeDrawing
+    val density = LocalDensity.current
+    val direction = LocalLayoutDirection.current
+    return with(density) {
+        val side = maxOf(insets.getLeft(this, direction), insets.getRight(this, direction)).toDp()
+        padding(start = side, end = side, top = insets.getTop(this).toDp(), bottom = insets.getBottom(this).toDp())
+    }
 }
