@@ -35,6 +35,16 @@ import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.TextUnit
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.spring
+import androidx.compose.foundation.layout.offset
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.zIndex
+import com.kyant.backdrop.drawBackdrop
+import com.kyant.backdrop.effects.blur
+import com.kyant.shapes.RoundedRectangle
+import kotlin.math.roundToInt
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.layout.boundsInRoot
 import androidx.compose.ui.layout.onGloballyPositioned
@@ -173,9 +183,14 @@ fun Modifier.topEdgeFade(height: Dp): Modifier =
         }
 
 /**
- * [LiquidMenu] that opens from an [anchor] (e.g. a [GroupedPickerCell] value) instead of a fixed alignment, right-aligned to it:
- * downward from the anchor's top edge, covering it like an iOS 26 menu picker, or upward from its bottom edge when the
- * anchor sits in the lower half of this box.
+ * [LiquidMenu] that opens from an [anchor] (e.g. a [GroupedPickerCell] value) instead of a fixed alignment.
+ *
+ * Without a [preview] it is right-aligned to the anchor and covers it from its top edge, like an iOS 26 menu picker
+ * (upward from its bottom edge when the anchor sits in the lower half of this box). With a [preview] it behaves like a
+ * long-press context menu: the background blurs and dims, [preview] is redrawn lifted at the anchor bounds, and the menu
+ * opens below the preview (above it near the bottom), aligned to its leading edge. Pass the [state] of a
+ * [liquidContextMenuSource] so the preview takes over from the swollen source. [dimBackground] dims and blurs the
+ * background without a preview; it is always on with one.
  */
 @Composable
 fun BoxScope.LiquidAnchoredMenu(
@@ -187,25 +202,87 @@ fun BoxScope.LiquidAnchoredMenu(
     modifier: Modifier = Modifier,
     width: Dp = 250.dp,
     icons: LiquidMenuIcons = LiquidMenuIcons(),
+    dimBackground: Boolean = false,
+    state: LiquidContextMenuState? = null,
+    preview: (@Composable () -> Unit)? = null,
 ) {
     var hostOrigin by remember { mutableStateOf(Offset.Zero) }
     var hostSize by remember { mutableStateOf(IntSize.Zero) }
     Box(Modifier.matchParentSize().onGloballyPositioned { hostOrigin = it.positionInRoot(); hostSize = it.size })
     val density = LocalDensity.current
     val b = anchor.bounds.translate(-hostOrigin)
-    val gap = with(density) { 8.dp.toPx() }
+    if (preview != null || dimBackground) {
+        AnchoredMenuBackdrop(expanded, backdrop, b, state, preview)
+    }
+    val gap = with(density) { (if (preview != null) 12.dp else 8.dp).toPx() }
+    val margin = with(density) { (if (preview != null) 16.dp else 8.dp).toPx() }
     val menuWidth = with(density) { width.toPx() }
-    val below = b.center.y < hostSize.height / 2f
-    val x = (b.right - menuWidth).coerceIn(gap, (hostSize.width - menuWidth - gap).coerceAtLeast(gap))
-    val overlap = with(density) { 4.dp.toPx() }
-    val y = if (below) b.top - overlap else -(hostSize.height - b.bottom - overlap)
+    val below = if (preview != null) b.bottom < hostSize.height * 0.6f else b.center.y < hostSize.height / 2f
+    val maxX = (hostSize.width - menuWidth - margin).coerceAtLeast(margin)
+    val x = (if (preview != null) b.left else b.right - menuWidth).coerceIn(margin, maxX)
+    val y = when {
+        preview != null && below -> b.bottom + gap
+        preview != null -> -(hostSize.height - b.top + gap)
+        below -> b.top - with(density) { 4.dp.toPx() }
+        else -> -(hostSize.height - b.bottom - with(density) { 4.dp.toPx() })
+    }
+    val pivotX = if (preview != null) ((b.left - x) / menuWidth + 0.1f) else (b.right - x) / menuWidth
     LiquidMenu(
         expanded, onDismissRequest, backdrop, entries,
         alignment = if (below) Alignment.TopStart else Alignment.BottomStart,
         modifier = modifier,
         offset = with(density) { DpOffset(x.toDp(), y.toDp()) },
-        transformOrigin = TransformOrigin(((b.right - x) / menuWidth).coerceIn(0f, 1f), if (below) 0f else 1f),
+        transformOrigin = TransformOrigin(pivotX.coerceIn(0f, 1f), if (below) 0f else 1f),
         width = width,
         icons = icons
     )
+}
+
+/** Blurred, dimmed background and the lifted [preview] at [bounds] (host coordinates) behind an anchored menu. */
+@Composable
+private fun BoxScope.AnchoredMenuBackdrop(
+    expanded: Boolean,
+    backdrop: Backdrop,
+    bounds: Rect,
+    state: LiquidContextMenuState?,
+    preview: (@Composable () -> Unit)?,
+) {
+    val glass = LocalLiquidGlassStyle.current
+    Box(Modifier.matchParentSize().zIndex(1f)) {
+        val progress = rememberPresentation(expanded) ?: return
+        val p = progress.value.coerceIn(0f, 1f)
+        val lift = remember(expanded) { Animatable(if (expanded && state != null) ContextMenuPressedScale else 1f) }
+        LaunchedEffect(expanded) { lift.animateTo(1f, spring(1f, 600f)) }
+        Box(
+            Modifier
+                .matchParentSize()
+                .drawBackdrop(
+                    backdrop = backdrop,
+                    shape = { RoundedRectangle(0.dp) },
+                    effects = { blur(18f.dp.toPx() * p * glass.blur) },
+                    highlight = null,
+                    shadow = null,
+                    onDrawSurface = { drawRect(Color.Black.copy(alpha = 0.12f * p)) }
+                )
+        )
+        if (preview != null) {
+            val density = LocalDensity.current
+            Box(
+                Modifier
+                    .offset { IntOffset(bounds.left.roundToInt(), bounds.top.roundToInt()) }
+                    .size(with(density) { bounds.width.toDp() }, with(density) { bounds.height.toDp() })
+                    .drawWithContent {
+                        drawContent()
+                        if (expanded && state != null && !state.previewDrawn) state.previewDrawn = true
+                    }
+                    .graphicsLayer {
+                        scaleX = lift.value
+                        scaleY = lift.value
+                        shadowElevation = 24.dp.toPx() * p
+                        shape = RoundedRectangle(24.dp)
+                        clip = true
+                    }
+            ) { preview() }
+        }
+    }
 }
