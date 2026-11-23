@@ -33,6 +33,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -82,6 +83,14 @@ sealed interface MenuEntry {
 
     data object Divider : MenuEntry
 }
+
+/** Icons for checked rows, submenu links, and the submenu's return row. */
+@Immutable
+data class LiquidMenuIcons(
+    val check: ImageVector = GlassIcons.Check,
+    val submenu: ImageVector = GlassIcons.ChevronRight,
+    val back: ImageVector = GlassIcons.ChevronDown,
+)
 
 /**
  * Animated Liquid Glass panel shared by menus and popovers: it grows out of [transformOrigin]
@@ -159,6 +168,7 @@ fun BoxScope.LiquidMenu(
     transformOrigin: TransformOrigin = TransformOrigin(1f, 0f),
     width: Dp = 250.dp,
     header: String? = null,
+    icons: LiquidMenuIcons = LiquidMenuIcons(),
 ) {
     var submenu by remember(expanded) { mutableStateOf<MenuEntry.Submenu?>(null) }
     LiquidGlassPopup(
@@ -186,17 +196,17 @@ fun BoxScope.LiquidMenu(
                     BasicText(header, Modifier.padding(horizontal = 20.dp, vertical = 6.dp), style = TextStyle(GlassColors.secondaryLabel(), 13.sp))
                 }
                 if (open == null) {
-                    MenuEntries(entries, onDismissRequest) { submenu = it }
+                    MenuEntries(entries, onDismissRequest, icons) { submenu = it }
                 } else {
                     MenuRow(
                         title = open.title,
-                        icon = GlassIcons.ChevronDown,
+                        icon = icons.back,
                         color = GlassColors.label(),
                         bold = true,
                         onClick = { submenu = null }
                     )
                     MenuDivider()
-                    MenuEntries(open.entries, onDismissRequest) { submenu = it }
+                    MenuEntries(open.entries, onDismissRequest, icons) { submenu = it }
                 }
             }
         }
@@ -207,6 +217,7 @@ fun BoxScope.LiquidMenu(
 internal fun MenuEntries(
     entries: List<MenuEntry>,
     onDismissRequest: () -> Unit,
+    icons: LiquidMenuIcons,
     onOpenSubmenu: (MenuEntry.Submenu) -> Unit,
 ) {
     entries.forEach { entry ->
@@ -214,7 +225,7 @@ internal fun MenuEntries(
             is MenuEntry.Action -> MenuRow(
                 title = entry.title,
                 subtitle = entry.subtitle,
-                icon = if (entry.checked) GlassIcons.Check else entry.icon,
+                icon = if (entry.checked) icons.check else entry.icon,
                 color = when {
                     entry.destructive -> GlassColors.destructive()
                     else -> GlassColors.label()
@@ -230,7 +241,7 @@ internal fun MenuEntries(
                 title = entry.title,
                 icon = entry.icon,
                 subtitle = entry.subtitle,
-                trailing = GlassIcons.ChevronRight,
+                trailing = icons.submenu,
                 color = GlassColors.label(),
                 onClick = { onOpenSubmenu(entry) }
             )

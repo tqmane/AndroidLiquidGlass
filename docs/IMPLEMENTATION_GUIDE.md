@@ -45,10 +45,19 @@ Rules:
 | --- | --- | --- |
 | `Modifier.liquidGlass(backdrop, shape, tint, surfaceColor, blurRadius = 2.dp, refractionHeight = 12.dp, refractionAmount = 24.dp, shadow = true)` | Controls: buttons, capsules, thumbs | Light blur and strong lens. `tint` colors the glass (prominent buttons). |
 | `Modifier.liquidGlassPanel(backdrop, shape, containerColor, blurRadius = 12.dp, refractionHeight = 16.dp, refractionAmount = 32.dp, exportedBackdrop = null)` | Panels: sheets, alerts, menus, popovers, scrubber bars | Heavy blur keeps text readable. Pass `exportedBackdrop` when controls sit on the panel. |
-| `GlassColors.label() / secondaryLabel() / accent() / destructive() / separator() / fill()` | iOS semantic colors | `@Composable`, they follow `isSystemInDarkTheme()`. Never hard-code black or white text on glass. |
+| `GlassColors.label() / secondaryLabel() / accent() / destructive() / separator() / fill()` | iOS semantic colors | `@Composable`, they follow the glass appearance. Provide `LocalGlassAccent` to override the accent within a subtree. |
 | `GlassIcons.*` | SF Symbols look-alikes as `ImageVector` | Add new icons here. Use `curveTo(...)`, because `cubicTo` does not exist in the path builder. |
 
 Write new modifiers by calling `drawBackdrop(...)` from `:backdrop` directly, following `liquidGlass`. Read global settings (section 4) **inside** the `effects` / `onDrawSurface` lambdas so changes apply live without recomposition.
+
+```kotlin
+val teal = if (isGlassDark()) Color(0xFF40C8E0) else Color(0xFF30B0C7)
+CompositionLocalProvider(LocalGlassAccent provides teal) {
+    LiquidStepper(value, onValueChange, backdrop, decrementIcon = myDownIcon, incrementIcon = myUpIcon)
+}
+```
+
+Without a provider, the accent is system blue and toggles use system green. Explicit component colors such as a tab bar's `selectedColor` still take precedence. Pass an `ImageVector` to the navigation and stepper icon parameters, or supply a `LiquidMenuIcons`, `LiquidSearchBarIcons`, `LiquidVideoPlayerIcons`, or `LiquidVolumeIcons` bundle and override only the icons you need. The catalog's **Custom accent & icons** screen shows these overrides.
 
 ## 3. Component catalog and how to use each one
 

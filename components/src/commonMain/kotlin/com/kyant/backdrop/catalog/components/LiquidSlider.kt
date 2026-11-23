@@ -56,9 +56,7 @@ fun LiquidSlider(
 ) {
     val glass = LocalLiquidGlassStyle.current
     val isLightTheme = !isGlassDark()
-    val accentColor =
-        if (isLightTheme) Color(0xFF0088FF)
-        else Color(0xFF0091FF)
+    val accentColor = GlassColors.accent()
     val trackColor =
         if (isLightTheme) Color(0xFF787878).copy(0.2f)
         else Color(0xFF787880).copy(0.36f)

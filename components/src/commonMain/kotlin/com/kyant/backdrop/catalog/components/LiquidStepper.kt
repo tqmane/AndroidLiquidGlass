@@ -31,6 +31,7 @@ import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.lerp
 import com.kyant.backdrop.Backdrop
@@ -57,6 +58,8 @@ fun LiquidStepper(
     range: IntRange = 0..10,
     step: Int = 1,
     wraps: Boolean = false,
+    decrementIcon: ImageVector = GlassIcons.Minus,
+    incrementIcon: ImageVector = GlassIcons.Plus,
 ) {
     val isLightTheme = !isGlassDark()
     val wellColor = if (isLightTheme) Color(0xFF767680).copy(alpha = 0.12f) else Color(0xFF767680).copy(alpha = 0.24f)
@@ -83,7 +86,7 @@ fun LiquidStepper(
         verticalAlignment = Alignment.CenterVertically
     ) {
         StepperHalf(
-            icon = GlassIcons.Minus,
+            icon = decrementIcon,
             label = "Decrement",
             enabled = wraps || value - step >= range.first,
             labelColor = labelColor,
@@ -92,7 +95,7 @@ fun LiquidStepper(
         )
         Box(Modifier.width(1.dp).height(18.dp).background(dividerColor))
         StepperHalf(
-            icon = GlassIcons.Plus,
+            icon = incrementIcon,
             label = "Increment",
             enabled = wraps || value + step <= range.last,
             labelColor = labelColor,

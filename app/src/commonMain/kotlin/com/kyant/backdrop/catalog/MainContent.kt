@@ -19,6 +19,7 @@ import com.kyant.backdrop.catalog.destinations.AdaptiveLuminanceGlassContent
 import com.kyant.backdrop.catalog.destinations.BottomTabsContent
 import com.kyant.backdrop.catalog.destinations.ButtonsContent
 import com.kyant.backdrop.catalog.destinations.ControlCenterContent
+import com.kyant.backdrop.catalog.destinations.CustomGlassContent
 import com.kyant.backdrop.catalog.destinations.DialogContent
 import com.kyant.backdrop.catalog.destinations.SegmentedControlContent
 import com.kyant.backdrop.catalog.destinations.StepperContent
@@ -73,6 +74,7 @@ fun MainContent() {
             CatalogDestination.GlassSettings -> GlassSettingsContent()
             CatalogDestination.VideoPlayer -> VideoPlayerContent()
             CatalogDestination.TabsSidebar -> TabsSidebarContent()
+            CatalogDestination.CustomGlass -> CustomGlassContent()
 
             CatalogDestination.LockScreen -> LockScreenContent()
             CatalogDestination.ControlCenter -> ControlCenterContent()

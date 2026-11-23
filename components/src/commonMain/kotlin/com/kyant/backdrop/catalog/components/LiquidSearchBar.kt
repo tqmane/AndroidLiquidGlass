@@ -31,6 +31,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.TextStyle
@@ -40,6 +41,24 @@ import androidx.compose.ui.unit.sp
 import com.kyant.backdrop.Backdrop
 import com.kyant.shapes.Capsule
 import androidx.compose.foundation.text.BasicText
+
+/** Icons for the search field and its focused close button. */
+data class LiquidSearchBarIcons(
+    val search: ImageVector = GlassIcons.Search,
+    val clear: ImageVector = GlassIcons.Close,
+    val microphone: ImageVector = GlassIcons.Mic,
+    val close: ImageVector = GlassIcons.Close,
+)
+
+@Composable
+fun LiquidSearchBar(
+    query: String,
+    onQueryChange: (String) -> Unit,
+    backdrop: Backdrop,
+    modifier: Modifier = Modifier,
+    placeholder: String = "Search",
+    onSearch: (String) -> Unit = {},
+) = LiquidSearchBar(query, onQueryChange, backdrop, modifier, placeholder, LiquidSearchBarIcons(), onSearch)
 
 /**
  * iOS 26 search field: the bottom-placed Liquid Glass capsule used by `.searchable` and the
@@ -52,6 +71,7 @@ fun LiquidSearchBar(
     backdrop: Backdrop,
     modifier: Modifier = Modifier,
     placeholder: String = "Search",
+    icons: LiquidSearchBarIcons,
     onSearch: (String) -> Unit = {},
 ) {
     var focused by remember { mutableStateOf(false) }
@@ -72,7 +92,7 @@ fun LiquidSearchBar(
                 .padding(horizontal = 14.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            GlassIcon(GlassIcons.Search, if (focused) GlassColors.label() else secondary, Modifier.size(19.dp))
+            GlassIcon(icons.search, if (focused) GlassColors.label() else secondary, Modifier.size(19.dp))
             Spacer(Modifier.width(8.dp))
             Box(Modifier.weight(1f), contentAlignment = Alignment.CenterStart) {
                 if (query.isEmpty()) {
@@ -96,10 +116,10 @@ fun LiquidSearchBar(
                         .clickable(interactionSource = null, indication = null, role = Role.Button) { onQueryChange("") },
                     contentAlignment = Alignment.Center
                 ) {
-                    GlassIcon(GlassIcons.Close, secondary, Modifier.size(15.dp))
+                    GlassIcon(icons.clear, secondary, Modifier.size(15.dp))
                 }
             } else {
-                GlassIcon(GlassIcons.Mic, secondary, Modifier.size(19.dp))
+                GlassIcon(icons.microphone, secondary, Modifier.size(19.dp))
             }
         }
         AnimatedVisibility(
@@ -108,7 +128,7 @@ fun LiquidSearchBar(
             exit = fadeOut() + scaleOut(targetScale = 0.5f) + shrinkHorizontally()
         ) {
             LiquidIconButton(
-                icon = GlassIcons.Close,
+                icon = icons.close,
                 contentDescription = "Close search",
                 onClick = {
                     onQueryChange("")
@@ -129,6 +149,7 @@ fun SearchFieldInline(
     onQueryChange: (String) -> Unit,
     modifier: Modifier = Modifier,
     placeholder: String = "Search",
+    searchIcon: ImageVector = GlassIcons.Search,
 ) {
     val secondary = GlassColors.secondaryLabel()
     Row(
@@ -139,7 +160,7 @@ fun SearchFieldInline(
             .padding(horizontal = 12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        GlassIcon(GlassIcons.Search, secondary, Modifier.size(17.dp))
+        GlassIcon(searchIcon, secondary, Modifier.size(17.dp))
         Spacer(Modifier.width(6.dp))
         Box(Modifier.weight(1f), contentAlignment = Alignment.CenterStart) {
             if (query.isEmpty()) BasicText(placeholder, style = TextStyle(secondary, 17.sp))
@@ -147,4 +168,3 @@ fun SearchFieldInline(
         }
     }
 }
-
