@@ -164,6 +164,8 @@ fun BoxScope.LiquidContextMenu(
             Modifier
                 .matchParentSize()
                 .onGloballyPositioned { origin = it.positionInRoot(); container = it.size }
+                // Nothing is drawn until the preview can be placed, so no frame shows the blur without the card.
+                .drawWithContent { if (placed) drawContent() }
                 .drawBackdrop(
                     backdrop = backdrop,
                     shape = { RoundedRectangle(0.dp) },
