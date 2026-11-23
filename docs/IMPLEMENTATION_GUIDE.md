@@ -137,9 +137,9 @@ iPadOS 26 presents several components differently from iPhone. The catalog switc
 
 | Component | Phone (compact) | Tablet (regular, >= 600 dp) |
 |---|---|---|
-| `LiquidSheet` | Bottom sheet, full width, medium/large detents | Centered form sheet, 580 dp wide; medium is 366 dp tall, large reaches 24 dp below the top inset; all four corners rounded |
-| Toolbar sheet header | X (left) and check (right) glass icon buttons | Grey `Cancel` capsule and prominent blue `Done` capsule (`LiquidBorderedButton`) |
-| `LiquidActionSheet` | Bottom panel, includes the Cancel action | Centered 320 dp card, Cancel action hidden (tap outside or Back dismisses) |
+| `LiquidSheet` | Bottom sheet, full width, medium/large detents | Centered form sheet, 580 dp wide, all four corners rounded; large is 635 dp tall and vertically centered, medium is 366 dp tall and keeps the same bottom edge (it sits below the center, like iPadOS) |
+| Toolbar sheet header | X (left) and check (right) glass icon buttons | Grey `Cancel` capsule (`LiquidBorderedButton(neutral = true)`) and prominent blue `Done` capsule |
+| `LiquidActionSheet` | Bottom panel, includes the Cancel action | 280 dp popover anchored to its source with an arrow (pass `anchorBounds` from `Modifier.contextMenuAnchor`), above the source when it fits, otherwise below; centered when no source is given; Cancel action hidden (tap outside or Back dismisses) |
 | Toolbar / tab bar demo | Full-width bottom bar | Bottom bar capped at 560 dp wide |
 
 Rules:

@@ -92,7 +92,7 @@ private fun LiquidSheetScope.EditCollectionBody(onClose: () -> Unit) {
     LiquidSheetHeader(
         "Edit collection",
         leading = {
-            if (isFormSheet) LiquidBorderedButton("Cancel", onClose)
+            if (isFormSheet) LiquidBorderedButton("Cancel", onClose, neutral = true)
             else LiquidIconButton(GlassIcons.Close, "Cancel", onClose, backdrop)
         },
         trailing = {

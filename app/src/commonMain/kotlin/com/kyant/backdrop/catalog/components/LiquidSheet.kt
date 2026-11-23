@@ -111,14 +111,16 @@ fun BoxScope.LiquidSheet(
             val formSheet = maxWidth >= 600.dp
             val formHeight = with(density) { 366.dp.toPx() }
             val formMargin = with(density) { 24.dp.toPx() }
-            val formGap = if (formSheet) ((maxH - formHeight) / 2f).coerceAtLeast(formMargin) else 0f
+            // iPadOS form sheet: large is ~635 pt tall and centered; medium keeps the same bottom edge.
+            val formLargeHeight = minOf(with(density) { 635.dp.toPx() }, maxH - topInset - 2 * formMargin)
+            val formGap = if (formSheet) ((maxH - formLargeHeight) / 2f).coerceAtLeast(formMargin) else 0f
             val stops = remember(detents, maxH, topInset, formSheet) {
                 detents.map { d ->
                     when (d) {
                         is SheetDetent.Fraction -> {
                             val f = d.fraction.coerceIn(0.1f, 1f)
                             if (!formSheet) maxH - usable * f
-                            else if (f >= 1f) topInset + formMargin
+                            else if (f >= 1f) maxH - formGap - formLargeHeight
                             else maxOf(topInset + formMargin, maxH - formGap - formHeight * f / 0.5f)
                         }
                     }

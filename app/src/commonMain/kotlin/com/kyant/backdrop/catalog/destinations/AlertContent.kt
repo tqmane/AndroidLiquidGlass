@@ -19,6 +19,8 @@ import androidx.compose.ui.unit.sp
 import com.kyant.backdrop.backdrops.LayerBackdrop
 import com.kyant.backdrop.backdrops.layerBackdrop
 import com.kyant.backdrop.backdrops.rememberLayerBackdrop
+import androidx.compose.foundation.layout.Box
+import androidx.compose.ui.geometry.Rect
 import com.kyant.backdrop.catalog.BackdropDemoScaffold
 import com.kyant.backdrop.catalog.components.*
 import com.kyant.shapes.Capsule
@@ -30,11 +32,12 @@ fun AlertContent() {
         var three by remember { mutableStateOf(false) }
         var one by remember { mutableStateOf(false) }
         var sheet by remember { mutableStateOf(false) }
+        var sheetAnchor by remember { mutableStateOf<Rect?>(null) }
         Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(16.dp)) {
             DemoButton("Alert, one action", backdrop) { one = true }
             DemoButton("Alert, two actions", backdrop) { two = true }
             DemoButton("Alert, three actions", backdrop) { three = true }
-            DemoButton("Action sheet", backdrop) { sheet = true }
+            Box(Modifier.contextMenuAnchor { sheetAnchor = it }) { DemoButton("Action sheet", backdrop) { sheet = true } }
         }
         LiquidAlert(one, { one = false }, backdrop, "Saved", "Your changes were saved.", listOf(AlertAction("OK", AlertActionStyle.Preferred)))
         LiquidAlert(
@@ -47,7 +50,8 @@ fun AlertContent() {
         )
         LiquidActionSheet(
             sheet, { sheet = false }, backdrop, "Photo", "Choose what to do with this photo.",
-            listOf(AlertAction("Share"), AlertAction("Duplicate"), AlertAction("Delete", AlertActionStyle.Destructive), AlertAction("Cancel", AlertActionStyle.Cancel))
+            listOf(AlertAction("Share"), AlertAction("Duplicate"), AlertAction("Delete", AlertActionStyle.Destructive), AlertAction("Cancel", AlertActionStyle.Cancel)),
+            anchorBounds = sheetAnchor
         )
     }
 }

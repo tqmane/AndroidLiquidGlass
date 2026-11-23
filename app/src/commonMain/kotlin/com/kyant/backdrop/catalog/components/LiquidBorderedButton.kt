@@ -30,7 +30,7 @@ enum class BorderedButtonSize(val height: Int, val horizontalPadding: Int, val f
     Large(50, 20, 17),
 }
 
-/** iOS 26 `.bordered` / `.borderedProminent` capsule button (tinted fill, no glass). */
+/** iOS 26 `.bordered` / `.borderedProminent` capsule button (tinted fill, no glass). [neutral] gives the grey fill and label-colored text of an untinted `.bordered` button (iPad form-sheet Cancel). */
 @Composable
 fun LiquidBorderedButton(
     label: String,
@@ -38,10 +38,11 @@ fun LiquidBorderedButton(
     modifier: Modifier = Modifier,
     prominent: Boolean = false,
     destructive: Boolean = false,
+    neutral: Boolean = false,
     size: BorderedButtonSize = BorderedButtonSize.Medium,
     enabled: Boolean = true,
 ) {
-    val tint = if (destructive) GlassColors.red() else GlassColors.accent()
+    val tint = if (destructive) GlassColors.red() else if (neutral) GlassColors.label() else GlassColors.accent()
     val interaction = remember { MutableInteractionSource() }
     val pressed by interaction.collectIsPressedAsState()
     val press by animateFloatAsState(if (pressed) 1f else 0f, spring(0.7f, 600f))
@@ -55,7 +56,7 @@ fun LiquidBorderedButton(
             }
             .defaultMinSize(minHeight = size.height.dp)
             .clip(Capsule())
-            .background(if (prominent) tint else tint.copy(alpha = 0.15f))
+            .background(if (prominent) tint else if (neutral) GlassColors.fill() else tint.copy(alpha = 0.15f))
             .clickable(interaction, null, enabled = enabled, role = Role.Button, onClick = onClick)
             .padding(horizontal = size.horizontalPadding.dp),
         contentAlignment = Alignment.Center

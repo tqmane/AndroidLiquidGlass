@@ -1,6 +1,20 @@
 package com.kyant.backdrop.catalog.components
 
 import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.GenericShape
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.graphics.TransformOrigin
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.layout.positionInRoot
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.DpSize
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.IntSize
+import kotlin.math.roundToInt
 import com.kyant.backdrop.catalog.utils.BackHandler
 import androidx.compose.ui.zIndex
 import androidx.compose.animation.core.Animatable
@@ -140,30 +154,69 @@ fun BoxScope.LiquidActionSheet(
     message: String?,
     actions: List<AlertAction>,
     modifier: Modifier = Modifier,
+    anchorBounds: Rect? = null,
 ) {
     BackHandler(visible) { onDismissRequest() }
-    BoxWithConstraints(Modifier.matchParentSize().zIndex(1f)) {
+    var origin by remember { mutableStateOf(Offset.Zero) }
+    var cardSize by remember { mutableStateOf(IntSize.Zero) }
+    BoxWithConstraints(
+        Modifier.matchParentSize().zIndex(1f).onGloballyPositioned { origin = it.positionInRoot() }
+    ) {
         val regular = maxWidth >= 600.dp
         val progress = rememberPresentation(visible) ?: return@BoxWithConstraints
         val p = progress.value
+        val density = LocalDensity.current
+        // iPad: a popover above (or below) its source with an arrow pointing at it; centered when there is no source.
+        val anchored = regular && anchorBounds != null && cardSize != IntSize.Zero
+        val gap = with(density) { ActionSheetArrow.height.toPx() + 4.dp.toPx() }
+        val margin = with(density) { 16.dp.toPx() }
+        val anchor = anchorBounds?.translate(-origin.x, -origin.y)
+        val above = anchor != null && anchor.top - gap - cardSize.height >= margin
+        val cardX = if (anchor == null) 0f else
+            (anchor.center.x - cardSize.width / 2f).coerceIn(margin, maxOf(margin, constraints.maxWidth - cardSize.width - margin))
+        val cardY = if (anchor == null) 0f else if (above) anchor.top - gap - cardSize.height else anchor.bottom + gap
         Box(
             Modifier
                 .matchParentSize()
                 .background(Color.Black.copy(alpha = 0.2f * p.coerceIn(0f, 1f)))
                 .clickable(interactionSource = null, indication = null, onClick = onDismissRequest)
         )
+        if (anchored && anchor != null) {
+            Box(
+                Modifier
+                    .offset {
+                        val w = ActionSheetArrow.width.roundToPx()
+                        val h = ActionSheetArrow.height.roundToPx()
+                        IntOffset(
+                            (anchor.center.x - w / 2f).roundToInt(),
+                            (if (above) anchor.top - gap else anchor.bottom + gap - h).roundToInt()
+                        )
+                    }
+                    .size(ActionSheetArrow)
+                    .graphicsLayer { alpha = p.coerceIn(0f, 1f); rotationZ = if (above) 0f else 180f }
+                    .liquidGlassPanel(backdrop, { ArrowShape })
+            )
+        }
         Column(
             modifier
-                .align(if (regular) Alignment.Center else Alignment.BottomCenter)
-                .navigationBarsPadding()
-                .padding(10.dp)
-                .then(if (regular) Modifier.width(320.dp) else Modifier.fillMaxWidth())
+                .then(
+                    when {
+                        anchored -> Modifier.align(Alignment.TopStart).offset { IntOffset(cardX.roundToInt(), cardY.roundToInt()) }
+                        regular -> Modifier.align(Alignment.Center)
+                        else -> Modifier.align(Alignment.BottomCenter).navigationBarsPadding().padding(10.dp)
+                    }
+                )
+                .then(if (regular) Modifier.width(280.dp) else Modifier.fillMaxWidth())
+                .onSizeChanged { cardSize = it }
                 .semantics {
                     paneTitle = title ?: "Actions"
                     dismiss { onDismissRequest(); true }
                 }
                 .graphicsLayer {
-                    if (regular) { scaleX = 0.9f + 0.1f * p; scaleY = scaleX } else translationY = (1f - p) * size.height
+                    if (regular) {
+                        scaleX = 0.9f + 0.1f * p; scaleY = scaleX
+                        if (anchored) transformOrigin = TransformOrigin(0.5f, if (above) 1f else 0f)
+                    } else translationY = (1f - p) * size.height
                     alpha = p.coerceIn(0f, 1f)
                 }
                 .liquidGlassPanel(backdrop, { RoundedRectangle(34.dp) })
@@ -186,6 +239,15 @@ fun BoxScope.LiquidActionSheet(
             }
         }
     }
+}
+
+private val ActionSheetArrow = DpSize(26.dp, 12.dp)
+
+private val ArrowShape = GenericShape { size, _ ->
+    moveTo(0f, 0f)
+    lineTo(size.width, 0f)
+    lineTo(size.width / 2f, size.height)
+    close()
 }
 
 @Composable
