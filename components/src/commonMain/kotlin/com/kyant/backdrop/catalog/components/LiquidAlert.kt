@@ -18,6 +18,7 @@ import kotlin.math.roundToInt
 import com.kyant.backdrop.catalog.utils.BackHandler
 import androidx.compose.ui.zIndex
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.AnimationSpec
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -167,7 +168,11 @@ fun BoxScope.LiquidActionSheet(
         Modifier.matchParentSize().zIndex(1f).onGloballyPositioned { origin = it.positionInRoot() }
     ) {
         val regular = maxWidth >= 600.dp
-        val progress = rememberPresentation(visible) ?: return@BoxWithConstraints
+        // iOS 26 grows an iPad popover dialog out of its source evenly over ~0.25 s, without overshoot.
+        val progress = rememberPresentation(
+            visible,
+            if (regular && anchorBounds != null) spring(1f, 220f) else spring(0.78f, 380f)
+        ) ?: return@BoxWithConstraints
         val p = progress.value
         val density = LocalDensity.current
         // iPad: a popover above (or below) its source with an arrow pointing at it; centered when there is no source.
@@ -308,13 +313,16 @@ private fun AlertButton(action: AlertAction, modifier: Modifier, onAction: (Aler
 }
 
 @Composable
-internal fun rememberPresentation(visible: Boolean): Animatable<Float, *>? {
+internal fun rememberPresentation(
+    visible: Boolean,
+    presentSpec: AnimationSpec<Float> = spring(0.78f, 380f)
+): Animatable<Float, *>? {
     val progress = remember { Animatable(0f) }
     var shown by remember { mutableStateOf(false) }
     LaunchedEffect(visible) {
         if (visible) {
             shown = true
-            progress.animateTo(1f, spring(0.78f, 380f))
+            progress.animateTo(1f, presentSpec)
         } else {
             // iOS 26 dismissals take ~0.12 s.
             progress.animateTo(0f, spring(1f, 900f))
