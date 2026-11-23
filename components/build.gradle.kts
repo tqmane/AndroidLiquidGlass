@@ -10,7 +10,7 @@ plugins {
 
 kotlin {
     android {
-        minSdk = 21
+        minSdk = 23 // androidx.activity:activity-compose (BackHandler) requires API 23
         compileSdk = 37
         buildToolsVersion = "37.0.0"
         namespace = "com.kyant.backdrop.components"
