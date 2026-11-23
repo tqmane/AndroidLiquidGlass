@@ -32,6 +32,11 @@ fun AlertContent() {
         var three by remember { mutableStateOf(false) }
         var one by remember { mutableStateOf(false) }
         var sheet by remember { mutableStateOf(false) }
+        var rename by remember { mutableStateOf(false) }
+        var login by remember { mutableStateOf(false) }
+        var name by remember { mutableStateOf("") }
+        var user by remember { mutableStateOf("") }
+        var password by remember { mutableStateOf("") }
         var sheetAnchor by remember { mutableStateOf<Rect?>(null) }
         // Scrolls and clears the scaffold's bottom "Pick an image" button on short (landscape) windows.
         Column(
@@ -42,6 +47,8 @@ fun AlertContent() {
             DemoButton("Alert, one action", backdrop) { one = true }
             DemoButton("Alert, two actions", backdrop) { two = true }
             DemoButton("Alert, three actions", backdrop) { three = true }
+            DemoButton("Alert, text field", backdrop) { rename = true }
+            DemoButton("Alert, login", backdrop) { login = true }
             Box(Modifier.contextMenuAnchor { sheetAnchor = it }) { DemoButton("Action sheet", backdrop) { sheet = true } }
         }
         LiquidAlert(one, { one = false }, backdrop, "Saved", "Your changes were saved.", listOf(AlertAction("OK", AlertActionStyle.Preferred)))
@@ -52,6 +59,16 @@ fun AlertContent() {
         LiquidAlert(
             three, { three = false }, backdrop, "Delete this item?", "This action cannot be undone.",
             listOf(AlertAction("Delete", AlertActionStyle.Destructive), AlertAction("Archive"), AlertAction("Cancel", AlertActionStyle.Cancel))
+        )
+        LiquidAlert(
+            rename, { rename = false }, backdrop, "Enter Name", "Enter a name to continue.",
+            listOf(AlertAction("Cancel", AlertActionStyle.Cancel), AlertAction("OK")),
+            textFields = listOf(AlertTextField(name, { name = it }, "Name"))
+        )
+        LiquidAlert(
+            login, { login = false }, backdrop, "Log In", "Enter your username and password.",
+            listOf(AlertAction("Cancel", AlertActionStyle.Cancel), AlertAction("OK")),
+            textFields = listOf(AlertTextField(user, { user = it }, "Username"), AlertTextField(password, { password = it }, "Password", secure = true))
         )
         LiquidActionSheet(
             sheet, { sheet = false }, backdrop, "Photo", "Choose what to do with this photo.",

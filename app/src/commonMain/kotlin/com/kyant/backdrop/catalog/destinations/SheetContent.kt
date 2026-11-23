@@ -83,8 +83,17 @@ private fun LiquidSheetScope.BrowseBody() {
             GroupedCell("Travel ideas", icon = GlassIcons.Airplane, showSeparator = true)
             GroupedCell("Recipes", icon = GlassIcons.Book, showSeparator = true)
         }
+        // Long enough to overflow the large detent, so the list scrolls there (at the medium detent a drag expands the sheet instead).
+        sheet.SheetSection("Albums") {
+            AlbumNames.forEachIndexed { i, name -> GroupedCell(name, icon = GlassIcons.Folder, showSeparator = i > 0) }
+        }
     }
 }
+
+private val AlbumNames = listOf(
+    "Beach day", "Birthday", "Camping", "City lights", "Coffee", "Concerts", "Family", "Food", "Garden",
+    "Hiking", "Holidays", "Museums", "Night sky", "Pets", "Road trip", "Snow", "Sunsets", "Weddings",
+)
 
 @Composable
 private fun LiquidSheetScope.EditCollectionBody(onClose: () -> Unit) {

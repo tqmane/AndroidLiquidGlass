@@ -57,6 +57,21 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.focus.FocusDirection
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.util.lerp
 import com.kyant.backdrop.Backdrop
@@ -71,9 +86,19 @@ data class AlertAction(
     val onClick: () -> Unit = {},
 )
 
+/** A text field in a [LiquidAlert] (`UIAlertController.addTextField`). [secure] hides the input like a password field. */
+data class AlertTextField(
+    val value: String,
+    val onValueChange: (String) -> Unit,
+    val placeholder: String = "",
+    val secure: Boolean = false,
+    val keyboardType: KeyboardType = if (secure) KeyboardType.Password else KeyboardType.Text,
+)
+
 /**
  * iOS 26 `UIAlertController` (`.alert`): a Liquid Glass card with capsule action buttons;
- * two actions sit side by side, more stack vertically.
+ * two actions sit side by side, more stack vertically. [textFields] adds input fields under the message;
+ * the first one is focused on presentation and the card stays centered above the keyboard.
  */
 @Composable
 fun BoxScope.LiquidAlert(
@@ -84,6 +109,7 @@ fun BoxScope.LiquidAlert(
     message: String?,
     actions: List<AlertAction>,
     modifier: Modifier = Modifier,
+    textFields: List<AlertTextField> = emptyList(),
 ) {
     BackHandler(visible) { onDismissRequest() }
     Box(Modifier.matchParentSize().zIndex(1f)) {
@@ -95,6 +121,7 @@ fun BoxScope.LiquidAlert(
                 .background(Color.Black.copy(alpha = 0.2f * p.coerceIn(0f, 1f)))
                 .clickable(interactionSource = null, indication = null) {}
         )
+        Box(Modifier.matchParentSize().imePadding()) {
         Column(
             modifier
                 .align(Alignment.Center)
@@ -115,6 +142,8 @@ fun BoxScope.LiquidAlert(
                     compositingStrategy = CompositingStrategy.ModulateAlpha
                 }
                 .liquidGlassPanel(backdrop, { RoundedRectangle(34.dp) })
+                // Scrolls when the keyboard leaves less height than the card needs (landscape phones).
+                .verticalScroll(rememberScrollState())
                 .padding(horizontal = 16.dp, vertical = 16.dp)
         ) {
             Column(Modifier.padding(start = 8.dp, end = 8.dp, top = 6.dp, bottom = 18.dp)) {
@@ -132,6 +161,10 @@ fun BoxScope.LiquidAlert(
                     )
                 }
             }
+            if (textFields.isNotEmpty()) {
+                AlertTextFields(textFields, visible)
+                Spacer(Modifier.height(20.dp))
+            }
             val onAction: (AlertAction) -> Unit = { it.onClick(); onDismissRequest() }
             if (actions.size == 2) {
                 Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -142,6 +175,52 @@ fun BoxScope.LiquidAlert(
                     actions.forEach { AlertButton(it, Modifier.fillMaxWidth(), onAction) }
                 }
             }
+        }
+        }
+    }
+}
+
+@Composable
+private fun AlertTextFields(fields: List<AlertTextField>, visible: Boolean) {
+    val first = remember { FocusRequester() }
+    val focusManager = LocalFocusManager.current
+    LaunchedEffect(visible) { if (visible) first.requestFocus() else focusManager.clearFocus() }
+    // iOS 26: one field is a capsule; several share one rounded group split by inset separators.
+    Column(
+        Modifier.fillMaxWidth()
+            .clip(if (fields.size == 1) Capsule() else RoundedRectangle(20.dp))
+            .background(GlassColors.fill())
+    ) {
+        fields.forEachIndexed { i, field ->
+            val last = i == fields.lastIndex
+            if (i > 0) {
+                Box(Modifier.padding(horizontal = 16.dp).fillMaxWidth().height(0.5.dp).background(GlassColors.separator()))
+            }
+            BasicTextField(
+                field.value,
+                field.onValueChange,
+                Modifier.fillMaxWidth().then(if (i == 0) Modifier.focusRequester(first) else Modifier),
+                singleLine = true,
+                textStyle = TextStyle(GlassColors.label(), 17.sp),
+                cursorBrush = SolidColor(GlassColors.accent()),
+                visualTransformation = if (field.secure) PasswordVisualTransformation() else VisualTransformation.None,
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = field.keyboardType,
+                    imeAction = if (last) ImeAction.Done else ImeAction.Next
+                ),
+                keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) }),
+                decorationBox = { inner ->
+                    Box(
+                        Modifier.fillMaxWidth().height(48.dp).padding(horizontal = 16.dp),
+                        contentAlignment = Alignment.CenterStart
+                    ) {
+                        if (field.value.isEmpty()) {
+                            BasicText(field.placeholder, style = TextStyle(GlassColors.secondaryLabel(), 17.sp), maxLines = 1)
+                        }
+                        inner()
+                    }
+                }
+            )
         }
     }
 }
