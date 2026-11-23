@@ -200,10 +200,12 @@ fun LiquidAdaptiveTabScaffold(
         val regular = maxWidth >= RegularWidthBreakpoint
         val bars = WindowInsets.systemBars.asPaddingValues()
         val sidebarWidth = 320.dp
-        val sidebarProgress by animateFloatAsState(
+        val sidebarSpring by animateFloatAsState(
             if (regular && sidebarVisible) 1f else 0f,
             spring(dampingRatio = 0.85f, stiffness = 500f)
         )
+        // The spring overshoots past 0 and 1; padding must never go negative.
+        val sidebarProgress = sidebarSpring.coerceIn(0f, 1f)
         val contentPadding =
             if (regular) PaddingValues(
                 start = (sidebarWidth + 16.dp) * sidebarProgress,
