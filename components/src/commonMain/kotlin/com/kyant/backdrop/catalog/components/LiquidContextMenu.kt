@@ -92,7 +92,7 @@ fun Modifier.liquidContextMenuSource(
     onClick: (() -> Unit)? = null,
 ): Modifier = this
     .onGloballyPositioned { state.bounds = it.boundsInRoot() }
-    .semantics {
+    .semantics(mergeDescendants = true) {
         onLongClick { onLongPress(); true }
         if (onClick != null) onClick { onClick(); true }
     }
