@@ -114,12 +114,14 @@ private fun androidx.compose.foundation.layout.RowScope.StepperHalf(
     val scope = rememberCoroutineScope()
     val press = remember { Animatable(0f) }
     var pressed by remember { mutableStateOf(false) }
+    var repeated by remember { mutableStateOf(false) }
     val currentOnStep by rememberUpdatedState(onStep)
     val currentEnabled by rememberUpdatedState(enabled)
     LaunchedEffect(pressed) {
         if (pressed) {
             delay(500)
             while (pressed && currentEnabled) {
+                repeated = true
                 currentOnStep()
                 delay(100)
             }
@@ -141,9 +143,10 @@ private fun androidx.compose.foundation.layout.RowScope.StepperHalf(
                     onPress = {
                         pressed = true
                         scope.launch { press.animateTo(1f, spring(0.6f, 800f)) }
-                        currentOnStep()
-                        tryAwaitRelease()
+                        repeated = false
+                        val released = tryAwaitRelease()
                         pressed = false
+                        if (released && !repeated) currentOnStep()
                         scope.launch { press.animateTo(0f, spring(1f, 300f)) }
                     }
                 )
