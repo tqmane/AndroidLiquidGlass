@@ -12,6 +12,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.ui.zIndex
 import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.isSpecified
@@ -52,8 +55,11 @@ fun LiquidButton(
         )
     }
 
+    // A held button grows over its neighbours, as on iOS, instead of sliding under the next sibling.
+    val lifted by remember { derivedStateOf { interactiveHighlight.pressProgress > 0.01f } }
     Row(
         modifier
+            .zIndex(if (lifted) 1f else 0f)
             .drawBackdrop(
                 backdrop = backdrop,
                 shape = { Capsule() },

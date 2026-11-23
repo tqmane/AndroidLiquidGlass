@@ -15,6 +15,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.ui.zIndex
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
@@ -131,8 +134,11 @@ fun LiquidGlassContainer(
     val isLightTheme = !isGlassDark()
     val animationScope = rememberCoroutineScope()
     val interactiveHighlight = remember(animationScope) { InteractiveHighlight(animationScope) }
+    // A held button grows over its neighbours, as on iOS, instead of sliding under the next sibling.
+    val lifted by remember { derivedStateOf { interactiveHighlight.pressProgress > 0.01f } }
     Box(
         modifier
+            .zIndex(if (lifted) 1f else 0f)
             // Registered before the press layer so the bounds are the laid-out ones and [pressTransform] is applied once.
             .liquidGlassEffectMember({ interactiveHighlight.pressProgress }) { rect ->
                 val (scale, translation) = pressTransform(interactiveHighlight, rect.size, density)
