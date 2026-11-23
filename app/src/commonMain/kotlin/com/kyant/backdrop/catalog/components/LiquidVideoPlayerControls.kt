@@ -1,5 +1,6 @@
 package com.kyant.backdrop.catalog.components
 
+import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
@@ -160,6 +161,7 @@ fun BoxScope.LiquidVideoPlayerControls(
             captionText,
             Modifier
                 .align(Alignment.BottomCenter)
+                .then(if (full) Modifier.safeDrawingPadding() else Modifier)
                 .padding(bottom = if (full) 76.dp else 56.dp)
                 .background(Color.Black.copy(alpha = 0.45f), RoundedRectangle(6.dp))
                 .padding(horizontal = 8.dp, vertical = 2.dp),
@@ -172,6 +174,7 @@ fun BoxScope.LiquidVideoPlayerControls(
     Box(
         modifier
             .matchParentSize()
+            .then(if (full) Modifier.safeDrawingPadding() else Modifier)
             .graphicsLayer { this.alpha = alpha }
             .onSizeChanged { chromeHeight = with(density) { it.height.toDp() } }
     ) {
