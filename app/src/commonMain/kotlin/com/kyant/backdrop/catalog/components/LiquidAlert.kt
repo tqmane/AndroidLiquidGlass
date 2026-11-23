@@ -1,5 +1,6 @@
 package com.kyant.backdrop.catalog.components
 
+import androidx.compose.foundation.layout.BoxWithConstraints
 import com.kyant.backdrop.catalog.utils.BackHandler
 import androidx.compose.ui.zIndex
 import androidx.compose.animation.core.Animatable
@@ -141,8 +142,9 @@ fun BoxScope.LiquidActionSheet(
     modifier: Modifier = Modifier,
 ) {
     BackHandler(visible) { onDismissRequest() }
-    Box(Modifier.matchParentSize().zIndex(1f)) {
-        val progress = rememberPresentation(visible) ?: return
+    BoxWithConstraints(Modifier.matchParentSize().zIndex(1f)) {
+        val regular = maxWidth >= 600.dp
+        val progress = rememberPresentation(visible) ?: return@BoxWithConstraints
         val p = progress.value
         Box(
             Modifier
@@ -152,16 +154,16 @@ fun BoxScope.LiquidActionSheet(
         )
         Column(
             modifier
-                .align(Alignment.BottomCenter)
+                .align(if (regular) Alignment.Center else Alignment.BottomCenter)
                 .navigationBarsPadding()
                 .padding(10.dp)
-                .fillMaxWidth()
+                .then(if (regular) Modifier.width(320.dp) else Modifier.fillMaxWidth())
                 .semantics {
                     paneTitle = title ?: "Actions"
                     dismiss { onDismissRequest(); true }
                 }
                 .graphicsLayer {
-                    translationY = (1f - p) * size.height
+                    if (regular) { scaleX = 0.9f + 0.1f * p; scaleY = scaleX } else translationY = (1f - p) * size.height
                     alpha = p.coerceIn(0f, 1f)
                 }
                 .liquidGlassPanel(backdrop, { RoundedRectangle(34.dp) })
@@ -180,7 +182,7 @@ fun BoxScope.LiquidActionSheet(
             }
             val onAction: (AlertAction) -> Unit = { it.onClick(); onDismissRequest() }
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                actions.forEach { AlertButton(it, Modifier.fillMaxWidth(), onAction) }
+                actions.filter { !regular || it.style != AlertActionStyle.Cancel }.forEach { AlertButton(it, Modifier.fillMaxWidth(), onAction) }
             }
         }
     }
