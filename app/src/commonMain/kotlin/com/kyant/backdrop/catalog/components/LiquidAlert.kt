@@ -171,17 +171,23 @@ fun BoxScope.LiquidActionSheet(
         val gap = with(density) { ActionSheetArrow.height.toPx() + 4.dp.toPx() }
         val margin = with(density) { 16.dp.toPx() }
         val anchor = anchorBounds?.translate(-origin.x, -origin.y)
-        val above = anchor != null && anchor.top - gap - cardSize.height >= margin
+        val maxH = constraints.maxHeight.toFloat()
+        val spaceAbove = if (anchor == null) 0f else anchor.top - gap - margin
+        val spaceBelow = if (anchor == null) 0f else maxH - anchor.bottom - gap - margin
+        val above = anchor != null && (cardSize.height <= spaceAbove || (cardSize.height > spaceBelow && spaceAbove > spaceBelow))
         val cardX = if (anchor == null) 0f else
             (anchor.center.x - cardSize.width / 2f).coerceIn(margin, maxOf(margin, constraints.maxWidth - cardSize.width - margin))
-        val cardY = if (anchor == null) 0f else if (above) anchor.top - gap - cardSize.height else anchor.bottom + gap
+        val idealY = if (anchor == null) 0f else if (above) anchor.top - gap - cardSize.height else anchor.bottom + gap
+        // When neither side fits, keep every action on screen; the arrow is dropped because it no longer touches the card.
+        val cardY = idealY.coerceIn(margin, maxOf(margin, maxH - cardSize.height - margin))
+        val arrowColor = if (isGlassDark()) Color(0xFF3A3A3C) else Color(0xFFF2F2F7)
         Box(
             Modifier
                 .matchParentSize()
                 .background(Color.Black.copy(alpha = 0.2f * p.coerceIn(0f, 1f)))
                 .clickable(interactionSource = null, indication = null, onClick = onDismissRequest)
         )
-        if (anchored && anchor != null) {
+        if (anchored && anchor != null && cardY == idealY) {
             Box(
                 Modifier
                     .offset {
@@ -194,7 +200,7 @@ fun BoxScope.LiquidActionSheet(
                     }
                     .size(ActionSheetArrow)
                     .graphicsLayer { alpha = p.coerceIn(0f, 1f); rotationZ = if (above) 0f else 180f }
-                    .liquidGlassPanel(backdrop, { ArrowShape })
+                    .background(arrowColor, ArrowShape)
             )
         }
         Column(
