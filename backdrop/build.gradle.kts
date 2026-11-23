@@ -80,7 +80,7 @@ kotlin {
 // JitPack sets JITPACK/GROUP/VERSION; it builds without signing keys and publishes to its own repository.
 val jitpack = System.getenv("JITPACK") == "true"
 val publishGroup = if (jitpack) System.getenv("GROUP") else "io.github.kyant0"
-val publishVersion = if (jitpack) System.getenv("VERSION") else "2.0.18"
+val publishVersion = if (jitpack) System.getenv("VERSION") else "2.0.19"
 
 mavenPublishing {
     if (!jitpack) {
