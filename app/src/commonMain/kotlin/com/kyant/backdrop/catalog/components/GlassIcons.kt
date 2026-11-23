@@ -161,6 +161,10 @@ object GlassIcons {
         moveTo(4f, 17f); arcTo(8.5f, 8.5f, 0f, isMoreThanHalf = false, isPositiveArc = true, x1 = 20f, y1 = 17f)
         moveTo(12f, 16f); lineTo(15.5f, 10f)
     }
+    val Waveform = stroke("waveform", 1.8f) {
+        moveTo(4f, 10.5f); lineTo(4f, 13.5f); moveTo(7.2f, 8f); lineTo(7.2f, 16f); moveTo(10.4f, 4.5f); lineTo(10.4f, 19.5f)
+        moveTo(13.6f, 7f); lineTo(13.6f, 17f); moveTo(16.8f, 9.5f); lineTo(16.8f, 14.5f); moveTo(20f, 11f); lineTo(20f, 13f)
+    }
     val SunMax = stroke("sun.max") {
         circle(12f, 12f, 4f)
         moveTo(12f, 2.5f); lineTo(12f, 4.5f); moveTo(12f, 19.5f); lineTo(12f, 21.5f); moveTo(2.5f, 12f); lineTo(4.5f, 12f); moveTo(19.5f, 12f); lineTo(21.5f, 12f)

@@ -1,5 +1,12 @@
 package com.kyant.backdrop.catalog.components
 
+import com.kyant.shapes.RoundedRectangle
+import com.kyant.backdrop.backdrops.rememberLayerBackdrop
+import com.kyant.backdrop.backdrops.layerBackdrop
+import androidx.compose.ui.unit.DpOffset
+import androidx.compose.ui.graphics.TransformOrigin
+import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.foundation.background
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.detectDragGestures
@@ -86,30 +93,49 @@ fun rememberVideoPlayerState(duration: Float = 596f): VideoPlayerState {
     return state
 }
 
+/** An iOS 26 AVKit-style player: [frame] is the video surface, sampled as the backdrop of the glass chrome. */
+@Composable
+fun LiquidVideoPlayer(
+    state: VideoPlayerState,
+    modifier: Modifier = Modifier,
+    captionText: String? = null,
+    onClose: (() -> Unit)? = null,
+    frame: @Composable BoxScope.() -> Unit,
+) {
+    val backdrop = rememberLayerBackdrop()
+    Box(modifier.clipToBounds()) {
+        Box(Modifier.matchParentSize().layerBackdrop(backdrop), content = frame)
+        LiquidVideoPlayerControls(state, backdrop, captionText = captionText, onClose = onClose)
+    }
+}
+
 /**
- * iOS 26 AVKit-style player chrome over video content: close / picture-in-picture / volume at the
- * top, skip-back / play-pause / skip-forward glass buttons in the center, and a glass platter at the
- * bottom with the scrubber, times and the AirPlay, captions, playback-options and fullscreen buttons.
- * A tap on the video toggles the chrome; it auto-hides after 3 s while playing.
+ * iOS 26 AVKit-style player chrome over video content. Inline: a fullscreen + AirPlay capsule,
+ * skip-back / play-pause / skip-forward glass buttons and a scrubber capsule with a "..." menu
+ * (Playback Speed, Audio Track, Subtitles). Fullscreen ([VideoPlayerState.fullscreen]): close and
+ * AirPlay buttons, a mute button, a speed / audio / subtitles capsule and a full-width scrubber.
+ * While scrubbing only the scrubber stays; a tap on the video toggles the chrome, which auto-hides
+ * after 3 s while playing.
  */
 @Composable
 fun BoxScope.LiquidVideoPlayerControls(
     state: VideoPlayerState,
     backdrop: Backdrop,
-    title: String,
     modifier: Modifier = Modifier,
+    captionText: String? = null,
     onClose: (() -> Unit)? = null,
     skipInterval: Float = 10f,
 ) {
     var visible by remember { mutableStateOf(true) }
     var lastInteraction by remember { mutableStateOf(0) }
-    var optionsMenu by remember { mutableStateOf(false) }
-    var captionsMenu by remember { mutableStateOf(false) }
+    var menu by remember { mutableStateOf<PlayerMenu?>(null) }
     val alpha by animateFloatAsState(if (visible) 1f else 0f)
+    val chromeAlpha by animateFloatAsState(if (state.scrubbing) 0f else 1f)
     val touch = { lastInteraction++; visible = true }
+    val full = state.fullscreen
 
-    LaunchedEffect(visible, state.playing, state.scrubbing, lastInteraction, optionsMenu, captionsMenu) {
-        if (visible && state.playing && !state.scrubbing && !optionsMenu && !captionsMenu) {
+    LaunchedEffect(visible, state.playing, state.scrubbing, lastInteraction, menu) {
+        if (visible && state.playing && !state.scrubbing && menu == null) {
             delay(3000)
             visible = false
         }
@@ -120,170 +146,169 @@ fun BoxScope.LiquidVideoPlayerControls(
             .matchParentSize()
             .pointerInput(Unit) { detectTapGestures { visible = !visible } }
     )
+    if (captionText != null && state.captions != null) {
+        BasicText(
+            captionText,
+            Modifier
+                .align(Alignment.BottomCenter)
+                .padding(bottom = if (full) 76.dp else 56.dp)
+                .background(Color.Black.copy(alpha = 0.45f), RoundedRectangle(6.dp))
+                .padding(horizontal = 8.dp, vertical = 2.dp),
+            style = TextStyle(Color.White, if (full) 17.sp else 11.sp)
+        )
+    }
     if (alpha == 0f) return
 
+    val edge = if (full) 16.dp else 8.dp
     Box(
         modifier
             .matchParentSize()
             .graphicsLayer { this.alpha = alpha }
     ) {
-        Row(
-            Modifier.align(Alignment.TopStart).padding(16.dp),
-            horizontalArrangement = Arrangement.spacedBy(10.dp)
-        ) {
-            if (onClose != null) {
-                LiquidIconButton(GlassIcons.Close, "Close", { touch(); onClose() }, backdrop, iconColor = Color.White)
+        Box(Modifier.matchParentSize().graphicsLayer { this.alpha = chromeAlpha }) {
+            if (full) {
+                Row(Modifier.align(Alignment.TopStart).padding(edge), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    if (onClose != null) {
+                        LiquidIconButton(GlassIcons.Close, "Close", { touch(); onClose() }, backdrop, iconColor = Color.White)
+                    }
+                    LiquidIconButton(GlassIcons.AirPlay, "AirPlay", { touch() }, backdrop, iconColor = Color.White)
+                }
+                LiquidIconButton(
+                    if (state.muted) GlassIcons.SpeakerSlash else GlassIcons.Speaker,
+                    if (state.muted) "Unmute" else "Mute",
+                    { touch(); state.muted = !state.muted },
+                    backdrop,
+                    Modifier.align(Alignment.TopEnd).padding(edge),
+                    iconColor = Color.White
+                )
+                LiquidButtonGroup(backdrop, Modifier.align(Alignment.BottomEnd).padding(end = edge, bottom = 76.dp)) {
+                    LiquidGroupItem(GlassIcons.Gauge, "Playback speed", { touch(); menu = PlayerMenu.Speed }, color = Color.White)
+                    LiquidGroupItem(GlassIcons.Waveform, "Audio track", { touch(); menu = PlayerMenu.Audio }, color = Color.White)
+                    LiquidGroupItem(GlassIcons.Captions, "Subtitles", { touch(); menu = PlayerMenu.Subtitles }, color = Color.White)
+                }
+            } else {
+                LiquidButtonGroup(backdrop, Modifier.align(Alignment.TopStart).padding(edge), height = 36.dp) {
+                    LiquidGroupItem(GlassIcons.Expand, "Full screen", { touch(); state.fullscreen = true }, color = Color.White)
+                    LiquidGroupItem(GlassIcons.AirPlay, "AirPlay", { touch() }, color = Color.White)
+                }
             }
-            LiquidIconButton(
-                GlassIcons.PictureInPicture,
-                if (state.pictureInPicture) "Exit picture in picture" else "Picture in picture",
-                { touch(); state.pictureInPicture = !state.pictureInPicture },
-                backdrop,
-                iconColor = Color.White
-            )
+            Row(
+                Modifier.align(Alignment.Center),
+                horizontalArrangement = Arrangement.spacedBy(if (full) 64.dp else 28.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                val small = if (full) 60.dp else 44.dp
+                LiquidIconButton(GlassIcons.GoBackward, "Skip back ${skipInterval.toInt()} seconds", { touch(); state.skip(-skipInterval) }, backdrop, size = small, iconSize = small * 0.5f, iconColor = Color.White)
+                LiquidIconButton(
+                    if (state.playing) GlassIcons.Pause else GlassIcons.Play,
+                    if (state.playing) "Pause" else "Play",
+                    {
+                        touch()
+                        if (!state.playing && state.position >= state.duration) state.seek(0f)
+                        state.playing = !state.playing
+                    },
+                    backdrop,
+                    size = if (full) 88.dp else 60.dp,
+                    iconSize = if (full) 38.dp else 28.dp,
+                    iconColor = Color.White
+                )
+                LiquidIconButton(GlassIcons.GoForward, "Skip forward ${skipInterval.toInt()} seconds", { touch(); state.skip(skipInterval) }, backdrop, size = small, iconSize = small * 0.5f, iconColor = Color.White)
+            }
         }
-        LiquidVolumeControl(state, backdrop, Modifier.align(Alignment.TopEnd).padding(16.dp), onInteraction = touch)
 
         Row(
-            Modifier.align(Alignment.Center),
-            horizontalArrangement = Arrangement.spacedBy(28.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            LiquidIconButton(GlassIcons.GoBackward, "Skip back ${skipInterval.toInt()} seconds", { touch(); state.skip(-skipInterval) }, backdrop, size = 56.dp, iconSize = 26.dp, iconColor = Color.White)
-            LiquidIconButton(
-                if (state.playing) GlassIcons.Pause else GlassIcons.Play,
-                if (state.playing) "Pause" else "Play",
-                {
-                    touch()
-                    if (!state.playing && state.position >= state.duration) state.seek(0f)
-                    state.playing = !state.playing
-                },
-                backdrop,
-                size = 72.dp,
-                iconSize = 34.dp,
-                iconColor = Color.White
-            )
-            LiquidIconButton(GlassIcons.GoForward, "Skip forward ${skipInterval.toInt()} seconds", { touch(); state.skip(skipInterval) }, backdrop, size = 56.dp, iconSize = 26.dp, iconColor = Color.White)
-        }
-
-        Column(
             Modifier
                 .align(Alignment.BottomCenter)
                 .fillMaxWidth()
-                .padding(12.dp)
-                .liquidGlassPanel(backdrop, { Capsule() }, containerColor = Color.Black.copy(alpha = 0.12f))
-                .padding(horizontal = 18.dp, vertical = 10.dp),
-            verticalArrangement = Arrangement.spacedBy(6.dp)
+                .padding(edge)
+                .height(if (full) 44.dp else 30.dp)
+                .liquidGlassPanel(backdrop, { Capsule() }, containerColor = Color.Black.copy(alpha = 0.1f))
+                .padding(horizontal = if (full) 16.dp else 10.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(if (full) 12.dp else 8.dp)
         ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                BasicText(title, Modifier.weight(1f), style = TextStyle(Color.White, 15.sp, FontWeight.SemiBold), maxLines = 1)
-                PlayerBarButton(GlassIcons.AirPlay, "AirPlay") { touch() }
-                PlayerBarButton(GlassIcons.Captions, "Subtitles", if (state.captions != null) Color.White else Color.White.copy(alpha = 0.7f)) { touch(); captionsMenu = true }
-                PlayerBarButton(GlassIcons.Ellipsis, "Playback options") { touch(); optionsMenu = true }
-                PlayerBarButton(GlassIcons.Expand, if (state.fullscreen) "Exit full screen" else "Full screen") { touch(); state.fullscreen = !state.fullscreen }
+            val timeStyle = TextStyle(Color.White.copy(alpha = 0.75f), if (full) 13.sp else 10.sp, FontWeight.Medium)
+            BasicText(formatTime(state.position), style = timeStyle)
+            LiquidScrubber(state, Modifier.weight(1f), onInteraction = touch)
+            BasicText("-" + formatTime(state.duration - state.position), style = timeStyle)
+            if (!full) {
+                Box(
+                    Modifier
+                        .graphicsLayer { this.alpha = chromeAlpha }
+                        .semantics { contentDescription = "More" }
+                        .pointerInput(Unit) { detectTapGestures { touch(); menu = PlayerMenu.More } }
+                        .padding(horizontal = 2.dp)
+                ) { GlassIcon(GlassIcons.Ellipsis, Color.White, Modifier.width(18.dp).height(18.dp)) }
             }
-            LiquidScrubber(state, onInteraction = touch)
         }
 
+        val close = { menu = null }
+        val speedEntries = listOf(2f, 1.5f, 1.25f, 1f, 0.5f).map { s ->
+            MenuEntry.Action(speedLabel(s), checked = state.speed == s, onClick = { state.speed = s; close() })
+        }
+        val audioEntries = listOf("English", "Japanese").map { t ->
+            MenuEntry.Action(t, checked = state.audioTrack == t, onClick = { state.audioTrack = t; close() })
+        }
+        val subtitleEntries = listOf<String?>(null, "English", "Japanese").map { c ->
+            MenuEntry.Action(c ?: "Off", checked = state.captions == c, onClick = { state.captions = c; close() })
+        }
+        val (entries, header) = when (menu) {
+            PlayerMenu.Speed -> speedEntries to "Playback Speed"
+            PlayerMenu.Audio -> audioEntries to "Audio Track"
+            PlayerMenu.Subtitles -> subtitleEntries to "Subtitles"
+            PlayerMenu.More, null -> listOf(
+                MenuEntry.Submenu("Playback Speed", GlassIcons.Gauge, speedEntries),
+                MenuEntry.Submenu("Audio Track", GlassIcons.Waveform, audioEntries),
+                MenuEntry.Submenu("Subtitles", GlassIcons.Captions, subtitleEntries),
+            ) to null
+        }
         LiquidMenu(
-            expanded = optionsMenu,
-            onDismissRequest = { optionsMenu = false },
+            expanded = menu != null,
+            onDismissRequest = close,
             backdrop = backdrop,
-            entries = listOf(
-                MenuEntry.Submenu(
-                    "Playback Speed",
-                    GlassIcons.Gauge,
-                    listOf(0.5f, 1f, 1.25f, 1.5f, 2f).map { s ->
-                        MenuEntry.Action(speedLabel(s), checked = state.speed == s, onClick = { state.speed = s; optionsMenu = false })
-                    }
-                ),
-                MenuEntry.Submenu(
-                    "Audio",
-                    GlassIcons.Speaker,
-                    listOf("English", "Japanese").map { t ->
-                        MenuEntry.Action(t, checked = state.audioTrack == t, onClick = { state.audioTrack = t; optionsMenu = false })
-                    }
-                ),
-                MenuEntry.Divider,
-                MenuEntry.Action("Picture in Picture", GlassIcons.PictureInPicture, onClick = { state.pictureInPicture = true; optionsMenu = false }),
-            ),
-            alignment = Alignment.BottomEnd,
-            offset = androidx.compose.ui.unit.DpOffset((-16).dp, (-104).dp),
-            transformOrigin = androidx.compose.ui.graphics.TransformOrigin(1f, 1f),
-        )
-        LiquidMenu(
-            expanded = captionsMenu,
-            onDismissRequest = { captionsMenu = false },
-            backdrop = backdrop,
-            entries = listOf<String?>(null, "English", "Japanese", "English (SDH)").map { c ->
-                MenuEntry.Action(c ?: "Off", checked = state.captions == c, onClick = { state.captions = c; captionsMenu = false })
-            },
-            alignment = Alignment.BottomEnd,
-            offset = androidx.compose.ui.unit.DpOffset((-60).dp, (-104).dp),
-            transformOrigin = androidx.compose.ui.graphics.TransformOrigin(1f, 1f),
-            width = 220.dp,
+            entries = entries,
+            alignment = if (full) Alignment.TopEnd else Alignment.BottomEnd,
+            offset = if (full) DpOffset((-edge), 12.dp) else DpOffset((-edge), (-42).dp),
+            transformOrigin = if (full) TransformOrigin(1f, 0f) else TransformOrigin(1f, 1f),
+            width = if (menu == PlayerMenu.More || menu == null) 250.dp else 220.dp,
+            header = header,
         )
     }
 }
 
-@Composable
-private fun PlayerBarButton(
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
-    description: String,
-    color: Color = Color.White,
-    onClick: () -> Unit,
-) {
-    Box(
-        Modifier
-            .width(40.dp)
-            .height(36.dp)
-            .semantics { contentDescription = description }
-            .pointerInput(Unit) { detectTapGestures { onClick() } },
-        contentAlignment = Alignment.Center
-    ) {
-        GlassIcon(icon, color, Modifier.width(22.dp).height(22.dp))
-    }
-}
+private enum class PlayerMenu { More, Speed, Audio, Subtitles }
 
-/** Video scrubber: a thin track that thickens while dragged, with elapsed and remaining time. */
+/** Video scrubber track: thin capsule that thickens while dragged; tap or drag to seek. */
 @Composable
 fun LiquidScrubber(state: VideoPlayerState, modifier: Modifier = Modifier, onInteraction: () -> Unit = {}) {
-    val thickness by animateFloatAsState(if (state.scrubbing) 10f else 5f)
+    val thickness by animateFloatAsState(if (state.scrubbing) 9f else 6f)
     val currentOnInteraction by rememberUpdatedState(onInteraction)
-    Column(modifier, verticalArrangement = Arrangement.spacedBy(4.dp)) {
-        Canvas(
-            Modifier
-                .fillMaxWidth()
-                .height(20.dp)
-                .semantics {
-                    contentDescription = "Playback position"
-                    progressBarRangeInfo = ProgressBarRangeInfo(state.position, 0f..state.duration)
-                    setProgress { state.seek(it); true }
+    Canvas(
+        modifier
+            .height(24.dp)
+            .semantics {
+                contentDescription = "Playback position"
+                progressBarRangeInfo = ProgressBarRangeInfo(state.position, 0f..state.duration)
+                setProgress { state.seek(it); true }
+            }
+            .pointerInput(state) {
+                detectTapGestures { state.seek(it.x / size.width * state.duration); currentOnInteraction() }
+            }
+            .pointerInput(state) {
+                detectDragGestures(
+                    onDragStart = { state.scrubbing = true; state.seek(it.x / size.width * state.duration) },
+                    onDragEnd = { state.scrubbing = false; currentOnInteraction() },
+                    onDragCancel = { state.scrubbing = false },
+                ) { change, _ ->
+                    state.seek(change.position.x / size.width * state.duration)
                 }
-                .pointerInput(state) {
-                    detectTapGestures { state.seek(it.x / size.width * state.duration); currentOnInteraction() }
-                }
-                .pointerInput(state) {
-                    detectDragGestures(
-                        onDragStart = { state.scrubbing = true; state.seek(it.x / size.width * state.duration) },
-                        onDragEnd = { state.scrubbing = false },
-                        onDragCancel = { state.scrubbing = false },
-                    ) { change, _ ->
-                        state.seek(change.position.x / size.width * state.duration)
-                        currentOnInteraction()
-                    }
-                }
-        ) {
-            val h = thickness.dp.toPx()
-            val top = (size.height - h) / 2f
-            val fraction = if (state.duration > 0f) state.position / state.duration else 0f
-            drawRoundRect(Color.White.copy(alpha = 0.3f), Offset(0f, top), Size(size.width, h), CornerRadius(h / 2f))
-            drawRoundRect(Color.White, Offset(0f, top), Size(size.width * fraction, h), CornerRadius(h / 2f))
-        }
-        Row {
-            BasicText(formatTime(state.position), Modifier.weight(1f), style = TextStyle(Color.White.copy(alpha = 0.8f), 12.sp, FontWeight.Medium))
-            BasicText("-" + formatTime(state.duration - state.position), style = TextStyle(Color.White.copy(alpha = 0.8f), 12.sp, FontWeight.Medium))
-        }
+            }
+    ) {
+        val h = thickness.dp.toPx()
+        val top = (size.height - h) / 2f
+        val fraction = if (state.duration > 0f) state.position / state.duration else 0f
+        drawRoundRect(Color.White.copy(alpha = 0.3f), Offset(0f, top), Size(size.width, h), CornerRadius(h / 2f))
+        drawRoundRect(Color.White.copy(alpha = 0.92f), Offset(0f, top), Size(size.width * fraction, h), CornerRadius(h / 2f))
     }
 }
 

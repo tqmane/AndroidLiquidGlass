@@ -144,6 +144,7 @@ fun BoxScope.LiquidMenu(
     offset: DpOffset = DpOffset.Zero,
     transformOrigin: TransformOrigin = TransformOrigin(1f, 0f),
     width: Dp = 250.dp,
+    header: String? = null,
 ) {
     var submenu by remember(expanded) { mutableStateOf<MenuEntry.Submenu?>(null) }
     LiquidGlassPopup(
@@ -157,6 +158,9 @@ fun BoxScope.LiquidMenu(
     ) {
         Crossfade(submenu) { open ->
             Column(Modifier.padding(vertical = 8.dp)) {
+                if (open == null && header != null) {
+                    BasicText(header, Modifier.padding(horizontal = 20.dp, vertical = 6.dp), style = TextStyle(GlassColors.secondaryLabel(), 13.sp))
+                }
                 if (open == null) {
                     MenuEntries(entries, onDismissRequest) { submenu = it }
                 } else {
