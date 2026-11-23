@@ -296,8 +296,14 @@ fun LiquidTopTabBar(
                             .padding(horizontal = if (tab.search) 11.dp else 13.dp),
                         contentAlignment = Alignment.Center
                     ) {
-                        if (tab.search) GlassIcon(tab.icon, color, Modifier.size(20.dp))
-                        else BasicText(tab.title, style = TextStyle(color, 15.sp, FontWeight.Medium))
+                        // The held pill magnifies the label under it, as the bottom tab pill does.
+                        val magnify = Modifier.graphicsLayer {
+                            val k = if (active) lerp(1f, 1.2f, press.value) else 1f
+                            scaleX = k
+                            scaleY = k
+                        }
+                        if (tab.search) GlassIcon(tab.icon, color, magnify.size(20.dp))
+                        else BasicText(tab.title, magnify, style = TextStyle(color, 15.sp, FontWeight.Medium))
                     }
                 }
             }
