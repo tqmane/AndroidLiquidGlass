@@ -159,7 +159,12 @@ fun LiquidBottomTabs(
                 },
                 onDrag = { _, dragAmount ->
                     updateValue(
-                        valueAt((dragPosition[0] + dragAmount.x * if (isLtr) 1f else -1f).also { dragPosition[0] = it })
+                        valueAt(
+                            // Clamped to the bar, as the pill is, so overshooting an end does not eat the drag back.
+                            (dragPosition[0] + dragAmount.x * if (isLtr) 1f else -1f)
+                                .fastCoerceIn(0f, startAt((tabsCount - 1).toFloat()))
+                                .also { dragPosition[0] = it }
+                        )
                     )
                     animationScope.launch {
                         offsetAnimation.snapTo(offsetAnimation.value + dragAmount.x)
