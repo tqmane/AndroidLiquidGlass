@@ -49,6 +49,8 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.dismiss
 import androidx.compose.ui.semantics.paneTitle
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.onClick
+import androidx.compose.ui.semantics.onLongClick
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.lerp
@@ -90,6 +92,10 @@ fun Modifier.liquidContextMenuSource(
     onClick: (() -> Unit)? = null,
 ): Modifier = this
     .onGloballyPositioned { state.bounds = it.boundsInRoot() }
+    .semantics {
+        onLongClick { onLongPress(); true }
+        if (onClick != null) onClick { onClick(); true }
+    }
     .graphicsLayer {
         scaleX = state.scale.value
         scaleY = state.scale.value

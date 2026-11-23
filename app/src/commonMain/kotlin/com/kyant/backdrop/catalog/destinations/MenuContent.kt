@@ -1,5 +1,6 @@
 package com.kyant.backdrop.catalog.destinations
 
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -40,6 +41,19 @@ fun MenuContent() {
         var folder by remember { mutableStateOf("Downloads") }
         val teal = if (isGlassDark()) Color(0xFF40C8E0) else Color(0xFF30B0C7)
         val contextState = rememberLiquidContextMenuState()
+        val rows = listOf("Movies" to GlassIcons.Folder, "Trip to Kyoto.mp4" to GlassIcons.Film)
+        val rowStates = rows.map { rememberLiquidContextMenuState() }
+        val rowAnchors = rows.map { rememberLiquidMenuAnchor() }
+        var heldRow by remember { mutableStateOf<Int?>(null) }
+        val rowCell = if (isGlassDark()) Color(0xFF1C1C1E) else Color.White
+        val row: @Composable (Int) -> Unit = { i ->
+            Row(Modifier.fillMaxSize().background(rowCell).padding(horizontal = 16.dp), verticalAlignment = Alignment.CenterVertically) {
+                GlassIcon(rows[i].second, if (i == 0) teal else GlassColors.accent(), Modifier.size(24.dp))
+                Spacer(Modifier.width(14.dp))
+                BasicText(rows[i].first, Modifier.weight(1f), style = TextStyle(GlassColors.label(), 17.sp), maxLines = 1)
+                BasicText(if (i == 0) "12 items" else "4:32", style = TextStyle(GlassColors.secondaryLabel(), 15.sp))
+            }
+        }
         val entries = listOf(
             MenuEntry.Action("Copy", GlassIcons.Copy),
             MenuEntry.Action("Add to Favorites", GlassIcons.Heart, checked = favorite) { favorite = !favorite },
@@ -58,7 +72,7 @@ fun MenuContent() {
                 BasicText("Long-press for context menu", style = TextStyle(Color.Black.copy(0.6f), 13.sp))
             }
         }
-        Column(Modifier.align(Alignment.TopCenter).systemBarsPadding().padding(16.dp).fillMaxWidth()) {
+        Column(Modifier.align(Alignment.TopCenter).fillMaxSize().verticalScroll(rememberScrollState()).systemBarsPadding().padding(16.dp)) {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                 LiquidIconButton(GlassIcons.Star, "Popover", { popover = true }, backdrop)
                 LiquidIconButton(GlassIcons.Ellipsis, "More", { menu = true }, backdrop)
@@ -69,6 +83,17 @@ fun MenuContent() {
                     .liquidContextMenuSource(contextState, onLongPress = { context = true })
                     .clip(RoundedRectangle(24.dp))
             ) { card() }
+            Spacer(Modifier.height(24.dp))
+            GroupedSection("Remote (long-press a row)", rowCell) {
+                rows.indices.forEach { i ->
+                    if (i > 0) GroupedSeparator(Modifier.padding(start = 38.dp))
+                    Box(
+                        Modifier.fillMaxWidth().height(52.dp)
+                            .liquidMenuAnchor(rowAnchors[i])
+                            .liquidContextMenuSource(rowStates[i], onLongPress = { heldRow = i })
+                    ) { row(i) }
+                }
+            }
             Spacer(Modifier.height(16.dp))
             BasicText("Sort: $sort, favorite: $favorite", Modifier.align(Alignment.CenterHorizontally), style = TextStyle(Color.White, 15.sp))
         }
@@ -89,6 +114,19 @@ fun MenuContent() {
                     LiquidToggle({ on }, { on = it }, panel)
                 }
             }
+        }
+        rows.indices.forEach { i ->
+            LiquidAnchoredMenu(
+                heldRow == i, { heldRow = null }, backdrop, rowAnchors[i],
+                listOf(
+                    MenuEntry.Action(if (i == 0) "Open" else "Play", if (i == 0) GlassIcons.Folder else GlassIcons.Play),
+                    MenuEntry.Action("Rename", GlassIcons.Pencil),
+                    MenuEntry.Action("Download", GlassIcons.ArrowDownCircle),
+                    MenuEntry.Divider,
+                    MenuEntry.Action("Delete", GlassIcons.Trash, destructive = true),
+                ),
+                state = rowStates[i]
+            ) { row(i) }
         }
         LiquidContextMenu(context, { context = false }, backdrop, contextState.bounds, entries, contextState, card)
     }
