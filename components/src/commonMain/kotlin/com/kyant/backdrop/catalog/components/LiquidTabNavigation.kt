@@ -164,7 +164,7 @@ fun LiquidTopTabBar(
                     lens(16.dp.toPx() * glass.refraction, 24.dp.toPx() * glass.refraction)
                 },
                 layerBlock = {
-                    val s = lerp(1f, 1f + 8.dp.toPx() / size.width, press.value)
+                    val s = lerp(1f, 1f + 16.dp.toPx() / size.width, press.value)
                     scaleX = s
                     scaleY = s
                 },
@@ -207,7 +207,7 @@ fun LiquidTopTabBar(
                                 dragX = x
                                 scope.launch {
                                     val w = indicatorWidth.value
-                                    indicatorX.snapTo(x - w / 2f)
+                                    indicatorX.animateTo(x - w / 2f, spring(1f, 1500f))
                                 }
                             }
                         }
@@ -229,9 +229,11 @@ fun LiquidTopTabBar(
                     Modifier
                         .graphicsLayer {
                             translationX = indicatorX.value
-                            val s = lerp(1f, 1.18f, press.value)
-                            scaleX = s
-                            scaleY = s
+                            // Same lift as the bottom tab pill (56 -> 78 dp), squashed along the drag like it.
+                            val s = lerp(1f, 78f / 56f, press.value)
+                            val v = (indicatorX.velocity / 10_000f).coerceIn(-0.2f, 0.2f)
+                            scaleX = s / (1f - abs(v) * 0.75f)
+                            scaleY = s * (1f - abs(v) * 0.25f)
                         }
                         .width(with(density) { indicatorWidth.value.toDp() })
                         .fillMaxHeight()
@@ -252,6 +254,10 @@ fun LiquidTopTabBar(
                                 drawRect(
                                     if (dark) Color.White.copy(0.1f) else Color.Black.copy(0.08f),
                                     alpha = 1f - press.value
+                                )
+                                // While held the pill is a clear lens that still reads as glass on a dark bar.
+                                drawRect(
+                                    if (dark) Color.White.copy(0.06f * press.value) else Color.Black.copy(0.03f * press.value)
                                 )
                             }
                         )
