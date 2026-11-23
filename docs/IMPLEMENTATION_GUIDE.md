@@ -141,13 +141,16 @@ iPadOS 26 presents several components differently from iPhone. The catalog switc
 | Toolbar sheet header | X (left) and check (right) glass icon buttons | Grey `Cancel` capsule (`LiquidBorderedButton(neutral = true)`) and prominent blue `Done` capsule |
 | `LiquidActionSheet` | Bottom panel, includes the Cancel action | 280 dp popover anchored to its source with an arrow (pass `anchorBounds` from `Modifier.contextMenuAnchor`), above the source when it fits, otherwise below; centered when no source is given; Cancel action hidden (tap outside or Back dismisses) |
 | Toolbar / tab bar demo | Full-width bottom bar | Bottom bar capped at 560 dp wide |
+| `LiquidAdaptiveTabScaffold` | `LiquidBottomTabs` at the bottom | `LiquidTopTabBar` floating at the top center (text tabs, icon-only search tab) plus a sidebar toggle at the top start that slides in `LiquidSidebar` (320 dp inset glass pane) and hides the top bar |
+| Fullscreen video | Locks to landscape | Keeps the current orientation (locking a large screen letterboxes the app) |
 
 Rules:
 - Read `LiquidSheetScope.isFormSheet` inside sheet content to pick header controls; do not check the screen size yourself.
 - A form sheet is still a backdrop exporter: controls inside it keep using the sheet scope's `backdrop`.
 - Measure width from the layout (`BoxWithConstraints`), never from the display metrics: split screen and freeform windows on Android tablets are narrower than the screen.
 - Check both orientations. In portrait a 13-inch iPad is still regular width, so it keeps the form sheet.
-- Native iPad references show the tab bar as a floating capsule at the top center. The catalog does not move the tab bar to the top; do that in your app's scaffold if you need it.
+- Use `LiquidAdaptiveTabScaffold` (SwiftUI `TabView` + `.sidebarAdaptable`) for app-level tabs: pass `tabs` for the bar and `sidebarSections` for the sidebar (the first section with a null title is normally the same tabs; later sections are extra destinations that only the sidebar shows). Draw page content inside its `content` lambda and apply the `PaddingValues` it gives you: it already clears the top bar, the sidebar and the system bars. Do not wrap the scaffold in another backdrop scaffold; it records `content` into its own `LayerBackdrop`.
+- On regular width the top bar and the sidebar are alternatives: showing the sidebar fades the top bar out, like iPadOS. Selecting a sidebar-only destination leaves no pill selected in the top bar.
 
 ## 6. Adding a new component (checklist)
 
