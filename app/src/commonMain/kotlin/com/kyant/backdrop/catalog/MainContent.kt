@@ -14,6 +14,16 @@ import com.kyant.backdrop.catalog.destinations.BottomTabsContent
 import com.kyant.backdrop.catalog.destinations.ButtonsContent
 import com.kyant.backdrop.catalog.destinations.ControlCenterContent
 import com.kyant.backdrop.catalog.destinations.DialogContent
+import com.kyant.backdrop.catalog.destinations.SegmentedControlContent
+import com.kyant.backdrop.catalog.destinations.StepperContent
+import com.kyant.backdrop.catalog.destinations.PageControlContent
+import com.kyant.backdrop.catalog.destinations.ProgressContent
+import com.kyant.backdrop.catalog.destinations.SheetContent
+import com.kyant.backdrop.catalog.destinations.AlertContent
+import com.kyant.backdrop.catalog.destinations.MenuContent
+import com.kyant.backdrop.catalog.destinations.ToolbarContent
+import com.kyant.backdrop.catalog.destinations.SearchContent
+import com.kyant.backdrop.catalog.destinations.GlassMaterialsContent
 import com.kyant.backdrop.catalog.destinations.GlassPlaygroundContent
 import com.kyant.backdrop.catalog.destinations.HomeContent
 import com.kyant.backdrop.catalog.destinations.LazyScrollContainerContent
@@ -42,6 +52,16 @@ fun MainContent() {
             CatalogDestination.Slider -> SliderContent()
             CatalogDestination.BottomTabs -> BottomTabsContent()
             CatalogDestination.Dialog -> DialogContent()
+            CatalogDestination.SegmentedControl -> SegmentedControlContent()
+            CatalogDestination.Stepper -> StepperContent()
+            CatalogDestination.PageControl -> PageControlContent()
+            CatalogDestination.Progress -> ProgressContent()
+            CatalogDestination.Sheet -> SheetContent()
+            CatalogDestination.Alert -> AlertContent()
+            CatalogDestination.Menu -> MenuContent()
+            CatalogDestination.Toolbar -> ToolbarContent()
+            CatalogDestination.Search -> SearchContent()
+            CatalogDestination.GlassMaterials -> GlassMaterialsContent()
 
             CatalogDestination.LockScreen -> LockScreenContent()
             CatalogDestination.ControlCenter -> ControlCenterContent()

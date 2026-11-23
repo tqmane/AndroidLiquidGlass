@@ -75,8 +75,6 @@ actual fun BackdropDemoScaffold(
             contentScale = ContentScale.Crop
         )
 
-        content(backdrop)
-
         LiquidButton(
             { pickMedia.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) },
             backdrop,
@@ -93,5 +91,7 @@ actual fun BackdropDemoScaffold(
                 style = TextStyle(Color.White, 16f.sp)
             )
         }
+
+        content(backdrop)
     }
 }
