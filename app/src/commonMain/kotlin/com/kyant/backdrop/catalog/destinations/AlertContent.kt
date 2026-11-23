@@ -33,7 +33,12 @@ fun AlertContent() {
         var one by remember { mutableStateOf(false) }
         var sheet by remember { mutableStateOf(false) }
         var sheetAnchor by remember { mutableStateOf<Rect?>(null) }
-        Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        // Scrolls and clears the scaffold's bottom "Pick an image" button on short (landscape) windows.
+        Column(
+            Modifier.verticalScroll(rememberScrollState()).safeDrawingPadding().padding(vertical = 88.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
             DemoButton("Alert, one action", backdrop) { one = true }
             DemoButton("Alert, two actions", backdrop) { two = true }
             DemoButton("Alert, three actions", backdrop) { three = true }
