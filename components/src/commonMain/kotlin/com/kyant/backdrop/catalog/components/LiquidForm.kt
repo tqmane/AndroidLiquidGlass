@@ -217,7 +217,7 @@ fun BoxScope.LiquidAnchoredMenu(
     val gap = with(density) { (if (preview != null) 12.dp else 8.dp).toPx() }
     val margin = with(density) { (if (preview != null) 16.dp else 8.dp).toPx() }
     val menuWidth = with(density) { width.toPx() }
-    val below = if (preview != null) b.bottom < hostSize.height * 0.6f else b.center.y < hostSize.height / 2f
+    val below = if (preview != null) hostSize.height - b.bottom >= b.top else b.center.y < hostSize.height / 2f
     val maxX = (hostSize.width - menuWidth - margin).coerceAtLeast(margin)
     val x = (if (preview != null) b.left else b.right - menuWidth).coerceIn(margin, maxX)
     val y = when {
@@ -226,11 +226,14 @@ fun BoxScope.LiquidAnchoredMenu(
         below -> b.top - with(density) { 4.dp.toPx() }
         else -> -(hostSize.height - b.bottom - with(density) { 4.dp.toPx() })
     }
+    val overlapPx = with(density) { 4.dp.toPx() }
+    val maxHeight = if (below) hostSize.height - (if (preview != null) b.bottom + gap else b.top - overlapPx) - margin
+    else (if (preview != null) b.top - gap else b.bottom + overlapPx) - margin
     val pivotX = if (preview != null) ((b.left - x) / menuWidth + 0.1f) else (b.right - x) / menuWidth
     LiquidMenu(
         expanded, onDismissRequest, backdrop, entries,
         alignment = if (below) Alignment.TopStart else Alignment.BottomStart,
-        modifier = modifier,
+        modifier = modifier.heightIn(max = with(density) { maxHeight.toDp() }.coerceAtLeast(88.dp)),
         offset = with(density) { DpOffset(x.toDp(), y.toDp()) },
         transformOrigin = TransformOrigin(pivotX.coerceIn(0f, 1f), if (below) 0f else 1f),
         width = width,
