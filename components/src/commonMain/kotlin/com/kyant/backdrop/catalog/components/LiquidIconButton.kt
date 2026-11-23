@@ -180,12 +180,12 @@ fun LiquidGlassContainer(
 }
 
 /**
- * Press growth and drag offset of [LiquidGlassContainer]. iOS 26 interactive glass swells ~26 % while held
+ * Press growth and drag offset of [LiquidGlassContainer]. iOS 26 interactive glass swells ~27 % while held
  * (native 62 pt search circle), capped for small bar buttons.
  */
 private fun pressTransform(highlight: InteractiveHighlight, size: Size, density: Float): Pair<Float, Offset> {
     val progress = highlight.pressProgress
-    val scale = lerp(1f, 1f + min(16f * density / size.height, 0.3f), progress)
+    val scale = lerp(1f, 1f + min(12f * density / size.height, 0.27f), progress)
     val maxOffset = size.minDimension
     val offset = highlight.offset
     return scale to Offset(maxOffset * tanh(0.05f * offset.x / maxOffset), maxOffset * tanh(0.05f * offset.y / maxOffset))

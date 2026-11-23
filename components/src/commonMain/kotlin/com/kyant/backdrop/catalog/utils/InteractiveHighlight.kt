@@ -24,8 +24,12 @@ class InteractiveHighlight(
     val position: (size: Size, offset: Offset) -> Offset = { _, offset -> offset }
 ) {
 
-    private val pressProgressAnimationSpec =
-        spring(0.5f, 300f, 0.001f)
+    // iOS 26 glass reaches its held size in ~0.13 s without overshoot, and on release shrinks ~9 % below
+    // rest at ~0.25 s before settling back.
+    private val pressInAnimationSpec =
+        spring(1f, 1000f, 0.001f)
+    private val releaseAnimationSpec =
+        spring(0.35f, 200f, 0.001f)
     private val positionAnimationSpec =
         spring(0.5f, 300f, Offset.VisibilityThreshold)
 
@@ -98,19 +102,19 @@ half4 main(float2 coord) {
                 onDragStart = { down ->
                     startPosition = down.position
                     animationScope.launch {
-                        launch { pressProgressAnimation.animateTo(1f, pressProgressAnimationSpec) }
+                        launch { pressProgressAnimation.animateTo(1f, pressInAnimationSpec) }
                         launch { positionAnimation.snapTo(startPosition) }
                     }
                 },
                 onDragEnd = {
                     animationScope.launch {
-                        launch { pressProgressAnimation.animateTo(0f, pressProgressAnimationSpec) }
+                        launch { pressProgressAnimation.animateTo(0f, releaseAnimationSpec) }
                         launch { positionAnimation.animateTo(startPosition, positionAnimationSpec) }
                     }
                 },
                 onDragCancel = {
                     animationScope.launch {
-                        launch { pressProgressAnimation.animateTo(0f, pressProgressAnimationSpec) }
+                        launch { pressProgressAnimation.animateTo(0f, releaseAnimationSpec) }
                         launch { positionAnimation.animateTo(startPosition, positionAnimationSpec) }
                     }
                 }
