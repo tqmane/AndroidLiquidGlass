@@ -194,9 +194,9 @@ fun BoxScope.LiquidVideoPlayerControls(
             if (full) {
                 Row(Modifier.align(Alignment.TopStart).padding(edge), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                     if (onClose != null) {
-                        LiquidIconButton(GlassIcons.Close, "Close", { touch(); onClose() }, backdrop, size = 44.dp, iconSize = 20.dp, iconColor = Color.White)
+                        LiquidIconButton(GlassIcons.Close, "Close", { touch(); onClose() }, backdrop, size = 44.dp, iconSize = 20.dp, iconColor = Color.White, surfaceColor = PlayerGlassFill)
                     }
-                    LiquidIconButton(GlassIcons.AirPlay, "AirPlay", { touch() }, backdrop, size = 44.dp, iconSize = 20.dp, iconColor = Color.White)
+                    LiquidIconButton(GlassIcons.AirPlay, "AirPlay", { touch() }, backdrop, size = 44.dp, iconSize = 20.dp, iconColor = Color.White, surfaceColor = PlayerGlassFill)
                 }
                 LiquidButtonGroup(backdrop, Modifier.align(Alignment.BottomEnd).padding(end = edge, bottom = edge + ScrubberBarFull + 10.dp), height = 42.dp) {
                     LiquidGroupItem(GlassIcons.Gauge, "Playback speed", { touch(); menu = PlayerMenu.Speed }, color = Color.White)
@@ -225,8 +225,9 @@ fun BoxScope.LiquidVideoPlayerControls(
                     },
                     backdrop,
                     size = if (full) 92.dp else 76.dp,
-                    iconSize = if (full) 40.dp else 34.dp,
-                    iconColor = Color.White
+                    iconSize = if (full) 54.dp else 44.dp,
+                    iconColor = Color.White,
+                    surfaceColor = PlayerGlassFill
                 )
                 SkipButton(GlassIcons.GoForward, "Skip forward ${skipInterval.toInt()} seconds", skipInterval, small, backdrop) { touch(); state.skip(skipInterval) }
             }
@@ -245,7 +246,7 @@ fun BoxScope.LiquidVideoPlayerControls(
         ) {
             val timeStyle = TextStyle(Color.White.copy(alpha = 0.75f), if (full) 13.sp else 12.sp, FontWeight.Medium)
             BasicText(formatTime(state.position), style = timeStyle)
-            LiquidScrubber(state, Modifier.weight(1f), onInteraction = touch)
+            LiquidScrubber(state, Modifier.weight(1f), thickness = if (full) 8.dp else 6.dp, onInteraction = touch)
             BasicText("\u2212" + formatTime(state.duration - state.position), style = timeStyle)
             if (!full) {
                 Box(
@@ -323,11 +324,14 @@ private val CaptionStyles = listOf("Transparent Background", "Default", "Large T
 private val ScrubberBarInline = 40.dp
 private val ScrubberBarFull = 44.dp
 
+/** AVKit's player buttons sit on a faint white fill that lifts them off dark video. */
+private val PlayerGlassFill = Color.White.copy(alpha = 0.08f)
+
 /** AVKit gobackward.10 / goforward.10: circular arrow glass button with the interval drawn inside. */
 @Composable
 private fun SkipButton(icon: ImageVector, description: String, interval: Float, size: Dp, backdrop: Backdrop, onClick: () -> Unit) {
     Box(contentAlignment = Alignment.Center) {
-        LiquidIconButton(icon, description, onClick, backdrop, size = size, iconSize = size * 0.58f, iconColor = Color.White)
+        LiquidIconButton(icon, description, onClick, backdrop, size = size, iconSize = size * 0.58f, iconColor = Color.White, surfaceColor = PlayerGlassFill)
         BasicText(
             interval.toInt().toString(),
             Modifier.padding(top = 2.dp).clearAndSetSemantics {},
@@ -338,8 +342,8 @@ private fun SkipButton(icon: ImageVector, description: String, interval: Float, 
 
 /** Video scrubber track: thin capsule that thickens while dragged; tap or drag to seek. */
 @Composable
-fun LiquidScrubber(state: VideoPlayerState, modifier: Modifier = Modifier, onInteraction: () -> Unit = {}) {
-    val thickness by animateFloatAsState(if (state.scrubbing) 9f else 6f)
+fun LiquidScrubber(state: VideoPlayerState, modifier: Modifier = Modifier, thickness: Dp = 6.dp, onInteraction: () -> Unit = {}) {
+    val thickness by animateFloatAsState(if (state.scrubbing) thickness.value * 1.5f else thickness.value)
     val currentOnInteraction by rememberUpdatedState(onInteraction)
     Canvas(
         modifier

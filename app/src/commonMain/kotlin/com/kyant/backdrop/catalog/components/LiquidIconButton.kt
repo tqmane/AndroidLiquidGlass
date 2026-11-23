@@ -51,11 +51,13 @@ fun LiquidIconButton(
     iconSize: Dp = 20.dp,
     tint: Color = Color.Unspecified,
     iconColor: Color = if (tint.isSpecified) Color.White else GlassColors.label(),
+    surfaceColor: Color = Color.Unspecified,
 ) {
     LiquidGlassContainer(
         backdrop = backdrop,
         onClick = onClick,
         tint = tint,
+        surfaceColor = surfaceColor,
         modifier = modifier
             .semantics { if (contentDescription != null) this.contentDescription = contentDescription }
             .size(size)
@@ -118,6 +120,7 @@ fun LiquidGlassContainer(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     tint: Color = Color.Unspecified,
+    surfaceColor: Color = Color.Unspecified,
     content: @Composable () -> Unit,
 ) {
     val glass = LocalLiquidGlassStyle.current
@@ -144,6 +147,7 @@ fun LiquidGlassContainer(
                     scaleY = scale
                 },
                 onDrawSurface = {
+                    if (surfaceColor.isSpecified) drawRect(surfaceColor)
                     if (tint.isSpecified) {
                         drawRect(tint, blendMode = BlendMode.Hue)
                         drawRect(tint.copy(alpha = 0.75f))

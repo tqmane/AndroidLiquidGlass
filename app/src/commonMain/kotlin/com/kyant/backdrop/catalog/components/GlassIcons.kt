@@ -178,9 +178,11 @@ object GlassIcons {
         moveTo(4f, 5f); lineTo(20f, 5f); lineTo(20f, 17f); lineTo(10f, 17f); lineTo(6f, 20.5f); lineTo(6f, 17f); lineTo(4f, 17f); close()
         moveTo(7f, 10f); lineTo(11f, 10f); moveTo(13f, 10f); lineTo(17f, 10f); moveTo(7f, 13.5f); lineTo(15f, 13.5f)
     }
-    val Gauge = stroke("gauge.with.needle") {
-        moveTo(4f, 17f); arcTo(8.5f, 8.5f, 0f, isMoreThanHalf = false, isPositiveArc = true, x1 = 20f, y1 = 17f)
-        moveTo(12f, 16f); lineTo(15.5f, 10f)
+    val Gauge = stroke("gauge.with.needle", 1.7f) {
+        circle(12f, 12f, 9.5f)
+        moveTo(12f, 13.5f); lineTo(15.5f, 8.5f)
+        moveTo(6.5f, 13.5f); lineTo(7.5f, 13.5f); moveTo(16.5f, 13.5f); lineTo(17.5f, 13.5f)
+        moveTo(8.2f, 8.2f); lineTo(8.9f, 8.9f); moveTo(12f, 6.5f); lineTo(12f, 7.5f)
     }
     val Waveform = stroke("waveform", 1.8f) {
         moveTo(4f, 10.5f); lineTo(4f, 13.5f); moveTo(7.2f, 8f); lineTo(7.2f, 16f); moveTo(10.4f, 4.5f); lineTo(10.4f, 19.5f)
