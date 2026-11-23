@@ -38,6 +38,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.CompositingStrategy
@@ -52,6 +53,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.semantics.onLongClick
 import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.lerp
 import com.kyant.backdrop.Backdrop
@@ -78,6 +80,16 @@ internal suspend fun LiquidContextMenuState.awaitPreviewDrawn() {
 
 @Composable
 fun rememberLiquidContextMenuState(): LiquidContextMenuState = remember { LiquidContextMenuState() }
+
+/**
+ * Background blur behind an open context menu. 0 (default) dims the live content without redrawing it, so the content
+ * behind stays legible as on iOS 26. A radius > 0 redraws what the menu's backdrop records, blurred, over the screen:
+ * record the content behind (not just a wallpaper) in that backdrop, or the content disappears.
+ */
+val ContextMenuBackgroundBlur: Dp = 0.dp
+
+/** Black dim over the background behind an open context menu (iOS 26 light: #F2F2F7 -> #C4C4CC). */
+const val ContextMenuBackgroundDim: Float = 0.18f
 
 /** Scale the source swells to by the time the long press fires (measured on iOS 26: +3.8 % over ~0.55 s). */
 internal const val ContextMenuPressedScale = 1.038f
@@ -185,14 +197,7 @@ fun BoxScope.LiquidContextMenu(
                 .onGloballyPositioned { origin = it.positionInRoot(); container = it.size }
                 // Nothing is drawn until the preview can be placed, so no frame shows the blur without the card.
                 .drawWithContent { if (placed) drawContent() }
-                .drawBackdrop(
-                    backdrop = backdrop,
-                    shape = { RoundedRectangle(0.dp) },
-                    effects = { blur((18f.dp.toPx() * p.coerceIn(0f, 1f)) * glass.blur) },
-                    highlight = null,
-                    shadow = null,
-                    onDrawSurface = { drawRect(Color.Black.copy(alpha = 0.12f * p.coerceIn(0f, 1f))) }
-                )
+                .contextMenuScrim(backdrop, ContextMenuBackgroundBlur, ContextMenuBackgroundDim, glass.blur) { p.coerceIn(0f, 1f) }
                 .clickable(interactionSource = null, indication = null, onClick = onDismissRequest)
                 .semantics {
                     paneTitle = "Context menu"
@@ -259,3 +264,14 @@ fun BoxScope.LiquidContextMenu(
         }
     }
 }
+
+/** Dim (and with [blurRadius] > 0, blurred [backdrop]) layer behind an open context menu; [progress] is 0..1. */
+internal fun Modifier.contextMenuScrim(backdrop: Backdrop, blurRadius: Dp, dim: Float, blurScale: Float, progress: () -> Float): Modifier =
+    if (blurRadius > 0.dp) drawBackdrop(
+        backdrop = backdrop,
+        shape = { RoundedRectangle(0.dp) },
+        effects = { blur(blurRadius.toPx() * progress() * blurScale) },
+        highlight = null,
+        shadow = null,
+        onDrawSurface = { drawRect(Color.Black.copy(alpha = dim * progress())) }
+    ) else drawBehind { drawRect(Color.Black.copy(alpha = dim * progress())) }

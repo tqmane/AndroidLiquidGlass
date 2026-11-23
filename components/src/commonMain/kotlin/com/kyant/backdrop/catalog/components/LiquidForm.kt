@@ -190,7 +190,9 @@ fun Modifier.topEdgeFade(height: Dp): Modifier =
  * long-press context menu: the background blurs and dims, [preview] is redrawn lifted at the anchor bounds, and the menu
  * opens below the preview (above it near the bottom), aligned to its leading edge. Pass the [state] of a
  * [liquidContextMenuSource] so the preview takes over from the swollen source. [dimBackground] dims and blurs the
- * background without a preview; it is always on with one.
+ * background without a preview; it is always on with one. [backgroundDim] is the black alpha (iOS 26: 0.18). [backgroundBlur]
+ * 0 (default) dims the live content, which stays legible like iOS 26; > 0 redraws what [backdrop] records, blurred, so
+ * record the content behind in it (see [ContextMenuBackgroundBlur]).
  */
 @Composable
 fun BoxScope.LiquidAnchoredMenu(
@@ -204,6 +206,8 @@ fun BoxScope.LiquidAnchoredMenu(
     icons: LiquidMenuIcons = LiquidMenuIcons(),
     dimBackground: Boolean = false,
     state: LiquidContextMenuState? = null,
+    backgroundBlur: Dp = ContextMenuBackgroundBlur,
+    backgroundDim: Float = ContextMenuBackgroundDim,
     preview: (@Composable () -> Unit)? = null,
 ) {
     var hostOrigin by remember { mutableStateOf(Offset.Zero) }
@@ -212,7 +216,7 @@ fun BoxScope.LiquidAnchoredMenu(
     val density = LocalDensity.current
     val b = anchor.bounds.translate(-hostOrigin)
     if (preview != null || dimBackground) {
-        AnchoredMenuBackdrop(expanded, backdrop, b, state, preview)
+        AnchoredMenuBackdrop(expanded, backdrop, b, state, backgroundBlur, backgroundDim, preview)
     }
     val gap = with(density) { (if (preview != null) 12.dp else 8.dp).toPx() }
     val margin = with(density) { (if (preview != null) 16.dp else 8.dp).toPx() }
@@ -248,6 +252,8 @@ private fun BoxScope.AnchoredMenuBackdrop(
     backdrop: Backdrop,
     bounds: Rect,
     state: LiquidContextMenuState?,
+    blurRadius: Dp,
+    dim: Float,
     preview: (@Composable () -> Unit)?,
 ) {
     val glass = LocalLiquidGlassStyle.current
@@ -259,14 +265,7 @@ private fun BoxScope.AnchoredMenuBackdrop(
         Box(
             Modifier
                 .matchParentSize()
-                .drawBackdrop(
-                    backdrop = backdrop,
-                    shape = { RoundedRectangle(0.dp) },
-                    effects = { blur(18f.dp.toPx() * p * glass.blur) },
-                    highlight = null,
-                    shadow = null,
-                    onDrawSurface = { drawRect(Color.Black.copy(alpha = 0.12f * p)) }
-                )
+                .contextMenuScrim(backdrop, blurRadius, dim, glass.blur) { p }
         )
         if (preview != null) {
             val density = LocalDensity.current
