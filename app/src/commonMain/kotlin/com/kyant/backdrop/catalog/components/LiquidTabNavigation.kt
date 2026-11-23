@@ -1,5 +1,8 @@
 package com.kyant.backdrop.catalog.components
 
+import com.kyant.backdrop.catalog.utils.BackHandler
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.SideEffect
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
@@ -256,6 +259,7 @@ private fun BoxWithConstraintsScope.SidebarHost(
     val spring by animateFloatAsState(if (visible) 1f else 0f, spring(dampingRatio = 0.85f, stiffness = 500f))
     // The spring overshoots past 0 and 1; padding and alpha must stay in range.
     val progress = spring.coerceIn(0f, 1f)
+    BackHandler(visible && !docked, onDismiss)
     content(if (docked) (width + 8.dp) * progress else 0.dp)
     if (!docked && progress > 0f) {
         Box(
@@ -348,8 +352,11 @@ fun LiquidAdaptiveTabScaffold(
                 if (tabs.none { it.key == selectedKey }) onSelect(barTabs.first().key)
             }
             // LiquidBottomTabs keys its state on the lambda's identity, so the lambda must be stable and read a State.
-            val selectedIndex = rememberUpdatedState(barTabs.indexOfFirst { it.key == selectedKey })
-            val readSelectedIndex = remember { { selectedIndex.value.coerceAtLeast(0) } }
+            // While Search (not in the bar) is selected the bar keeps its last tab; moving it would report a selection.
+            val barIndex = remember { mutableIntStateOf(0) }
+            val selectedBarIndex = barTabs.indexOfFirst { it.key == selectedKey }
+            SideEffect { if (selectedBarIndex >= 0) barIndex.intValue = selectedBarIndex }
+            val readSelectedIndex = remember { { barIndex.intValue } }
             Row(
                 Modifier
                     .align(Alignment.BottomCenter)
