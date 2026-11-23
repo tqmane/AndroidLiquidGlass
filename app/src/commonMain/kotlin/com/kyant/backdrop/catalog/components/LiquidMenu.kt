@@ -68,6 +68,7 @@ sealed interface MenuEntry {
         val title: String,
         val icon: ImageVector? = null,
         val entries: List<MenuEntry>,
+        val subtitle: String? = null,
     ) : MenuEntry
 
     data object Divider : MenuEntry
@@ -207,6 +208,7 @@ internal fun MenuEntries(
             is MenuEntry.Submenu -> MenuRow(
                 title = entry.title,
                 icon = entry.icon,
+                subtitle = entry.subtitle,
                 trailing = GlassIcons.ChevronRight,
                 color = GlassColors.label(),
                 onClick = { onOpenSubmenu(entry) }

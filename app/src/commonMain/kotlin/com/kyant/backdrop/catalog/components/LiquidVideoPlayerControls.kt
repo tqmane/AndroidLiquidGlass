@@ -75,6 +75,8 @@ class VideoPlayerState(duration: Float, playing: Boolean = false) {
     var muted by mutableStateOf(false)
     var speed by mutableFloatStateOf(1f)
     var captions by mutableStateOf<String?>(null)
+    var subtitleLanguage by mutableStateOf("English")
+    var captionStyle by mutableStateOf("Transparent Background")
     var audioTrack by mutableStateOf("English")
     var pictureInPicture by mutableStateOf(false)
     var fullscreen by mutableStateOf(false)
@@ -170,9 +172,9 @@ fun BoxScope.LiquidVideoPlayerControls(
                 .align(Alignment.BottomCenter)
                 .then(if (full) Modifier.safeDrawingPadding() else Modifier)
                 .padding(bottom = if (full) 76.dp else 56.dp)
-                .background(Color.Black.copy(alpha = 0.45f), RoundedRectangle(6.dp))
+                .background(Color.Black.copy(alpha = if (state.captionStyle == "Default") 0.8f else 0.45f), RoundedRectangle(6.dp))
                 .padding(horizontal = 8.dp, vertical = 2.dp),
-            style = TextStyle(Color.White, if (full) 17.sp else 11.sp)
+            style = TextStyle(Color.White, (if (full) 17f else 11f).let { if (state.captionStyle == "Large Text") it * 1.35f else it }.sp)
         )
     }
     if (alpha == 0f) return
@@ -260,9 +262,29 @@ fun BoxScope.LiquidVideoPlayerControls(
         val audioEntries = listOf("English", "Japanese").map { t ->
             MenuEntry.Action(t, checked = state.audioTrack == t, onClick = { state.audioTrack = t; close() })
         }
-        val subtitleEntries = listOf<String?>(null, "English", "Japanese").map { c ->
-            MenuEntry.Action(c ?: "Off", checked = state.captions == c, onClick = { state.captions = c; close() })
-        } + if (full) listOf(MenuEntry.Submenu("Audio Track", GlassIcons.Waveform, audioEntries)) else emptyList()
+        val subtitleEntries = listOf(
+            MenuEntry.Action("On", checked = state.captions != null, onClick = { state.captions = state.subtitleLanguage; close() }),
+            MenuEntry.Action("Off", checked = state.captions == null, onClick = { state.captions = null; close() }),
+            MenuEntry.Divider,
+            MenuEntry.Submenu(
+                "Language",
+                entries = listOf("English", "Japanese").map { l ->
+                    MenuEntry.Action(l, checked = state.subtitleLanguage == l, onClick = {
+                        state.subtitleLanguage = l
+                        state.captions = l
+                        close()
+                    })
+                },
+                subtitle = state.subtitleLanguage
+            ),
+            MenuEntry.Submenu(
+                "Style",
+                entries = CaptionStyles.map { st ->
+                    MenuEntry.Action(st, checked = state.captionStyle == st, onClick = { state.captionStyle = st; close() })
+                },
+                subtitle = state.captionStyle
+            ),
+        ) + if (full) listOf(MenuEntry.Submenu("Audio Track", GlassIcons.Waveform, audioEntries, subtitle = state.audioTrack)) else emptyList()
         val (entries, header) = when (menu) {
             PlayerMenu.Speed -> speedEntries to "Playback Speed"
             PlayerMenu.Audio -> audioEntries to "Audio Track"
@@ -292,6 +314,8 @@ fun BoxScope.LiquidVideoPlayerControls(
 }
 
 private enum class PlayerMenu { More, Speed, Audio, Subtitles }
+
+private val CaptionStyles = listOf("Transparent Background", "Default", "Large Text")
 
 private val ScrubberBarInline = 40.dp
 private val ScrubberBarFull = 44.dp
