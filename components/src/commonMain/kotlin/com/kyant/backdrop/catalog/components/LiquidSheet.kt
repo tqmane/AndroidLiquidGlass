@@ -47,6 +47,8 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -318,19 +320,24 @@ internal fun lerpPremultiplied(a: Color, b: Color, t: Float): Color {
     return Color(ch(a.red, b.red), ch(a.green, b.green), ch(a.blue, b.blue), alpha)
 }
 
-/** iOS 26 sheet navigation header: centered 17 pt semibold title with optional leading/trailing glass buttons; pass neither for a title-only sheet. */
+/**
+ * iOS 26 sheet navigation header: centered 17 pt semibold title with optional leading/trailing glass buttons; pass neither
+ * for a title-only sheet. With a [SheetLargeTitle] in the content, pass [showTitle] = false until it scrolls away.
+ */
 @Composable
 fun LiquidSheetScope.LiquidSheetHeader(
     title: String,
     modifier: Modifier = Modifier,
     leading: (@Composable () -> Unit)? = null,
     trailing: (@Composable () -> Unit)? = null,
+    showTitle: Boolean = true,
 ) {
+    val titleAlpha by animateFloatAsState(if (showTitle) 1f else 0f, tween(150))
     Box(modifier.fillMaxWidth().padding(top = 5.dp, start = 16.dp, end = 16.dp).height(52.dp)) {
         leading?.let { Box(Modifier.align(Alignment.CenterStart)) { it() } }
         BasicText(
             title,
-            Modifier.align(Alignment.Center).padding(horizontal = 56.dp),
+            Modifier.align(Alignment.Center).padding(horizontal = 56.dp).graphicsLayer { alpha = titleAlpha },
             style = TextStyle(GlassColors.label(), 17.sp, FontWeight.SemiBold),
             maxLines = 1
         )
@@ -338,17 +345,35 @@ fun LiquidSheetScope.LiquidSheetHeader(
     }
 }
 
+/** Section header of an inset-grouped list (15 pt regular). */
+val GroupedSectionTitleStyle: TextStyle = TextStyle(fontSize = 15.sp)
+
+/** Section header of a SwiftUI `Form` in iOS 26 (17 pt semibold). */
+val FormSectionTitleStyle: TextStyle = TextStyle(fontSize = 17.sp, fontWeight = FontWeight.SemiBold)
+
+/** iOS 26 large navigation title (34 pt bold) at the top of a sheet's scrolling content, under a [LiquidSheetHeader]. */
+@Composable
+fun SheetLargeTitle(title: String, modifier: Modifier = Modifier) {
+    BasicText(
+        title,
+        modifier.padding(start = 16.dp, end = 16.dp, top = 2.dp, bottom = 4.dp),
+        style = TextStyle(GlassColors.label(), 34.sp, FontWeight.Bold),
+        maxLines = 1
+    )
+}
+
 /** Inset-grouped section inside a sheet. Cells are a translucent fill at the medium detent and turn into opaque grouped cells once the sheet passes halfway up, as on iOS 26. */
 @Composable
 fun LiquidSheetScope.SheetSection(
     title: String?,
     modifier: Modifier = Modifier,
+    titleStyle: TextStyle = GroupedSectionTitleStyle,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     val isLightTheme = !isGlassDark()
     val cell = if (isLightTheme) lerpPremultiplied(Color.Black.copy(alpha = 0.05f), Color.White, material)
     else Color(0xFF2C2C2E)
-    GroupedSection(title, cell, modifier, content = content)
+    GroupedSection(title, cell, modifier, titleStyle = titleStyle, content = content)
 }
 
 /** Inset-grouped list section (26 dp corners, 15 pt secondary header). */
@@ -358,11 +383,12 @@ fun GroupedSection(
     cellColor: Color,
     modifier: Modifier = Modifier,
     horizontalPadding: Dp = 16.dp,
+    titleStyle: TextStyle = GroupedSectionTitleStyle,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     Column(modifier.fillMaxWidth().padding(horizontal = horizontalPadding)) {
         title?.let {
-            BasicText(it, Modifier.padding(start = 16.dp, top = 14.dp, bottom = 8.dp), style = TextStyle(GlassColors.secondaryLabel(), 15.sp))
+            BasicText(it, Modifier.padding(start = 16.dp, top = 14.dp, bottom = 8.dp), style = titleStyle.merge(TextStyle(GlassColors.secondaryLabel())))
         }
         Column(Modifier.fillMaxWidth().clip(RoundedRectangle(26.dp)).background(cellColor), content = content)
     }
