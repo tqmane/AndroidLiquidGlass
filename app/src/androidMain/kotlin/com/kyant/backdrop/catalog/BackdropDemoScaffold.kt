@@ -93,6 +93,5 @@ actual fun BackdropDemoScaffold(
                 style = TextStyle(Color.White, 16f.sp)
             )
         }
-
     }
 }

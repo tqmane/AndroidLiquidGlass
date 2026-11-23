@@ -52,7 +52,7 @@ private fun ColumnScope.SheetBody(backdrop: LayerBackdrop, title: String, onClos
         LiquidIconButton(GlassIcons.Check, "Done", onClose, backdrop, tint = GlassColors.accent())
     }
     Column(
-        Modifier.padding(16.dp).fillMaxWidth().clip(RoundedRectangle(26.dp)).background(GlassColors.fill().copy(alpha = 0.3f))
+        Modifier.weight(1f, fill = false).verticalScroll(rememberScrollState()).padding(16.dp).fillMaxWidth().clip(RoundedRectangle(26.dp)).background(GlassColors.fill().copy(alpha = 0.3f))
     ) {
         listOf("Recently added", "Downloads", "Favorites", "Shared with you").forEachIndexed { i, label ->
             if (i > 0) Box(Modifier.padding(start = 16.dp).fillMaxWidth().height(1.dp).background(GlassColors.separator()))
