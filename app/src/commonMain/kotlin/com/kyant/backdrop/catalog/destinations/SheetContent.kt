@@ -30,6 +30,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.kyant.backdrop.catalog.components.GlassColors
 import com.kyant.backdrop.catalog.components.GlassIcons
@@ -51,6 +52,7 @@ fun SheetContent() {
     var largeOnly by remember { mutableStateOf(false) }
     var noGrabber by remember { mutableStateOf(false) }
     var connection by remember { mutableStateOf(false) }
+    var tall by remember { mutableStateOf(false) }
     val pageCell = if (isSystemInDarkTheme()) Color(0xFF1C1C1E) else Color.White
 
     IosPage(
@@ -65,6 +67,7 @@ fun SheetContent() {
             LiquidSheet(connection, { connection = false }, backdrop, detents = listOf(SheetDetent.Large), showGrabber = false, title = "Connection") {
                 ConnectionBody { connection = false }
             }
+            LiquidSheet(tall, { tall = false }, backdrop, detents = listOf(SheetDetent.Large), title = "Browse", formSheetMaxHeight = Dp.Infinity) { BrowseBody() }
             LiquidSheet(noGrabber, { noGrabber = false }, backdrop, showGrabber = false, title = "Edit collection") {
                 EditCollectionBody { noGrabber = false }
             }
@@ -77,6 +80,7 @@ fun SheetContent() {
             GroupedCell("Large-only sheet", labelColor = GlassColors.accent(), showSeparator = true, onClick = { largeOnly = true })
             GroupedCell("Sheet without grabber", labelColor = GlassColors.accent(), showSeparator = true, onClick = { noGrabber = true })
             GroupedCell("Form sheet with fields", labelColor = GlassColors.accent(), showSeparator = true, onClick = { connection = true })
+            GroupedCell("Tall form sheet (iPad)", labelColor = GlassColors.accent(), showSeparator = true, onClick = { tall = true })
         }
         GroupedSection("Library", pageCell, Modifier.padding(top = 14.dp), horizontalPadding = 0.dp) {
             GroupedCell("Recently added", icon = GlassIcons.Clock)
