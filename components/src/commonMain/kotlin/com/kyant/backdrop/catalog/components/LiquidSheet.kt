@@ -92,6 +92,9 @@ sealed class SheetDetent {
  * velocity projection and swipe-to-dismiss.
  *
  * Place it last inside a full-size [BoxScope] that also contains the content [backdrop] records.
+ *
+ * On width >= 600dp it is an iPadOS form sheet whose large detent is [formSheetMaxHeight] tall,
+ * capped to the safe area; pass [Dp.Infinity] to fill all the height available.
  */
 @Composable
 fun BoxScope.LiquidSheet(
@@ -102,6 +105,7 @@ fun BoxScope.LiquidSheet(
     detents: List<SheetDetent> = listOf(SheetDetent.Medium, SheetDetent.Large),
     showGrabber: Boolean = true,
     title: String = "Sheet",
+    formSheetMaxHeight: Dp = 635.dp,
     content: @Composable LiquidSheetScope.() -> Unit,
 ) {
     BackHandler(visible) { onDismissRequest() }
@@ -122,9 +126,10 @@ fun BoxScope.LiquidSheet(
             // Centered within the safe area, so a taller detent always has a higher top even in a short window.
             val bottomInset = WindowInsets.safeDrawing.getBottom(density).toFloat()
             val formAvailable = maxH - formMinTop - formMargin - bottomInset
-            val formLargeHeight = minOf(with(density) { 635.dp.toPx() }, formAvailable)
+            val formLargeHeight = if (formSheetMaxHeight == Dp.Infinity) formAvailable
+                else minOf(with(density) { formSheetMaxHeight.toPx() }, formAvailable)
             // (top, bottom) of each detent, lowest sheet first.
-            val bounds = remember(detents, maxH, topInset, bottomInset, formSheet) {
+            val bounds = remember(detents, maxH, topInset, bottomInset, formSheet, formLargeHeight) {
                 detents.map { d ->
                     when (d) {
                         is SheetDetent.Fraction -> {
