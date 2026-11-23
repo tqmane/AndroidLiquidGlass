@@ -6,6 +6,11 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.ui.Alignment
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -45,11 +50,14 @@ fun VideoPlayerContent() {
         return
     }
     val dark = isSystemInDarkTheme()
+    // On a landscape tablet a full-width 16:9 player is taller than the window; cap it so the scrubber and text stay visible.
+    BoxWithConstraints(Modifier.fillMaxSize().background(if (dark) Color.Black else Color.White).safeDrawingPadding()) {
+    val maxPlayerWidth = maxHeight * 0.62f * (16f / 9f)
     Column(
         Modifier
             .fillMaxSize()
-            .background(if (dark) Color.Black else Color.White)
-            .safeDrawingPadding()
+            .verticalScroll(rememberScrollState()),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
         BasicText(
             "Video",
@@ -58,19 +66,20 @@ fun VideoPlayerContent() {
         )
         LiquidVideoPlayer(
             state,
-            Modifier.padding(horizontal = 16.dp).fillMaxWidth().aspectRatio(16f / 9f),
+            Modifier.padding(horizontal = 16.dp).widthIn(max = maxPlayerWidth).fillMaxWidth().aspectRatio(16f / 9f),
             captionText = ::caption
         ) { NightSkyFrame() }
         BasicText(
             "Night over the mountains",
-            Modifier.padding(start = 16.dp, end = 16.dp, top = 18.dp),
+            Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 18.dp),
             style = TextStyle(GlassColors.label(), 22.sp, FontWeight.Bold)
         )
         BasicText(
             "A local sample clip for the Liquid Glass player.",
-            Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+            Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
             style = TextStyle(GlassColors.secondaryLabel(), 15.sp)
         )
+    }
     }
 }
 

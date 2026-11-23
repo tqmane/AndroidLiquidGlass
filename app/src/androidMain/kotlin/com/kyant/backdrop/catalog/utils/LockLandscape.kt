@@ -18,15 +18,17 @@ actual fun LockLandscape(enabled: Boolean) {
         while (c is ContextWrapper && c !is Activity) c = c.baseContext
         val activity = c as? Activity
         if (!enabled || activity == null) return@DisposableEffect onDispose {}
+        // Tablets keep their orientation like iPad fullscreen playback; locking a large screen would letterbox the app.
+        val lock = activity.resources.configuration.smallestScreenWidthDp < 600
         val previous = activity.requestedOrientation
-        activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
+        if (lock) activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
         // Fullscreen playback hides the status and navigation bars, like AVKit; a swipe shows them transiently.
         val insets = WindowCompat.getInsetsController(activity.window, activity.window.decorView)
         insets.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
         insets.hide(WindowInsetsCompat.Type.systemBars())
         onDispose {
             insets.show(WindowInsetsCompat.Type.systemBars())
-            activity.requestedOrientation = previous
+            if (lock) activity.requestedOrientation = previous
         }
     }
 }
