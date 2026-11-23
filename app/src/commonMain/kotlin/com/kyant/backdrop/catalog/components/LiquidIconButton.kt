@@ -134,7 +134,7 @@ fun LiquidGlassContainer(
     Box(
         modifier
             // Registered before the press layer so the bounds are the laid-out ones and [pressTransform] is applied once.
-            .liquidGlassEffectMember { rect ->
+            .liquidGlassEffectMember({ interactiveHighlight.pressProgress }) { rect ->
                 val (scale, translation) = pressTransform(interactiveHighlight, rect.size, density)
                 Rect(
                     rect.center + translation - Offset(rect.width * scale / 2f, rect.height * scale / 2f),

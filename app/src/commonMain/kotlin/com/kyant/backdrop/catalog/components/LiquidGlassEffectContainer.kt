@@ -90,7 +90,12 @@ fun LiquidGlassEffectContainer(
                     },
                     highlight = null,
                     shadow = null,
-                    onDrawSurface = { drawGlassFill(Color.Unspecified, Color.Unspecified, isLight, glass.opacity) }
+                    onDrawSurface = {
+                        drawGlassFill(Color.Unspecified, Color.Unspecified, isLight, glass.opacity)
+                        // Same lift a held member gets from its press highlight, so the neck has no colour step.
+                        val glow = group.members.values.maxOfOrNull { it.glow() } ?: 0f
+                        if (glow > 0f) drawRect(Color.White.copy(alpha = 0.2f * glow))
+                    }
                 )
         )
     }
@@ -100,7 +105,10 @@ fun LiquidGlassEffectContainer(
  * Joins this capsule-shaped glass surface to the enclosing [LiquidGlassEffectContainer].
  * [transform] maps the laid-out bounds to the drawn ones (press growth, drag offset).
  */
-fun Modifier.liquidGlassEffectMember(transform: Density.(Rect) -> Rect = { it }): Modifier = composed {
+fun Modifier.liquidGlassEffectMember(
+    glow: () -> Float = { 0f },
+    transform: Density.(Rect) -> Rect = { it },
+): Modifier = composed {
     val group = LocalLiquidGlassGroup.current ?: return@composed this
     val key = remember { Any() }
     DisposableEffect(group) { onDispose { group.members.remove(key) } }
@@ -109,17 +117,18 @@ fun Modifier.liquidGlassEffectMember(transform: Density.(Rect) -> Rect = { it })
         if (!parent.isAttached) return@onGloballyPositioned
         val rect = parent.localBoundingBoxOf(c, clipBounds = false)
         val member = group.members[key]
-        if (member == null) group.members[key] = GroupMember(rect, transform)
+        if (member == null) group.members[key] = GroupMember(rect, transform, glow)
         else {
             member.rect = rect
             member.transform = transform
+            member.glow = glow
         }
     }
 }
 
 internal val LocalLiquidGlassGroup = compositionLocalOf<LiquidGlassGroup?> { null }
 
-internal class GroupMember(rect: Rect, var transform: Density.(Rect) -> Rect) {
+internal class GroupMember(rect: Rect, var transform: Density.(Rect) -> Rect, var glow: () -> Float) {
     var rect by mutableStateOf(rect)
 }
 
@@ -166,7 +175,7 @@ private fun addBridge(path: Path, outline: Path, a: Rect, b: Rect, spacing: Floa
     val c2 = Offset(b.left + r2, b.center.y)
     val d = (c2 - c1).getDistance()
     if (d <= abs(r1 - r2) + 0.5f) return
-    val v = 0.55f * t
+    val v = 0.32f * t
     if (v < 0.02f) return
     val u1 = if (d < r1 + r2) acos(((r1 * r1 + d * d - r2 * r2) / (2 * r1 * d)).coerceIn(-1f, 1f)) else 0f
     val u2 = if (d < r1 + r2) acos(((r2 * r2 + d * d - r1 * r1) / (2 * r2 * d)).coerceIn(-1f, 1f)) else 0f
@@ -181,7 +190,7 @@ private fun addBridge(path: Path, outline: Path, a: Rect, b: Rect, spacing: Floa
     val p2 = c1 + dir(a2) * r1
     val p3 = c2 + dir(a3) * r2
     val p4 = c2 + dir(a4) * r2
-    val handle = min(v * 2.4f, (p1 - p3).getDistance() / (r1 + r2)) * min(1f, d * 2f / (r1 + r2))
+    val handle = min(v * 2f, (p1 - p3).getDistance() / (r1 + r2)) * min(1f, d * 2f / (r1 + r2))
     val h1 = p1 + dir(a1 - PI.toFloat() / 2f) * (r1 * handle)
     val h2 = p2 + dir(a2 + PI.toFloat() / 2f) * (r1 * handle)
     val h3 = p3 + dir(a3 + PI.toFloat() / 2f) * (r2 * handle)
