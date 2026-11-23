@@ -1,5 +1,6 @@
 package com.kyant.backdrop.catalog.destinations
 
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -39,7 +40,7 @@ fun ToolbarContent() {
             }
         }
         Column(
-            Modifier.align(Alignment.BottomCenter).systemBarsPadding().padding(horizontal = 16.dp, vertical = 8.dp).fillMaxWidth(),
+            Modifier.align(Alignment.BottomCenter).systemBarsPadding().padding(horizontal = 16.dp, vertical = 8.dp).widthIn(max = 560.dp).fillMaxWidth(),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             BasicText("Bottom toolbar", style = TextStyle(Color.White, 13.sp))
