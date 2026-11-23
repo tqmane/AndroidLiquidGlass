@@ -111,10 +111,10 @@ data class LiquidSidebarSection(val title: String?, val items: List<LiquidTabIte
 val RegularWidthBreakpoint = 600.dp
 
 /**
- * iPadOS 26 floating tab bar: a Liquid Glass capsule (the same refracting material as [LiquidBottomTabs])
- * centered at the top of the window with an optional leading sidebar toggle, text tabs and an icon-only
- * search tab at the end. The selection is a glass droplet that slides between tabs; press it to swell it
- * and drag it across the bar to pick a tab, as on iPad.
+ * iPadOS 26 floating tab bar: [LiquidBottomTabs] moved to the top of the window and sized for it (a 46 dp
+ * capsule with a 38 dp selection pill), with the sidebar toggle inside the capsule ahead of the tabs. The
+ * pill is the bottom tab pill itself: press it to swell it into a clear lens and drag it across the bar to
+ * pick a tab, as on iPad. Text tabs and the icon-only search tab share the bar equally.
  */
 @Composable
 fun LiquidTopTabBar(
@@ -125,192 +125,52 @@ fun LiquidTopTabBar(
     modifier: Modifier = Modifier,
     onToggleSidebar: (() -> Unit)? = null,
     selectedColor: Color = GlassColors.accent(),
+    tabWidth: Dp = 92.dp,
 ) {
-    val glass = LocalLiquidGlassStyle.current
-    val dark = isGlassDark()
-    val containerColor = if (dark) Color(0xFF121212).copy(0.4f) else Color(0xFFFAFAFA).copy(0.4f)
-    val scope = rememberCoroutineScope()
-    val bounds = remember { mutableStateMapOf<String, Pair<Float, Float>>() }
-    val indicatorX = remember { Animatable(0f) }
-    val indicatorWidth = remember { Animatable(0f) }
-    val press = remember { Animatable(0f) }
-    val barBackdrop = rememberLayerBackdrop()
-    var dragX by remember { mutableStateOf<Float?>(null) }
-    val currentSelected by rememberUpdatedState(selectedKey)
+    // LiquidBottomTabs keys its state on the lambda's identity, so the lambda must be stable and read a State.
+    val selectedIndex = rememberUpdatedState(tabs.indexOfFirst { it.key == selectedKey }.coerceAtLeast(0))
+    val readSelectedIndex = remember { { selectedIndex.value } }
+    val currentTabs by rememberUpdatedState(tabs)
     val currentOnSelect by rememberUpdatedState(onSelect)
-    val selected = bounds[selectedKey]
-    LaunchedEffect(selected) {
-        val (x, w) = selected ?: return@LaunchedEffect
-        if (indicatorWidth.value == 0f) {
-            indicatorX.snapTo(x); indicatorWidth.snapTo(w)
-        } else {
-            launch { indicatorX.animateTo(x, spring(0.72f, 420f)) }
-            indicatorWidth.animateTo(w, spring(0.72f, 420f))
-        }
-    }
-    fun keyAt(x: Float): String? = bounds.entries.minByOrNull { (_, b) ->
-        val (l, w) = b
-        if (x < l) l - x else if (x > l + w) x - l - w else 0f
-    }?.key
-    val hovered = dragX?.let(::keyAt) ?: selectedKey
-
-    // The glass is a sibling behind the row rather than the row itself: drawBackdrop clips its content to the
-    // capsule, and the held pill has to swell past the bar the way it does on iPadOS.
-    Box(modifier.height(46.dp)) {
-        Box(
-            Modifier
-            .matchParentSize()
-            .drawBackdrop(
-                backdrop = backdrop,
-                shape = { Capsule() },
-                effects = {
-                    vibrancy()
-                    blur(8.dp.toPx() * glass.blur)
-                    lens(16.dp.toPx() * glass.refraction, 24.dp.toPx() * glass.refraction)
-                },
-                layerBlock = {
-                    val s = lerp(1f, 1f + 16.dp.toPx() / size.width, press.value)
-                    scaleX = s
-                    scaleY = s
-                },
-                exportedBackdrop = barBackdrop,
-                onDrawSurface = { if (dark) drawDarkGlass(glass.opacity) else drawRect(containerColor.copy(alpha = containerColor.alpha * glass.opacity)) }
-            )
-        )
-        Row(
-            Modifier.fillMaxHeight().padding(4.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        if (onToggleSidebar != null) {
-            Box(
-                Modifier
-                    // Kept above the held pill when it swells over the toggle.
-                    .zIndex(1f)
-                    .fillMaxHeight()
-                    .clip(Capsule())
-                    .clickable(role = Role.Button, onClick = onToggleSidebar)
-                    .semantics { contentDescription = "Show sidebar" }
-                    .padding(horizontal = 11.dp),
-                contentAlignment = Alignment.Center
-            ) { GlassIcon(GlassIcons.SidebarLeft, GlassColors.label(), Modifier.size(22.dp)) }
-        }
-        Box(
-            Modifier
-                .fillMaxHeight()
-                .pointerInput(Unit) {
-                    awaitEachGesture {
-                        val down = awaitFirstDown()
-                        val onIndicator = bounds[currentSelected]?.let { (l, w) -> down.position.x in l..(l + w) } == true
-                        scope.launch { press.animateTo(1f, spring(0.6f, 500f)) }
-                        var moved = false
-                        var last = down.position
-                        while (true) {
-                            val event = awaitPointerEvent()
-                            val change = event.changes.firstOrNull { it.id == down.id } ?: break
-                            last = change.position
-                            if (!change.pressed) break
-                            if (onIndicator && (moved || abs(change.position.x - down.position.x) > viewConfiguration.touchSlop)) {
-                                moved = true
-                                change.consume()
-                                val x = change.position.x
-                                dragX = x
-                                scope.launch {
-                                    val w = indicatorWidth.value
-                                    indicatorX.animateTo(x - w / 2f, spring(1f, 1500f))
-                                }
-                            }
-                        }
-                        val inside = last.x in 0f..size.width.toFloat() && last.y in 0f..size.height.toFloat() && keyAt(last.x) == keyAt(down.position.x)
-                        val target = if (moved) dragX?.let(::keyAt) else if (inside) keyAt(down.position.x) else null
-                        dragX = null
-                        scope.launch { press.animateTo(0f, spring(0.5f, 300f)) }
-                        if (target != null) {
-                            if (target == currentSelected) {
-                                bounds[target]?.let { (x, _) -> scope.launch { indicatorX.animateTo(x, spring(0.72f, 420f)) } }
-                            } else currentOnSelect(target)
-                        }
-                    }
-                }
-        ) {
-            if (indicatorWidth.value > 0f) {
-                val density = LocalDensity.current
+    val leadingWidth = if (onToggleSidebar != null) 44.dp else 0.dp
+    LiquidBottomTabs(
+        selectedTabIndex = readSelectedIndex,
+        onTabSelected = { index ->
+            val key = currentTabs[index].key
+            if (key != selectedKey) currentOnSelect(key)
+        },
+        backdrop = backdrop,
+        tabsCount = tabs.size,
+        modifier = modifier.width(leadingWidth + tabWidth * tabs.size + 8.dp),
+        accentColor = selectedColor,
+        height = 46.dp,
+        pillHeight = 38.dp,
+        leadingWidth = leadingWidth,
+        leading = {
+            if (onToggleSidebar != null) {
                 Box(
                     Modifier
-                        .graphicsLayer { translationX = indicatorX.value }
-                        .width(with(density) { indicatorWidth.value.toDp() })
-                        .fillMaxHeight()
-                        .drawBackdrop(
-                            // As in the bottom tab pill: refracts the bar glass, and the page where it overhangs the bar.
-                            backdrop = rememberCombinedBackdrop(backdrop, barBackdrop),
-                            shape = { Capsule() },
-                            effects = {
-                                lens(
-                                    10.dp.toPx() * press.value * glass.refraction,
-                                    14.dp.toPx() * press.value * glass.refraction,
-                                    chromaticAberration = true
-                                )
-                            },
-                            highlight = { Highlight.Default.copy(alpha = press.value) },
-                            // The bar is thinner than the bottom tabs, so the full-strength shadows there read as a
-                            // gray slab here; the iPad pill is a clear lens with a bright rim and barely any shade.
-                            shadow = { Shadow(alpha = 0.4f * press.value) },
-                            innerShadow = { InnerShadow(radius = 6.dp * press.value, alpha = 0.35f * press.value) },
-                            // Scaled through layerBlock so the backdrop is sampled unscaled under the swollen pill;
-                            // scaling an outer layer would magnify the page and the pill would read as an opaque slab.
-                            // Like the bottom tab pill it overhangs the bar by 7 dp above and below (38 -> 60 dp),
-                            // squashed along the drag.
-                            layerBlock = {
-                                val s = lerp(1f, (size.height + 22.dp.toPx()) / size.height, press.value)
-                                val v = (indicatorX.velocity / 10_000f).coerceIn(-0.2f, 0.2f)
-                                scaleX = s / (1f - abs(v) * 0.75f)
-                                scaleY = s * (1f - abs(v) * 0.25f)
-                            },
-                            onDrawSurface = {
-                                drawRect(
-                                    if (dark) Color.White.copy(0.1f) else Color.Black.copy(0.1f),
-                                    alpha = 1f - press.value
-                                )
-                            }
-                        )
-                )
-            }
-            Row(Modifier.fillMaxHeight(), verticalAlignment = Alignment.CenterVertically) {
-                tabs.forEach { tab ->
-                    val active = tab.key == hovered
-                    val color by animateColorAsState(if (active) selectedColor else GlassColors.label())
-                    Box(
-                        Modifier
-                            .fillMaxHeight()
-                            .onPlaced { bounds[tab.key] = it.positionInParent().x to it.size.width.toFloat() }
-                            .onKeyEvent {
-                                if (it.type == KeyEventType.KeyUp && (it.key == Key.Enter || it.key == Key.NumPadEnter || it.key == Key.Spacebar)) {
-                                    onSelect(tab.key)
-                                    true
-                                } else false
-                            }
-                            .focusable()
-                            .semantics {
-                                role = Role.Tab
-                                this.selected = tab.key == selectedKey
-                                contentDescription = tab.title
-                                onClick { onSelect(tab.key); true }
-                            }
-                            .padding(horizontal = if (tab.search) 11.dp else 13.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        // The held pill magnifies the label under it, as the bottom tab pill does.
-                        val magnify = Modifier.graphicsLayer {
-                            val k = if (active) lerp(1f, 1.2f, press.value) else 1f
-                            scaleX = k
-                            scaleY = k
-                        }
-                        if (tab.search) GlassIcon(tab.icon, color, magnify.size(20.dp))
-                        else BasicText(tab.title, magnify, style = TextStyle(color, 15.sp, FontWeight.Medium))
-                    }
-                }
+                        .fillMaxSize()
+                        .clip(Capsule())
+                        .clickable(role = Role.Button, onClick = onToggleSidebar)
+                        .semantics { contentDescription = "Show sidebar" },
+                    contentAlignment = Alignment.Center
+                ) { GlassIcon(GlassIcons.SidebarLeft, GlassColors.label(), Modifier.size(22.dp)) }
             }
         }
-    }
+    ) {
+        tabs.forEach { tab ->
+            LiquidBottomTab(
+                { onSelect(tab.key) },
+                Modifier.semantics {
+                    this.selected = tab.key == selectedKey
+                    contentDescription = tab.title
+                }
+            ) {
+                if (tab.search) GlassIcon(tab.icon, GlassColors.label(), Modifier.size(20.dp))
+                else BasicText(tab.title, style = TextStyle(GlassColors.label(), 15.sp, FontWeight.Medium))
+            }
+        }
     }
 }
 

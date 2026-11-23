@@ -1,5 +1,9 @@
 package com.kyant.backdrop.catalog.components
 
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.width
+import androidx.compose.ui.unit.Dp
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.EaseOut
 import androidx.compose.animation.core.spring
@@ -64,6 +68,10 @@ fun LiquidBottomTabs(
     tabsCount: Int,
     modifier: Modifier = Modifier,
     accentColor: Color = if (isGlassDark()) Color(0xFF0091FF) else Color(0xFF0088FF),
+    height: Dp = 64f.dp,
+    pillHeight: Dp = 56f.dp,
+    leadingWidth: Dp = 0f.dp,
+    leading: @Composable () -> Unit = {},
     content: @Composable RowScope.() -> Unit
 ) {
     val glass = LocalLiquidGlassStyle.current
@@ -80,7 +88,7 @@ fun LiquidBottomTabs(
     ) {
         val density = LocalDensity.current
         val tabWidth = with(density) {
-            (constraints.maxWidth.toFloat() - 8f.dp.toPx()) / tabsCount
+            (constraints.maxWidth.toFloat() - 8f.dp.toPx() - leadingWidth.toPx()) / tabsCount
         }
 
         val offsetAnimation = remember { Animatable(0f) }
@@ -105,7 +113,8 @@ fun LiquidBottomTabs(
                 valueRange = 0f..(tabsCount - 1).toFloat(),
                 visibilityThreshold = 0.001f,
                 initialScale = 1f,
-                pressedScale = 78f / 56f,
+                // 56 -> 78 dp on the bottom bar: the held pill overhangs the bar by 7 dp above and below.
+                pressedScale = (pillHeight.value + 22f) / pillHeight.value,
                 onDragStarted = {},
                 onDragStopped = {
                     val targetIndex = targetValue.fastRoundToInt().fastCoerceIn(0, tabsCount - 1)
@@ -148,9 +157,10 @@ fun LiquidBottomTabs(
             InteractiveHighlight(
                 animationScope = animationScope,
                 position = { size, offset ->
+                    val lead = with(density) { leadingWidth.toPx() }
                     Offset(
-                        if (isLtr) (dampedDragAnimation.value + 0.5f) * tabWidth + panelOffset
-                        else size.width - (dampedDragAnimation.value + 0.5f) * tabWidth + panelOffset,
+                        if (isLtr) lead + (dampedDragAnimation.value + 0.5f) * tabWidth + panelOffset
+                        else size.width - lead - (dampedDragAnimation.value + 0.5f) * tabWidth + panelOffset,
                         size.height / 2f
                     )
                 }
@@ -179,12 +189,16 @@ fun LiquidBottomTabs(
                     onDrawSurface = { if (isLightTheme) drawRect(containerColor) else drawDarkGlass(1f) }
                 )
                 .then(interactiveHighlight.modifier)
-                .height(64f.dp)
+                .height(height)
                 .fillMaxWidth()
                 .padding(4f.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            content = content
-        )
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            if (leadingWidth > 0f.dp) {
+                Box(Modifier.width(leadingWidth).fillMaxHeight(), contentAlignment = Alignment.Center) { leading() }
+            }
+            content()
+        }
 
         CompositionLocalProvider(
             LocalLiquidBottomTabScale provides {
@@ -218,18 +232,20 @@ fun LiquidBottomTabs(
                         onDrawSurface = { if (isLightTheme) drawRect(containerColor) else drawDarkGlass(1f) }
                     )
                     .then(interactiveHighlight.modifier)
-                    .height(56f.dp)
+                    .height(pillHeight)
                     .fillMaxWidth()
                     .padding(horizontal = 4f.dp)
                     .graphicsLayer(colorFilter = ColorFilter.tint(accentColor)),
-                verticalAlignment = Alignment.CenterVertically,
-                content = content
-            )
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                if (leadingWidth > 0f.dp) Spacer(Modifier.width(leadingWidth))
+                content()
+            }
         }
 
         Box(
             Modifier
-                .padding(horizontal = 4f.dp)
+                .padding(start = 4f.dp + leadingWidth, end = 4f.dp)
                 .graphicsLayer {
                     translationX =
                         if (isLtr) dampedDragAnimation.value * tabWidth + panelOffset
@@ -280,7 +296,7 @@ fun LiquidBottomTabs(
                         drawRect(Color.Black.copy(alpha = 0.03f * progress))
                     }
                 )
-                .height(56f.dp)
+                .height(pillHeight)
                 .fillMaxWidth(1f / tabsCount)
         )
     }
