@@ -9,6 +9,14 @@ import androidx.compose.ui.input.key.Key
 import androidx.compose.foundation.focusable
 import com.kyant.backdrop.catalog.utils.BackHandler
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandHorizontally
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.animation.shrinkHorizontally
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.runtime.mutableStateMapOf
@@ -443,14 +451,21 @@ fun LiquidAdaptiveTabScaffold(
                 Row(
                     Modifier
                         .align(Alignment.BottomCenter)
-                        .then(if (fieldFocused) Modifier.imePadding() else Modifier)
+                        // Unconditional so a dismissed field rides down with the keyboard, like iOS 26.
+                        .imePadding()
                         .systemBarsPadding()
                         .padding(start = 20.dp, end = 20.dp, bottom = 12.dp)
                         .graphicsLayer { alpha = morph },
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    if (!fieldFocused) {
+                    // iOS 26 brings the tab circle back only after the keyboard has gone.
+                    AnimatedVisibility(
+                        !fieldFocused,
+                        enter = fadeIn(tween(150, 150)) + scaleIn(tween(150, 150), 0.5f) +
+                            expandHorizontally(tween(150, 150)),
+                        exit = fadeOut(tween(100)) + scaleOut(tween(100), 0.5f) + shrinkHorizontally(tween(100))
+                    ) {
                         LiquidIconButton(
                             lastTab.icon, lastTab.title, { onSelect(lastTab.key) }, backdrop,
                             Modifier.graphicsLayer {
