@@ -1,5 +1,6 @@
 package com.kyant.backdrop.catalog.components
 
+import com.kyant.backdrop.catalog.utils.BackHandler
 import androidx.compose.ui.zIndex
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.spring
@@ -78,6 +79,7 @@ fun BoxScope.LiquidSheet(
     title: String = "Sheet",
     content: @Composable ColumnScope.() -> Unit,
 ) {
+    BackHandler(visible) { onDismissRequest() }
     Box(Modifier.matchParentSize().zIndex(1f)) {
         val density = LocalDensity.current
         val isLightTheme = !isSystemInDarkTheme()

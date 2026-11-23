@@ -1,5 +1,6 @@
 package com.kyant.backdrop.catalog.components
 
+import com.kyant.backdrop.catalog.utils.BackHandler
 import androidx.compose.ui.zIndex
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -55,6 +56,7 @@ fun BoxScope.LiquidContextMenu(
     entries: List<MenuEntry>,
     preview: @Composable () -> Unit,
 ) {
+    BackHandler(expanded) { onDismissRequest() }
     Box(Modifier.matchParentSize().zIndex(1f)) {
         val progress = rememberPresentation(expanded) ?: return
         val density = LocalDensity.current

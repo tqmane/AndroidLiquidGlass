@@ -1,5 +1,6 @@
 package com.kyant.backdrop.catalog.components
 
+import com.kyant.backdrop.catalog.utils.BackHandler
 import androidx.compose.ui.zIndex
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.spring
@@ -67,6 +68,7 @@ fun BoxScope.LiquidAlert(
     actions: List<AlertAction>,
     modifier: Modifier = Modifier,
 ) {
+    BackHandler(visible) { onDismissRequest() }
     Box(Modifier.matchParentSize().zIndex(1f)) {
         val progress = rememberPresentation(visible) ?: return
         val p = progress.value
@@ -138,6 +140,7 @@ fun BoxScope.LiquidActionSheet(
     actions: List<AlertAction>,
     modifier: Modifier = Modifier,
 ) {
+    BackHandler(visible) { onDismissRequest() }
     Box(Modifier.matchParentSize().zIndex(1f)) {
         val progress = rememberPresentation(visible) ?: return
         val p = progress.value

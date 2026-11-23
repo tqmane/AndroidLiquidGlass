@@ -1,5 +1,6 @@
 package com.kyant.backdrop.catalog.components
 
+import com.kyant.backdrop.catalog.utils.BackHandler
 import androidx.compose.ui.zIndex
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.Animatable
@@ -88,6 +89,7 @@ fun BoxScope.LiquidGlassPopup(
     paneTitle: String = "Menu",
     content: @Composable ColumnScope.() -> Unit,
 ) {
+    BackHandler(visible) { onDismissRequest() }
     Box(Modifier.matchParentSize().zIndex(1f)) {
         val progress = remember { Animatable(0f) }
         var shown by remember { mutableStateOf(false) }
