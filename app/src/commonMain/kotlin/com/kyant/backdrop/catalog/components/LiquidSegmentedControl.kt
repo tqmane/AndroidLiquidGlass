@@ -385,6 +385,7 @@ fun LiquidSegmentedControl(
                                     indication = null,
                                     role = Role.Tab,
                                     onClick = {
+                                        if (dragDistance > touchSlop) return@selectable
                                         val nextSelection = segmentSelectionAfterActivation(
                                             activatedIndex = index,
                                             momentary = momentary,
