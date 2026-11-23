@@ -31,6 +31,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -250,7 +251,8 @@ fun LiquidAdaptiveTabScaffold(
                 Modifier.systemBarsPadding().padding(start = 18.dp, top = 9.dp)
             )
         } else {
-            val selectedIndex = tabs.indexOfFirst { it.key == selectedKey }.coerceAtLeast(0)
+            // LiquidBottomTabs keeps the lambda in remembered state, so it must read a State, not a captured Int.
+            val selectedIndex by rememberUpdatedState(tabs.indexOfFirst { it.key == selectedKey }.coerceAtLeast(0))
             LiquidBottomTabs(
                 selectedTabIndex = { selectedIndex },
                 onTabSelected = { onSelect(tabs[it].key) },
