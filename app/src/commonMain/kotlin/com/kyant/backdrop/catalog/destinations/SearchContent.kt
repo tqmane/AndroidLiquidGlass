@@ -6,6 +6,9 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.foundation.layout.ime
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -38,9 +41,11 @@ fun SearchContent() {
                 }
             }
         }
+        val imeVisible = WindowInsets.ime.getBottom(LocalDensity.current) > 0
         LiquidSearchBar(
             query, { query = it }, backdrop,
-            Modifier.align(Alignment.BottomCenter).imePadding().systemBarsPadding().padding(start = 16.dp, end = 16.dp, bottom = 80.dp)
+            Modifier.align(Alignment.BottomCenter).imePadding().systemBarsPadding()
+                .padding(start = 16.dp, end = 16.dp, bottom = if (imeVisible) 8.dp else 80.dp)
         )
     }
 }
