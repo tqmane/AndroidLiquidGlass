@@ -126,51 +126,51 @@ The animations were matched frame by frame against slow-motion iOS 26 simulator 
 
 ### Segmented control tap
 
-![Segmented control tap: iOS 26 (top) vs Android (bottom)](docs/images/compare/segmented.jpg)
+![Segmented control tap: iOS 26 (top) vs Android (bottom)](docs/images/compare/motion/segmented.jpg)
 
 ### Glass button press
 
-![Glass button press: iOS 26 (top) vs Android (bottom)](docs/images/compare/glass-circle-press.jpg)
+![Glass button press: iOS 26 (top) vs Android (bottom)](docs/images/compare/motion/glass-circle-press.jpg)
 
 ### Sheet present
 
-![Sheet present: iOS 26 (top) vs Android (bottom)](docs/images/compare/sheet-present.jpg)
+![Sheet present: iOS 26 (top) vs Android (bottom)](docs/images/compare/motion/sheet-present.jpg)
 
 ### Sheet detent expand
 
-![Sheet detent expand: iOS 26 (top) vs Android (bottom)](docs/images/compare/sheet-expand.jpg)
+![Sheet detent expand: iOS 26 (top) vs Android (bottom)](docs/images/compare/motion/sheet-expand.jpg)
 
 ### Sheet dismiss
 
-![Sheet dismiss: iOS 26 (top) vs Android (bottom)](docs/images/compare/sheet-btn-dismiss.jpg)
+![Sheet dismiss: iOS 26 (top) vs Android (bottom)](docs/images/compare/motion/sheet-btn-dismiss.jpg)
 
 ### Alert present
 
-![Alert present: iOS 26 (top) vs Android (bottom)](docs/images/compare/alert-present.jpg)
+![Alert present: iOS 26 (top) vs Android (bottom)](docs/images/compare/motion/alert-present.jpg)
 
 ### Action sheet present
 
-![Action sheet present: iOS 26 (top) vs Android (bottom)](docs/images/compare/action-sheet.jpg)
+![Action sheet present: iOS 26 (top) vs Android (bottom)](docs/images/compare/motion/action-sheet.jpg)
 
 ### Search open (tab bar morph)
 
-![Search open (tab bar morph): iOS 26 (top) vs Android (bottom)](docs/images/compare/search-open.jpg)
+![Search open (tab bar morph): iOS 26 (top) vs Android (bottom)](docs/images/compare/motion/search-open.jpg)
 
 ### Search cancel
 
-![Search cancel: iOS 26 (top) vs Android (bottom)](docs/images/compare/search-cancel.jpg)
+![Search cancel: iOS 26 (top) vs Android (bottom)](docs/images/compare/motion/search-cancel.jpg)
 
 ### Search return to Home
 
-![Search return to Home: iOS 26 (top) vs Android (bottom)](docs/images/compare/search-return.jpg)
+![Search return to Home: iOS 26 (top) vs Android (bottom)](docs/images/compare/motion/search-return.jpg)
 
 ### iPad popover dialog
 
-![iPad popover dialog: iOS 26 (top) vs Android (bottom)](docs/images/compare/ipad-dialog-present.jpg)
+![iPad popover dialog: iOS 26 (top) vs Android (bottom)](docs/images/compare/motion/ipad-dialog-present.jpg)
 
 ### iPad sheet present
 
-![iPad sheet present: iOS 26 (top) vs Android (bottom)](docs/images/compare/ipad-sheet-present.jpg)
+![iPad sheet present: iOS 26 (top) vs Android (bottom)](docs/images/compare/motion/ipad-sheet-present.jpg)
 
 ## Demo
 
