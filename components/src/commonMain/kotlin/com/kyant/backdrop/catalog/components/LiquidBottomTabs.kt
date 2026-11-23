@@ -161,12 +161,14 @@ fun LiquidBottomTabs(
                     currentIndex = index
                 }
         }
+        // Read through a State: this effect outlives recompositions, and a captured lambda would report stale selections.
+        val currentOnTabSelected by rememberUpdatedState(onTabSelected)
         LaunchedEffect(dampedDragAnimation) {
             snapshotFlow { currentIndex }
                 .drop(1)
                 .collectLatest { index ->
                     dampedDragAnimation.animateToValue(index.toFloat())
-                    onTabSelected(index)
+                    currentOnTabSelected(index)
                 }
         }
 

@@ -147,10 +147,7 @@ fun LiquidTopTabBar(
     val leadingWidth = if (onToggleSidebar != null) 44.dp else 0.dp
     LiquidBottomTabs(
         selectedTabIndex = readSelectedIndex,
-        onTabSelected = { index ->
-            val key = currentTabs[index].key
-            if (key != selectedKey) currentOnSelect(key)
-        },
+        onTabSelected = { index -> currentOnSelect(currentTabs[index].key) },
         backdrop = backdrop,
         tabsCount = tabs.size,
         modifier = modifier.width(leadingWidth + widths.fold(0.dp) { a, b -> a + b } + 8.dp),
