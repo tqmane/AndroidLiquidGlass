@@ -94,7 +94,7 @@ fun Modifier.liquidGlass(
         onDrawSurface = {
             if (tint.isSpecified) {
                 drawRect(tint, blendMode = androidx.compose.ui.graphics.BlendMode.Hue)
-                drawRect(tint.copy(alpha = 0.75f))
+                drawRect(tint.copy(alpha = (0.75f * glass.opacity).coerceIn(0f, 1f)))
             }
             if (surfaceColor.isSpecified) {
                 drawRect(surfaceColor.copy(alpha = (surfaceColor.alpha * glass.opacity).coerceIn(0f, 1f)))
