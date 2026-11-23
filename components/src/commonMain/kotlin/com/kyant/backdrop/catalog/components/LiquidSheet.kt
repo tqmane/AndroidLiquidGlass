@@ -13,7 +13,6 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.State
 import androidx.compose.runtime.Stable
-import androidx.compose.ui.graphics.lerp as lerpColor
 import com.kyant.backdrop.backdrops.rememberLayerBackdrop
 import androidx.compose.ui.unit.Velocity
 import androidx.compose.ui.geometry.Offset
@@ -45,6 +44,9 @@ import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.snapshotFlow
+import androidx.compose.animation.core.tween
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -65,6 +67,7 @@ import androidx.compose.ui.util.lerp
 import com.kyant.backdrop.Backdrop
 import com.kyant.shapes.Capsule
 import com.kyant.shapes.RoundedRectangle
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.launch
 import kotlin.math.abs
 import kotlin.math.roundToInt
@@ -157,6 +160,15 @@ fun BoxScope.LiquidSheet(
                 1f
             }
             val expansionState = rememberUpdatedState(expansion)
+            // iOS 26 keeps the translucent material until the sheet passes halfway to the top detent, then fades it
+            // opaque in one quick step (and back on the way down); it doesn't follow the finger linearly.
+            val material = remember { Animatable(if (expansion >= 0.5f) 1f else 0f) }
+            LaunchedEffect(material) {
+                snapshotFlow { expansionState.value >= 0.5f }.collect { opaque ->
+                    material.animateTo(if (opaque) 1f else 0f, tween(150))
+                }
+            }
+            val materialState = remember(material) { derivedStateOf { material.value } }
             val presence = ((maxH - offsetY.value) / (maxH - lowestTop)).coerceIn(0f, 1f)
 
             Box(
@@ -168,8 +180,19 @@ fun BoxScope.LiquidSheet(
 
             val inset = if (formSheet) 0.dp else lerp(8f, 0f, expansion).dp
             val sheetHeight = with(density) { (maxH - formGap - minOf(offsetY.value, lowestTop)).toDp() } - inset
+            // Several drag/scroll deltas can arrive in one frame, before a launched snapTo has run, so track the
+            // finger-driven top synchronously instead of re-reading offsetY.value (which would drop deltas).
+            val dragTop = remember { floatArrayOf(Float.NaN) }
+            fun currentTop() = dragTop[0].takeUnless { it.isNaN() } ?: offsetY.value
+            fun dragTo(next: Float) {
+                dragTop[0] = next
+                scope.launch(start = CoroutineStart.UNDISPATCHED) { offsetY.snapTo(next) }
+            }
             suspend fun settle(velocity: Float) {
-                val projected = offsetY.value + velocity * 0.18f
+                val from = currentTop()
+                dragTop[0] = Float.NaN
+                offsetY.snapTo(from)
+                val projected = from + velocity * 0.18f
                 if (projected > lowestTop + (maxH - lowestTop) * 0.5f) {
                     dismissVelocity = velocity
                     currentOnDismiss()
@@ -181,31 +204,32 @@ fun BoxScope.LiquidSheet(
                 }
             }
             val draggableState = rememberDraggableState { delta ->
-                scope.launch {
-                    val target = offsetY.value + delta
-                    val resisted = if (target < highestTop) offsetY.value + delta * 0.25f else target
-                    offsetY.snapTo(resisted)
-                }
+                val top = currentTop()
+                val target = top + delta
+                dragTo(if (target < highestTop) top + delta * 0.25f else target)
             }
 
             val nestedScroll = remember(stops) {
                 object : NestedScrollConnection {
                     override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
-                        if (available.y >= 0f || offsetY.value <= highestTop) return Offset.Zero
-                        val next = maxOf(highestTop, offsetY.value + available.y)
-                        val consumed = next - offsetY.value
-                        scope.launch { offsetY.snapTo(next) }
-                        return Offset(0f, consumed)
+                        val top = currentTop()
+                        if (available.y >= 0f || top <= highestTop) return Offset.Zero
+                        val next = maxOf(highestTop, top + available.y)
+                        dragTo(next)
+                        return Offset(0f, next - top)
                     }
 
                     override fun onPostScroll(consumed: Offset, available: Offset, source: NestedScrollSource): Offset {
                         if (available.y <= 0f || source != NestedScrollSource.UserInput) return Offset.Zero
-                        scope.launch { offsetY.snapTo(offsetY.value + available.y) }
+                        dragTo(currentTop() + available.y)
                         return Offset(0f, available.y)
                     }
 
                     override suspend fun onPreFling(available: Velocity): Velocity {
-                        if (stops.any { abs(it - offsetY.value) < 0.5f }) return Velocity.Zero
+                        if (stops.any { abs(it - currentTop()) < 0.5f }) {
+                            dragTop[0] = Float.NaN
+                            return Velocity.Zero
+                        }
                         settle(available.y)
                         return available
                     }
@@ -227,9 +251,9 @@ fun BoxScope.LiquidSheet(
                     .liquidGlassPanel(
                         backdrop = backdrop,
                         shape = { RoundedRectangle(lerp(36f, 30f, expansion).dp) },
-                        containerColor = if (isLightTheme) lerpColor(Color(0xFFFAFAFA).copy(alpha = 0.62f), Color(0xFFF2F2F7), expansion)
-                        else lerpColor(Color(0xFF2A2A2A).copy(alpha = 0.72f), Color(0xFF1C1C1E), expansion),
-                        blurRadius = lerp(10f, 24f, expansion).dp,
+                        containerColor = if (isLightTheme) lerpPremultiplied(Color(0xFFFAFAFA).copy(alpha = 0.62f), Color(0xFFF2F2F7), materialState.value)
+                        else lerpPremultiplied(Color(0xFF2A2A2A).copy(alpha = 0.72f), Color(0xFF1C1C1E), materialState.value),
+                        blurRadius = lerp(10f, 24f, materialState.value).dp,
                         exportedBackdrop = sheetBackdrop
                     )
                     .clickable(interactionSource = null, indication = null) {}
@@ -250,7 +274,7 @@ fun BoxScope.LiquidSheet(
                             .background(if (isLightTheme) Color(0xFF3C3C43).copy(alpha = 0.3f) else Color(0xFFEBEBF5).copy(alpha = 0.36f))
                     )
                 }
-                val sheetScope = remember(this, sheetBackdrop, formSheet) { LiquidSheetScope(this, sheetBackdrop, expansionState, formSheet) }
+                val sheetScope = remember(this, sheetBackdrop, formSheet) { LiquidSheetScope(this, sheetBackdrop, expansionState, materialState, formSheet) }
                 sheetScope.content()
             }
         }
@@ -263,10 +287,22 @@ class LiquidSheetScope internal constructor(
     columnScope: ColumnScope,
     val backdrop: Backdrop,
     private val expansionState: State<Float>,
+    private val materialState: State<Float>,
     /** True on regular-width windows (tablets), where the sheet is a centered iPad-style form sheet. */
     val isFormSheet: Boolean = false,
 ) : ColumnScope by columnScope {
     val expansion: Float get() = expansionState.value
+
+    /** 0 while the sheet shows its translucent partial-detent material, 1 once it has turned opaque past halfway up. */
+    val material: Float get() = materialState.value
+}
+
+/** Color lerp in premultiplied alpha, so a translucent tint fading into an opaque fill doesn't pass through grey. */
+internal fun lerpPremultiplied(a: Color, b: Color, t: Float): Color {
+    val alpha = lerp(a.alpha, b.alpha, t)
+    if (alpha <= 0f) return Color.Transparent
+    fun ch(x: Float, y: Float) = ((x * a.alpha) * (1f - t) + (y * b.alpha) * t) / alpha
+    return Color(ch(a.red, b.red), ch(a.green, b.green), ch(a.blue, b.blue), alpha)
 }
 
 /** iOS 26 sheet navigation header: centered 17 pt semibold title with optional leading/trailing glass buttons; pass neither for a title-only sheet. */
@@ -289,7 +325,7 @@ fun LiquidSheetScope.LiquidSheetHeader(
     }
 }
 
-/** Inset-grouped section inside a sheet. Cells are a translucent fill at the medium detent and turn into opaque grouped cells as the sheet expands, as on iOS 26. */
+/** Inset-grouped section inside a sheet. Cells are a translucent fill at the medium detent and turn into opaque grouped cells once the sheet passes halfway up, as on iOS 26. */
 @Composable
 fun LiquidSheetScope.SheetSection(
     title: String?,
@@ -297,7 +333,7 @@ fun LiquidSheetScope.SheetSection(
     content: @Composable ColumnScope.() -> Unit,
 ) {
     val isLightTheme = !isGlassDark()
-    val cell = if (isLightTheme) lerpColor(Color.Black.copy(alpha = 0.05f), Color.White, expansion)
+    val cell = if (isLightTheme) lerpPremultiplied(Color.Black.copy(alpha = 0.05f), Color.White, material)
     else Color(0xFF2C2C2E)
     GroupedSection(title, cell, modifier, content = content)
 }
