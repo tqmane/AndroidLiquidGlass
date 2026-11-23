@@ -1,5 +1,8 @@
 package com.kyant.backdrop.catalog.components
 
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandHorizontally
 import androidx.compose.animation.fadeIn
@@ -76,6 +79,8 @@ fun LiquidSearchBar(
 ) {
     var focused by remember { mutableStateOf(false) }
     val focusManager = LocalFocusManager.current
+    // The whole capsule is the hit target, as on iOS, not just the text field inside it.
+    val focusRequester = remember { FocusRequester() }
     val secondary = GlassColors.secondaryLabel()
     // The × circle sticks to the field while held (it swells across the 8 dp gap).
     LiquidGlassEffectContainer(backdrop, modifier, spacing = 8.dp) {
@@ -89,6 +94,7 @@ fun LiquidSearchBar(
                 .liquidGlassEffectMember()
                 .liquidGlass(backdrop, { Capsule() })
                 .height(48.dp)
+                .clickable(interactionSource = null, indication = null) { focusRequester.requestFocus() }
                 .padding(horizontal = 14.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -101,7 +107,7 @@ fun LiquidSearchBar(
                 BasicTextField(
                     value = query,
                     onValueChange = onQueryChange,
-                    modifier = Modifier.onFocusChanged { focused = it.isFocused },
+                    modifier = Modifier.fillMaxWidth().focusRequester(focusRequester).onFocusChanged { focused = it.isFocused },
                     singleLine = true,
                     textStyle = TextStyle(GlassColors.label(), 17.sp),
                     cursorBrush = SolidColor(GlassColors.accent()),
@@ -152,11 +158,13 @@ fun SearchFieldInline(
     searchIcon: ImageVector = GlassIcons.Search,
 ) {
     val secondary = GlassColors.secondaryLabel()
+    val focusRequester = remember { FocusRequester() }
     Row(
         modifier
             .height(40.dp)
             .clip(Capsule())
             .background(GlassColors.fill())
+            .clickable(interactionSource = null, indication = null) { focusRequester.requestFocus() }
             .padding(horizontal = 12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -164,7 +172,7 @@ fun SearchFieldInline(
         Spacer(Modifier.width(6.dp))
         Box(Modifier.weight(1f), contentAlignment = Alignment.CenterStart) {
             if (query.isEmpty()) BasicText(placeholder, style = TextStyle(secondary, 17.sp))
-            BasicTextField(query, onQueryChange, singleLine = true, textStyle = TextStyle(GlassColors.label(), 17.sp), cursorBrush = SolidColor(GlassColors.accent()))
+            BasicTextField(query, onQueryChange, Modifier.fillMaxWidth().focusRequester(focusRequester), singleLine = true, textStyle = TextStyle(GlassColors.label(), 17.sp), cursorBrush = SolidColor(GlassColors.accent()))
         }
     }
 }
