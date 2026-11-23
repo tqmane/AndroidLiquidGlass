@@ -213,7 +213,8 @@ fun BoxScope.LiquidActionSheet(
                     when {
                         anchored -> Modifier.align(Alignment.TopStart).offset { IntOffset(cardX.roundToInt(), cardY.roundToInt()) }
                         regular -> Modifier.align(Alignment.Center)
-                        else -> Modifier.align(Alignment.BottomCenter).navigationBarsPadding().padding(10.dp)
+                        // iOS 26 iPhone: the action sheet is a centered card, not docked to the bottom edge.
+                        else -> Modifier.align(Alignment.Center).padding(horizontal = 20.dp)
                     }
                 )
                 .then(if (regular) Modifier.width(280.dp) else Modifier.fillMaxWidth())
