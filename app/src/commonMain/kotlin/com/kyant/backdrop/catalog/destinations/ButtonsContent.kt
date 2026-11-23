@@ -1,5 +1,10 @@
 package com.kyant.backdrop.catalog.destinations
 
+import androidx.compose.ui.Modifier
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.systemBarsPadding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import com.kyant.backdrop.catalog.components.LiquidGlassEffectContainer
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -25,6 +30,7 @@ import androidx.compose.foundation.layout.Row
 fun ButtonsContent() {
     BackdropDemoScaffold { backdrop ->
         Column(
+            Modifier.verticalScroll(rememberScrollState()).systemBarsPadding().padding(vertical = 16.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(16f.dp)
         ) {
