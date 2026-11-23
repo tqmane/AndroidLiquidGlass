@@ -30,7 +30,9 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -253,10 +255,15 @@ fun LiquidAdaptiveTabScaffold(
                 Modifier.systemBarsPadding().padding(start = 18.dp, top = 9.dp)
             )
         } else {
-            // LiquidBottomTabs keeps the lambda in remembered state, so it must read a State, not a captured Int.
-            val selectedIndex by rememberUpdatedState(tabs.indexOfFirst { it.key == selectedKey }.coerceAtLeast(0))
+            // A sidebar-only destination has no bottom tab; fall back to the first tab so the page and the bar agree.
+            LaunchedEffect(selectedKey) {
+                if (tabs.none { it.key == selectedKey }) onSelect(tabs.first().key)
+            }
+            // LiquidBottomTabs keys its state on the lambda's identity, so the lambda must be stable and read a State.
+            val selectedIndex = rememberUpdatedState(tabs.indexOfFirst { it.key == selectedKey }.coerceAtLeast(0))
+            val readSelectedIndex = remember { { selectedIndex.value } }
             LiquidBottomTabs(
-                selectedTabIndex = { selectedIndex },
+                selectedTabIndex = readSelectedIndex,
                 onTabSelected = { onSelect(tabs[it].key) },
                 backdrop = backdrop,
                 tabsCount = tabs.size,
