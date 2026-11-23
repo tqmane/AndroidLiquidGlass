@@ -133,6 +133,9 @@ fun LiquidBottomTabs(
         var currentIndex by remember(selectedTabIndex) {
             mutableIntStateOf(selectedTabIndex())
         }
+        // Pill position in px, accumulated synchronously: targetValue only advances once updateValue's coroutine
+        // runs, so moves delivered within one frame would otherwise all start from the same stale value.
+        val dragPosition = remember { floatArrayOf(0f) }
         val dampedDragAnimation = remember(animationScope, widths) {
             DampedDragAnimation(
                 animationScope = animationScope,
@@ -142,7 +145,7 @@ fun LiquidBottomTabs(
                 initialScale = 1f,
                 // 56 -> 78 dp on the bottom bar: the held pill overhangs the bar by 7 dp above and below.
                 pressedScale = (pillHeight.value + 22f) / pillHeight.value,
-                onDragStarted = {},
+                onDragStarted = { dragPosition[0] = startAt(targetValue) },
                 onDragStopped = {
                     val targetIndex = targetValue.fastRoundToInt().fastCoerceIn(0, tabsCount - 1)
                     currentIndex = targetIndex
@@ -156,7 +159,7 @@ fun LiquidBottomTabs(
                 },
                 onDrag = { _, dragAmount ->
                     updateValue(
-                        valueAt(startAt(targetValue) + dragAmount.x * if (isLtr) 1f else -1f)
+                        valueAt((dragPosition[0] + dragAmount.x * if (isLtr) 1f else -1f).also { dragPosition[0] = it })
                     )
                     animationScope.launch {
                         offsetAnimation.snapTo(offsetAnimation.value + dragAmount.x)
