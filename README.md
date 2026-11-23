@@ -10,6 +10,29 @@ A customizable Liquid Glass effect library for Compose Multiplatform.
 
 [Documentation](https://kyant.gitbook.io/backdrop)
 
+## JitPack
+
+```kotlin
+// settings.gradle.kts
+dependencyResolutionManagement {
+    repositories {
+        google()
+        mavenCentral()
+        maven("https://jitpack.io")
+    }
+}
+
+// build.gradle.kts
+dependencies {
+    // iOS 26 Liquid Glass components (also pulls in :backdrop)
+    implementation("com.github.tqmane.AndroidLiquidGlass:components:<tag or commit>")
+    // or only the low-level backdrop / glass effects
+    implementation("com.github.tqmane.AndroidLiquidGlass:backdrop:<tag or commit>")
+}
+```
+
+[![JitPack](https://jitpack.io/v/tqmane/AndroidLiquidGlass.svg)](https://jitpack.io/#tqmane/AndroidLiquidGlass)
+
 ## Components
 
 See the [implementation guide](docs/IMPLEMENTATION_GUIDE.md) for the architecture, every iOS 26 component in the catalog (segmented control, sheets, alerts, menus, video player, ...), and common pitfalls.

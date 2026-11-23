@@ -3,7 +3,9 @@
 This guide is for developers and AI coding agents who add or use Liquid Glass components in this repository. It covers the architecture, the steps for each kind of component, and the mistakes that already broke the catalog once.
 
 - `:backdrop` is the published library (`io.github.kyant0:backdrop`). It only provides low-level primitives: backdrops, `drawBackdrop` and effects (blur, lens, vibrancy, highlight, shadow).
-- `:app` is the Compose Multiplatform catalog. The reusable iOS 26 style components live in `app/src/commonMain/kotlin/com/kyant/backdrop/catalog/components/`, and each catalog page lives in `.../catalog/destinations/`.
+- `:components` is the published component library (`components` artifact). The reusable iOS 26 style components live in `components/src/commonMain/kotlin/com/kyant/backdrop/catalog/components/` (package `com.kyant.backdrop.catalog.components`), with the gesture/back helpers they need in `.../catalog/utils/`.
+- `:app` is the Compose Multiplatform catalog; each catalog page lives in `app/src/commonMain/kotlin/com/kyant/backdrop/catalog/destinations/`.
+- Both libraries are on JitPack: add `maven("https://jitpack.io")` and depend on `com.github.tqmane.AndroidLiquidGlass:components:<tag or commit>` (it brings `backdrop` with it as an `api` dependency).
 - `:androidApp` is the Android launcher for the catalog. `iosApp` is the iOS launcher.
 
 ## 1. Core model: who samples what

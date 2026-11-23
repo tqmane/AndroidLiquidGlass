@@ -1,0 +1,239 @@
+{
+  "formatVersion": "1.1",
+  "component": {
+    "url": "../../components/jitpack-test/components-jitpack-test.module",
+    "group": "com.github.tqmane",
+    "module": "components",
+    "version": "jitpack-test",
+    "attributes": {
+      "org.gradle.status": "release"
+    }
+  },
+  "createdBy": {
+    "gradle": {
+      "version": "9.7.1"
+    }
+  },
+  "variants": [
+    {
+      "name": "iosSimulatorArm64ApiElements-published",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.jvm.environment": "non-jvm",
+        "org.gradle.usage": "kotlin-api",
+        "org.jetbrains.kotlin.native.target": "ios_simulator_arm64",
+        "org.jetbrains.kotlin.platform.type": "native"
+      },
+      "dependencies": [
+        {
+          "group": "com.github.tqmane",
+          "module": "backdrop",
+          "version": {
+            "requires": "jitpack-test"
+          }
+        },
+        {
+          "group": "org.jetbrains.kotlin",
+          "module": "kotlin-stdlib",
+          "version": {
+            "requires": "2.4.10"
+          }
+        },
+        {
+          "group": "org.jetbrains.compose.foundation",
+          "module": "foundation",
+          "version": {
+            "requires": "1.12.0"
+          }
+        },
+        {
+          "group": "org.jetbrains.compose.ui",
+          "module": "ui",
+          "version": {
+            "requires": "1.12.0"
+          }
+        },
+        {
+          "group": "org.jetbrains.compose.ui",
+          "module": "ui-graphics",
+          "version": {
+            "requires": "1.12.0"
+          }
+        },
+        {
+          "group": "io.github.kyant0",
+          "module": "shapes",
+          "version": {
+            "requires": "1.2.1"
+          }
+        }
+      ],
+      "files": [
+        {
+          "name": "components-iosSimulatorArm64Main.klib",
+          "url": "components-iossimulatorarm64-jitpack-test.klib",
+          "size": 492814,
+          "sha512": "bee772e250e164b02e50a07d12f30822c2aee3c879149c47c80859915822f52386a9ff0e6c62a467d63e3fb65a119da43c3a8d9b554201210a0d7670efd84b24",
+          "sha256": "0ae9f94f28affe11a77274dbed771bc98a91392cc9d3e29c63d3515472c69f32",
+          "sha1": "b1a8ae5df5981ee396cf06cb53e6ab029de5f10b",
+          "md5": "b1749d75fffb972d3f0a8129e47bbd06"
+        }
+      ]
+    },
+    {
+      "name": "iosSimulatorArm64SourcesElements-published",
+      "attributes": {
+        "org.gradle.category": "documentation",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.docstype": "sources",
+        "org.gradle.jvm.environment": "non-jvm",
+        "org.gradle.usage": "kotlin-runtime",
+        "org.jetbrains.kotlin.native.target": "ios_simulator_arm64",
+        "org.jetbrains.kotlin.platform.type": "native"
+      },
+      "files": [
+        {
+          "name": "components-iossimulatorarm64-sources.jar",
+          "url": "components-iossimulatorarm64-jitpack-test-sources.jar",
+          "size": 67789,
+          "sha512": "dbfc8397cee64af927e6ff206799861a1fd886eddfb4be127d866bc4f8c188341bd5aef542869a47b8a4b6ebdece4fb2cb93314c679871d095ac8333b37742f1",
+          "sha256": "319280068fb9588350f4fe2f56f20939500832e1a763065dcdcc5be77ab6ddf9",
+          "sha1": "e4c291cbff4a7f56c6a033e6e23f68c557d6bb7d",
+          "md5": "9ab2014c31627229303bc6a9a7de401c"
+        }
+      ]
+    },
+    {
+      "name": "iosSimulatorArm64ResourcesElements-published",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.jvm.environment": "non-jvm",
+        "org.gradle.libraryelements": "kotlin-multiplatformresources",
+        "org.gradle.usage": "kotlin-multiplatformresources",
+        "org.jetbrains.kotlin.native.target": "ios_simulator_arm64",
+        "org.jetbrains.kotlin.platform.type": "native"
+      },
+      "dependencies": [
+        {
+          "group": "com.github.tqmane",
+          "module": "backdrop",
+          "version": {
+            "requires": "jitpack-test"
+          }
+        },
+        {
+          "group": "org.jetbrains.kotlin",
+          "module": "kotlin-stdlib",
+          "version": {
+            "requires": "2.4.10"
+          }
+        },
+        {
+          "group": "org.jetbrains.compose.foundation",
+          "module": "foundation",
+          "version": {
+            "requires": "1.12.0"
+          }
+        },
+        {
+          "group": "org.jetbrains.compose.ui",
+          "module": "ui",
+          "version": {
+            "requires": "1.12.0"
+          }
+        },
+        {
+          "group": "org.jetbrains.compose.ui",
+          "module": "ui-graphics",
+          "version": {
+            "requires": "1.12.0"
+          }
+        },
+        {
+          "group": "io.github.kyant0",
+          "module": "shapes",
+          "version": {
+            "requires": "1.2.1"
+          }
+        }
+      ],
+      "files": [
+        {
+          "name": "components.kotlin_resources.zip",
+          "url": "components-iossimulatorarm64-jitpack-test-kotlin_resources.kotlin_resources.zip",
+          "size": 320,
+          "sha512": "c93c35a652ddfe43dcd9bb3df8d48fe0a830c995dcc6d3405661e7c23fc1beeceda60242a839994c6fcc7e0d7d434a21103bf09ac401b047fabd5377502911e4",
+          "sha256": "8f065bac2460337b449f7527f4bf1467df52370bc9519cf06af3aa2147a7a673",
+          "sha1": "5bce14d502796b73c04f658c5c8d57c866bcc163",
+          "md5": "1eccddf952e408bd75afe8da2a055263"
+        }
+      ]
+    },
+    {
+      "name": "iosSimulatorArm64MetadataElements-published",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.jvm.environment": "non-jvm",
+        "org.gradle.usage": "kotlin-metadata",
+        "org.jetbrains.kotlin.native.target": "ios_simulator_arm64",
+        "org.jetbrains.kotlin.platform.type": "native"
+      },
+      "dependencies": [
+        {
+          "group": "com.github.tqmane",
+          "module": "backdrop",
+          "version": {
+            "requires": "jitpack-test"
+          }
+        },
+        {
+          "group": "org.jetbrains.kotlin",
+          "module": "kotlin-stdlib",
+          "version": {
+            "requires": "2.4.10"
+          }
+        },
+        {
+          "group": "org.jetbrains.compose.foundation",
+          "module": "foundation",
+          "version": {
+            "requires": "1.12.0"
+          }
+        },
+        {
+          "group": "org.jetbrains.compose.ui",
+          "module": "ui",
+          "version": {
+            "requires": "1.12.0"
+          }
+        },
+        {
+          "group": "org.jetbrains.compose.ui",
+          "module": "ui-graphics",
+          "version": {
+            "requires": "1.12.0"
+          }
+        },
+        {
+          "group": "io.github.kyant0",
+          "module": "shapes",
+          "version": {
+            "requires": "1.2.1"
+          }
+        }
+      ],
+      "files": [
+        {
+          "name": "components-iossimulatorarm64-metadata.jar",
+          "url": "components-iossimulatorarm64-jitpack-test-metadata.jar",
+          "size": 261,
+          "sha512": "1487e5a20c9e4d74f298e07c42e96a61be11b7a768c3fbc199ee138cd68e1fc2267d1cfe3f11f288acc05df755315344d052cc5f6f751f126ab4fe1caa5125ea",
+          "sha256": "c6deada2fac53b8ea6523dbda77597b128006674616f140f04df23264c6d1aa3",
+          "sha1": "2ad14aed781c4a73ed4dbb421966d408a0a06686",
+          "md5": "f43436d6bec321290f6af228ad602604"
+        }
+      ]
+    }
+  ]
+}

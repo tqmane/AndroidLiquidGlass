@@ -52,6 +52,7 @@ kotlin {
                 implementation(libs.compose.material.ripple)
                 implementation(libs.kyant.shapes)
                 implementation(project(":backdrop"))
+                implementation(project(":components"))
             }
         }
 

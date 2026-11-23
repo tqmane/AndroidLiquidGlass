@@ -1,0 +1,77 @@
+[
+  {
+    "moduleId": {
+      "groupAndName": {
+        "group": "Glass",
+        "name": "backdrop"
+      },
+      "componentId": {
+        "type": "project",
+        "projectPath": ":backdrop",
+        "buildPath": ":"
+      }
+    },
+    "file": "/home/ubuntu/repos/AndroidLiquidGlass/backdrop/build/classes/kotlin/metadata/skikoMain",
+    "sourceSetName": "skikoMain"
+  },
+  {
+    "moduleId": {
+      "groupAndName": {
+        "group": "org.jetbrains.skiko",
+        "name": "skiko"
+      },
+      "componentId": {
+        "type": "module",
+        "group": "org.jetbrains.skiko",
+        "name": "skiko"
+      }
+    },
+    "file": "/home/ubuntu/repos/AndroidLiquidGlass/components/build/kotlinTransformedMetadataLibraries/skikoMain/org.jetbrains.skiko-skiko-0.150.1-commonMain-WLtCvA.klib",
+    "sourceSetName": "commonMain"
+  },
+  {
+    "moduleId": {
+      "groupAndName": {
+        "group": "androidx.savedstate",
+        "name": "savedstate-compose"
+      },
+      "componentId": {
+        "type": "module",
+        "group": "androidx.savedstate",
+        "name": "savedstate-compose"
+      }
+    },
+    "file": "/home/ubuntu/repos/AndroidLiquidGlass/components/build/kotlinTransformedMetadataLibraries/skikoMain/androidx.savedstate-savedstate-compose-1.4.0-nonAndroidMain-YfHBdg.klib",
+    "sourceSetName": "nonAndroidMain"
+  },
+  {
+    "moduleId": {
+      "groupAndName": {
+        "group": "androidx.compose.runtime",
+        "name": "runtime"
+      },
+      "componentId": {
+        "type": "module",
+        "group": "androidx.compose.runtime",
+        "name": "runtime"
+      }
+    },
+    "file": "/home/ubuntu/repos/AndroidLiquidGlass/components/build/kotlinTransformedMetadataLibraries/skikoMain/androidx.compose.runtime-runtime-1.12.0-nonAndroidMain-uGrQsQ.klib",
+    "sourceSetName": "nonAndroidMain"
+  },
+  {
+    "moduleId": {
+      "groupAndName": {
+        "group": "androidx.savedstate",
+        "name": "savedstate"
+      },
+      "componentId": {
+        "type": "module",
+        "group": "androidx.savedstate",
+        "name": "savedstate"
+      }
+    },
+    "file": "/home/ubuntu/repos/AndroidLiquidGlass/components/build/kotlinTransformedMetadataLibraries/skikoMain/androidx.savedstate-savedstate-1.4.0-nonAndroidMain-JkDvJw.klib",
+    "sourceSetName": "nonAndroidMain"
+  }
+]
