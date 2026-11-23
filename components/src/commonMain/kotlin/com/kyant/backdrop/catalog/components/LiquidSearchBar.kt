@@ -1,5 +1,9 @@
 package com.kyant.backdrop.catalog.components
 
+import androidx.compose.ui.composed
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.FocusRequester
@@ -44,6 +48,20 @@ import androidx.compose.ui.unit.sp
 import com.kyant.backdrop.Backdrop
 import com.kyant.shapes.Capsule
 import androidx.compose.foundation.text.BasicText
+
+/**
+ * Makes the whole capsule the field's hit target. A tap detector rather than `clickable`, so the capsule never
+ * takes keyboard focus itself, and it shows the keyboard for a field that kept focus after the keyboard was hidden.
+ */
+private fun Modifier.focusOnTap(focusRequester: FocusRequester): Modifier = composed {
+    val keyboard = LocalSoftwareKeyboardController.current
+    pointerInput(focusRequester) {
+        detectTapGestures {
+            focusRequester.requestFocus()
+            keyboard?.show()
+        }
+    }
+}
 
 /** Icons for the search field and its focused close button. */
 data class LiquidSearchBarIcons(
@@ -94,7 +112,7 @@ fun LiquidSearchBar(
                 .liquidGlassEffectMember()
                 .liquidGlass(backdrop, { Capsule() })
                 .height(48.dp)
-                .clickable(interactionSource = null, indication = null) { focusRequester.requestFocus() }
+                .focusOnTap(focusRequester)
                 .padding(horizontal = 14.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -164,7 +182,7 @@ fun SearchFieldInline(
             .height(40.dp)
             .clip(Capsule())
             .background(GlassColors.fill())
-            .clickable(interactionSource = null, indication = null) { focusRequester.requestFocus() }
+            .focusOnTap(focusRequester)
             .padding(horizontal = 12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
