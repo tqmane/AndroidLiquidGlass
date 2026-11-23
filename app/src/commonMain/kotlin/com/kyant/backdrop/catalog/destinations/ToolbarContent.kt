@@ -1,5 +1,7 @@
 package com.kyant.backdrop.catalog.destinations
 
+import com.kyant.backdrop.catalog.components.liquidGlassEffectMember
+import com.kyant.backdrop.catalog.components.LiquidGlassEffectContainer
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -54,9 +56,12 @@ fun ToolbarContent() {
                 LiquidIconButton(GlassIcons.Pencil, "Compose", {}, backdrop, tint = GlassColors.accent())
             }
             BasicText("Tab bar with search", style = TextStyle(Color.White, 13.sp))
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                LiquidSegmentedTabs({ selectedTab }, { selectedTab = it }, backdrop, Modifier.weight(1f))
-                LiquidIconButton(GlassIcons.Search, "Search", {}, backdrop, size = 62.dp, iconSize = 24.dp)
+            // Hold the search circle: it swells and sticks to the tab bar, like Tab(role: .search).
+            LiquidGlassEffectContainer(backdrop, spacing = 12.dp) {
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    LiquidSegmentedTabs({ selectedTab }, { selectedTab = it }, backdrop, Modifier.weight(1f).liquidGlassEffectMember())
+                    LiquidIconButton(GlassIcons.Search, "Search", {}, backdrop, size = 62.dp, iconSize = 24.dp)
+                }
             }
             Spacer(Modifier.height(64.dp))
         }

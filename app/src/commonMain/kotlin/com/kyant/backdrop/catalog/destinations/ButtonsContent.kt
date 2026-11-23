@@ -1,5 +1,6 @@
 package com.kyant.backdrop.catalog.destinations
 
+import com.kyant.backdrop.catalog.components.LiquidGlassEffectContainer
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.text.BasicText
@@ -71,6 +72,14 @@ fun ButtonsContent() {
                 LiquidIconButton(GlassIcons.Ellipsis, "More", {}, backdrop)
                 LiquidIconButton(GlassIcons.Plus, "Add", {}, backdrop, tint = GlassColors.Blue)
                 LiquidIconButton(GlassIcons.Play, "Play", {}, backdrop, size = 56f.dp, iconSize = 24f.dp, tint = Color(0xFFFF8D28))
+            }
+            // GlassEffectContainer(spacing: 20) with 8 dp gaps: the circles bridge at rest and stick harder when held.
+            LiquidGlassEffectContainer(backdrop) {
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    LiquidIconButton(GlassIcons.Bookmark, "Bookmark", {}, backdrop, size = 56.dp, iconSize = 24.dp, iconColor = Color.Black)
+                    LiquidIconButton(GlassIcons.Heart, "Favorite", {}, backdrop, size = 56.dp, iconSize = 24.dp, iconColor = Color.Black)
+                    LiquidIconButton(GlassIcons.Share, "Share", {}, backdrop, size = 56.dp, iconSize = 24.dp, iconColor = Color.Black)
+                }
             }
             LiquidButtonGroup(backdrop) {
                 LiquidGroupItem(GlassIcons.Share, "Share", {}, color = Color.Black)

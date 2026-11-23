@@ -15,6 +15,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
@@ -34,6 +37,7 @@ import com.kyant.backdrop.effects.blur
 import com.kyant.backdrop.effects.lens
 import com.kyant.backdrop.effects.vibrancy
 import com.kyant.shapes.Capsule
+import kotlin.math.min
 import kotlin.math.tanh
 
 /**
@@ -138,12 +142,9 @@ fun LiquidGlassContainer(
                     lens((12f.dp.toPx()) * glass.refraction, (24f.dp.toPx()) * glass.refraction)
                 },
                 layerBlock = {
-                    val progress = interactiveHighlight.pressProgress
-                    val scale = lerp(1f, 1f + 6f.dp.toPx() / size.height, progress)
-                    val maxOffset = size.minDimension
-                    val offset = interactiveHighlight.offset
-                    translationX = maxOffset * tanh(0.05f * offset.x / maxOffset)
-                    translationY = maxOffset * tanh(0.05f * offset.y / maxOffset)
+                    val (scale, translation) = pressTransform(interactiveHighlight, size, density)
+                    translationX = translation.x
+                    translationY = translation.y
                     scaleX = scale
                     scaleY = scale
                 },
@@ -155,6 +156,13 @@ fun LiquidGlassContainer(
                     }
                 }
             )
+            .liquidGlassEffectMember { rect ->
+                val (scale, translation) = pressTransform(interactiveHighlight, rect.size, density)
+                Rect(
+                    rect.center + translation - Offset(rect.width * scale / 2f, rect.height * scale / 2f),
+                    Size(rect.width * scale, rect.height * scale)
+                )
+            }
             .clickable(interactionSource = null, indication = null, role = Role.Button, onClick = onClick)
             .then(interactiveHighlight.modifier)
             .then(interactiveHighlight.gestureModifier),
@@ -162,4 +170,16 @@ fun LiquidGlassContainer(
     ) {
         content()
     }
+}
+
+/**
+ * Press growth and drag offset of [LiquidGlassContainer]. iOS 26 interactive glass swells ~26 % while held
+ * (native 62 pt search circle), capped for small bar buttons.
+ */
+private fun pressTransform(highlight: InteractiveHighlight, size: Size, density: Float): Pair<Float, Offset> {
+    val progress = highlight.pressProgress
+    val scale = lerp(1f, 1f + min(16f * density / size.height, 0.3f), progress)
+    val maxOffset = size.minDimension
+    val offset = highlight.offset
+    return scale to Offset(maxOffset * tanh(0.05f * offset.x / maxOffset), maxOffset * tanh(0.05f * offset.y / maxOffset))
 }

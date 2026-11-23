@@ -57,14 +57,16 @@ fun LiquidSearchBar(
     var focused by remember { mutableStateOf(false) }
     val focusManager = LocalFocusManager.current
     val secondary = GlassColors.secondaryLabel()
+    // The × circle sticks to the field while held (it swells across the 8 dp gap).
+    LiquidGlassEffectContainer(backdrop, modifier, spacing = 8.dp) {
     Row(
-        modifier,
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Row(
             Modifier
                 .weight(1f)
+                .liquidGlassEffectMember()
                 .liquidGlass(backdrop, { Capsule() })
                 .height(48.dp)
                 .padding(horizontal = 14.dp),
@@ -116,6 +118,7 @@ fun LiquidSearchBar(
                 size = 48.dp
             )
         }
+    }
     }
 }
 

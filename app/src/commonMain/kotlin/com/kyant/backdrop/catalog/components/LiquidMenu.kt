@@ -1,10 +1,17 @@
 package com.kyant.backdrop.catalog.components
 
+import androidx.compose.ui.unit.IntSize
+import androidx.compose.animation.core.VisibilityThreshold
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.togetherWith
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.SizeTransform
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import com.kyant.backdrop.catalog.utils.BackHandler
 import androidx.compose.ui.zIndex
-import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
@@ -160,7 +167,17 @@ fun BoxScope.LiquidMenu(
         offset = offset,
         transformOrigin = transformOrigin,
     ) {
-        Crossfade(submenu) { open ->
+        // The panel morphs between the menu and submenu sizes while the rows cross-fade, as in UIKit;
+        // a plain Crossfade snapped the glass to the taller page for the whole fade.
+        AnimatedContent(
+            submenu,
+            transitionSpec = {
+                fadeIn(tween(160, delayMillis = 60)) togetherWith fadeOut(tween(100)) using
+                    SizeTransform(clip = true) { _, _ -> spring(0.9f, 500f, IntSize.VisibilityThreshold) }
+            },
+            contentAlignment = if (transformOrigin.pivotFractionY > 0.5f) Alignment.BottomCenter else Alignment.TopCenter,
+            label = "submenu"
+        ) { open ->
             Column(Modifier.verticalScroll(rememberScrollState()).padding(vertical = 8.dp)) {
                 if (open == null && header != null) {
                     BasicText(header, Modifier.padding(horizontal = 20.dp, vertical = 6.dp), style = TextStyle(GlassColors.secondaryLabel(), 13.sp))
