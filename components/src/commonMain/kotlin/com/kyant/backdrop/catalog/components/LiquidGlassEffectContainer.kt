@@ -1,14 +1,10 @@
 package com.kyant.backdrop.catalog.components
 
 import androidx.compose.foundation.layout.Box
-import androidx.compose.ui.graphics.drawscope.clipPath
-import androidx.compose.ui.graphics.ClipOp
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.RoundRect
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.PathOperation
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -71,25 +67,17 @@ fun LiquidGlassEffectContainer(
     Box(modifier.onPlaced { group.coordinates = it }) {
         CompositionLocalProvider(LocalLiquidGlassGroup provides group) { content() }
         // Drawn above the members: the neck plus a 1.5 dp band over their facing rims, so the joined glass
-        // reads as one blob (as on iOS) instead of two outlined shapes with a strip between them.
+        // reads as one blob (as on iOS) with a rim only on its outer outline.
         Box(
             Modifier
                 .matchParentSize()
-                .drawWithContent {
-                    drawContent()
-                    // Only the part of the rim outside the members: overlapping members (a held circle that grows
-                    // into its neighbours) would otherwise show the neck curve as a hook inside them.
-                    clipPath(group.memberOutline, ClipOp.Difference) {
-                        drawPath(
-                            group.edges,
-                            Color.White.copy(alpha = if (isLight) 0.55f else 0.22f),
-                            style = Stroke(1.dp.toPx())
-                        )
-                    }
-                }
                 .drawBackdrop(
                     backdrop = backdrop,
-                    shape = { group.bridgeShape(density, with(density) { spacing.toPx() }, with(density) { 1.5.dp.toPx() }) },
+                    shape = {
+                        // A held member's rim glows wider, so the band over it widens with the glow.
+                        val glow = group.members.values.maxOfOrNull { it.glow() } ?: 0f
+                        group.bridgeShape(density, with(density) { spacing.toPx() }, with(density) { 1.5.dp.toPx() })
+                    },
                     effects = {
                         vibrancy()
                         blur(2.dp.toPx() * glass.blur)
@@ -143,32 +131,35 @@ internal class LiquidGlassGroup {
     var coordinates: LayoutCoordinates? = null
     val members = mutableStateMapOf<Any, GroupMember>()
 
-    /** Outer outline of the necks from the last [bridgeShape], stroked as the joined glass's rim. */
-    var edges = Path()
-        private set
-
-    /** Union of the members' capsules from the last [bridgeShape]. */
-    var memberOutline = Path()
-        private set
-
     fun bridgeShape(density: Density, spacing: Float, rimInset: Float): Shape {
         val rects = members.values.map { with(it) { density.transform(rect) } }.sortedBy { it.left }
         val neck = Path()
-        val outline = Path()
         for (i in rects.indices) for (j in i + 1 until rects.size) {
-            addBridge(neck, outline, rects[i], rects[j], spacing)
+            addBridge(neck, rects[i], rects[j], spacing)
         }
-        edges = outline
-        memberOutline = Path().apply {
-            for (r in rects) addRoundRect(RoundRect(r, CornerRadius(r.height / 2f)))
+        // Where a held member has grown into its neighbour, the lens they share is covered too, so neither
+        // member's rim shows inside the other as a short arc: on iOS only the joined outline has a rim.
+        val lenses = Path()
+        for (i in rects.indices) for (j in i + 1 until rects.size) {
+            val a = rects[i]
+            val b = rects[j]
+            if (!a.overlaps(b)) continue
+            lenses.addPath(
+                Path.combine(
+                    PathOperation.Intersect,
+                    Path().apply { addRoundRect(RoundRect(a.inflate(rimInset), CornerRadius(a.height / 2f + rimInset))) },
+                    Path().apply { addRoundRect(RoundRect(b.inflate(rimInset), CornerRadius(b.height / 2f + rimInset))) }
+                )
+            )
         }
-        if (neck.isEmpty) return PathShape(neck)
+        if (neck.isEmpty && lenses.isEmpty) return PathShape(neck)
         val inner = Path()
         for (r in rects) {
             val d = r.deflate(rimInset)
             if (d.width > 0f && d.height > 0f) inner.addRoundRect(RoundRect(d, CornerRadius(d.height / 2f)))
         }
-        return PathShape(Path.combine(PathOperation.Difference, neck, inner))
+        val joined = Path.combine(PathOperation.Difference, neck, inner)
+        return PathShape(if (lenses.isEmpty) joined else Path.combine(PathOperation.Union, joined, lenses))
     }
 }
 
@@ -177,7 +168,7 @@ internal class LiquidGlassGroup {
  * [b] (right). The neck leaves each cap along its tangent, so the outline stays smooth (no horns), and
  * its spread grows with proximity: zero at [spacing], a full liquid waist once the caps touch.
  */
-private fun addBridge(path: Path, outline: Path, a: Rect, b: Rect, spacing: Float) {
+private fun addBridge(path: Path, a: Rect, b: Rect, spacing: Float) {
     val gap = b.left - a.right
     if (spacing <= 0f || gap >= spacing) return
     if (min(a.bottom, b.bottom) - max(a.top, b.top) < min(a.height, b.height) * 0.5f) return
@@ -188,7 +179,7 @@ private fun addBridge(path: Path, outline: Path, a: Rect, b: Rect, spacing: Floa
     val c2 = Offset(b.left + r2, b.center.y)
     val d = (c2 - c1).getDistance()
     if (d <= abs(r1 - r2) + 0.5f) return
-    val v = 0.32f * t
+    val v = 0.42f * kotlin.math.sqrt(t)
     if (v < 0.02f) return
     val u1 = if (d < r1 + r2) acos(((r1 * r1 + d * d - r2 * r2) / (2 * r1 * d)).coerceIn(-1f, 1f)) else 0f
     val u2 = if (d < r1 + r2) acos(((r2 * r2 + d * d - r1 * r1) / (2 * r2 * d)).coerceIn(-1f, 1f)) else 0f
@@ -213,10 +204,6 @@ private fun addBridge(path: Path, outline: Path, a: Rect, b: Rect, spacing: Floa
     path.lineTo(p4.x, p4.y)
     path.cubicTo(h4.x, h4.y, h2.x, h2.y, p2.x, p2.y)
     path.close()
-    outline.moveTo(p1.x, p1.y)
-    outline.cubicTo(h1.x, h1.y, h3.x, h3.y, p3.x, p3.y)
-    outline.moveTo(p4.x, p4.y)
-    outline.cubicTo(h4.x, h4.y, h2.x, h2.y, p2.x, p2.y)
 }
 
 /** A fresh instance per geometry, so the backdrop's outline cache is refreshed whenever members move. */
