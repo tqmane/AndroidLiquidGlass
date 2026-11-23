@@ -1,5 +1,9 @@
 package com.kyant.backdrop.catalog.components
 
+import androidx.compose.ui.semantics.onClick
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.Role
+import androidx.compose.foundation.clickable
 import com.kyant.shapes.RoundedRectangle
 import com.kyant.backdrop.backdrops.rememberLayerBackdrop
 import com.kyant.backdrop.backdrops.layerBackdrop
@@ -236,7 +240,7 @@ fun BoxScope.LiquidVideoPlayerControls(
                     Modifier
                         .graphicsLayer { this.alpha = chromeAlpha }
                         .semantics { contentDescription = "More" }
-                        .pointerInput(Unit) { detectTapGestures { touch(); menu = PlayerMenu.More } }
+                        .clickable(role = Role.Button) { touch(); menu = PlayerMenu.More }
                         .padding(horizontal = 2.dp)
                 ) { GlassIcon(GlassIcons.Ellipsis, Color.White, Modifier.width(18.dp).height(18.dp)) }
             }
@@ -328,7 +332,13 @@ fun LiquidVolumeControl(state: VideoPlayerState, backdrop: Backdrop, modifier: M
             Modifier
                 .width(44.dp)
                 .fillMaxSize()
-                .semantics { contentDescription = if (state.muted) "Unmute" else "Mute" }
+                .semantics {
+                    contentDescription = if (state.muted) "Unmute" else "Mute"
+                    role = Role.Button
+                    onClick(if (expanded) "Toggle mute" else "Show volume") {
+                        onInteraction(); if (expanded) state.muted = !state.muted else expanded = true; true
+                    }
+                }
                 .pointerInput(Unit) {
                     detectTapGestures(
                         onTap = { onInteraction(); if (expanded) state.muted = !state.muted else expanded = true },
