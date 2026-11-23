@@ -204,6 +204,7 @@ fun BoxScope.LiquidAnchoredMenu(
     modifier: Modifier = Modifier,
     width: Dp = 250.dp,
     icons: LiquidMenuIcons = LiquidMenuIcons(),
+    checkmarkPlacement: CheckmarkPlacement = CheckmarkPlacement.Icon,
     dimBackground: Boolean = false,
     state: LiquidContextMenuState? = null,
     backgroundBlur: Dp = ContextMenuBackgroundBlur,
@@ -241,7 +242,8 @@ fun BoxScope.LiquidAnchoredMenu(
         offset = with(density) { DpOffset(x.toDp(), y.toDp()) },
         transformOrigin = TransformOrigin(pivotX.coerceIn(0f, 1f), if (below) 0f else 1f),
         width = width,
-        icons = icons
+        icons = icons,
+        checkmarkPlacement = checkmarkPlacement
     )
 }
 

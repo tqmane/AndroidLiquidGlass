@@ -161,7 +161,7 @@ fun BoxScope.LiquidContextMenu(
     entries: List<MenuEntry>,
     state: LiquidContextMenuState? = null,
     preview: @Composable () -> Unit,
-) = LiquidContextMenu(expanded, onDismissRequest, backdrop, anchorBounds, entries, state, LiquidMenuIcons(), preview)
+) = LiquidContextMenu(expanded, onDismissRequest, backdrop, anchorBounds, entries, state, LiquidMenuIcons(), preview = preview)
 
 @Composable
 fun BoxScope.LiquidContextMenu(
@@ -172,6 +172,7 @@ fun BoxScope.LiquidContextMenu(
     entries: List<MenuEntry>,
     state: LiquidContextMenuState? = null,
     icons: LiquidMenuIcons,
+    checkmarkPlacement: CheckmarkPlacement = CheckmarkPlacement.Icon,
     preview: @Composable () -> Unit,
 ) {
     val glass = LocalLiquidGlassStyle.current
@@ -255,10 +256,10 @@ fun BoxScope.LiquidContextMenu(
             ) {
                 val open = submenu
                 if (open == null) {
-                    MenuEntries(entries, onDismissRequest, icons) { submenu = it }
+                    MenuEntries(entries, onDismissRequest, icons, checkmarkPlacement) { submenu = it }
                 } else {
-                    MenuEntries(listOf(MenuEntry.Action(open.title, icons.back) { submenu = null }), {}, icons) {}
-                    MenuEntries(open.entries, onDismissRequest, icons) { submenu = it }
+                    MenuEntries(listOf(MenuEntry.Action(open.title, icons.back) { submenu = null }), {}, icons, checkmarkPlacement) {}
+                    MenuEntries(open.entries, onDismissRequest, icons, checkmarkPlacement, sectionAfterHeader = true) { submenu = it }
                 }
             }
         }

@@ -39,6 +39,10 @@ fun MenuContent() {
         var favorite by remember { mutableStateOf(false) }
         var sort by remember { mutableStateOf("Date") }
         var folder by remember { mutableStateOf("Downloads") }
+        var searchMenu by remember { mutableStateOf(false) }
+        var source by remember { mutableStateOf("Library") }
+        var field by remember { mutableStateOf("Title") }
+        var order by remember { mutableStateOf("Date Added") }
         val teal = if (isGlassDark()) Color(0xFF40C8E0) else Color(0xFF30B0C7)
         val contextState = rememberLiquidContextMenuState()
         val rows = listOf("Movies" to GlassIcons.Folder, "Trip to Kyoto.mp4" to GlassIcons.Film)
@@ -66,6 +70,17 @@ fun MenuContent() {
             MenuEntry.Divider,
             MenuEntry.Action("Delete", GlassIcons.Trash, destructive = true),
         )
+        val searchEntries = listOf(
+            MenuEntry.Section("Content Source"),
+            MenuEntry.Action("Library", GlassIcons.Folder, checked = source == "Library", iconTint = teal) { source = "Library" },
+            MenuEntry.Action("Downloads", GlassIcons.ArrowDownCircle, checked = source == "Downloads", iconTint = teal) { source = "Downloads" },
+            MenuEntry.Section("Search Field"),
+            MenuEntry.Action("Title", GlassIcons.Pencil, checked = field == "Title") { field = "Title" },
+            MenuEntry.Action("All Fields", GlassIcons.List, checked = field == "All Fields") { field = "All Fields" },
+            MenuEntry.Section("Sort By"),
+            MenuEntry.Action("Date Added", GlassIcons.Clock, checked = order == "Date Added") { order = "Date Added" },
+            MenuEntry.Action("Name", GlassIcons.Book, checked = order == "Name") { order = "Name" },
+        )
         val card: @Composable () -> Unit = {
             Column(Modifier.fillMaxSize().background(Color.White).padding(16.dp), verticalArrangement = Arrangement.Bottom) {
                 BasicText("Photo", style = TextStyle(Color.Black, 20.sp, FontWeight.SemiBold))
@@ -75,6 +90,7 @@ fun MenuContent() {
         Column(Modifier.align(Alignment.TopCenter).fillMaxSize().verticalScroll(rememberScrollState()).systemBarsPadding().padding(16.dp)) {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                 LiquidIconButton(GlassIcons.Star, "Popover", { popover = true }, backdrop)
+                LiquidIconButton(GlassIcons.Search, "Search options", { searchMenu = true }, backdrop)
                 LiquidIconButton(GlassIcons.Ellipsis, "More", { menu = true }, backdrop)
             }
             Spacer(Modifier.height(48.dp))
@@ -100,6 +116,11 @@ fun MenuContent() {
         LiquidMenu(
             menu, { menu = false }, backdrop, entries, Alignment.TopEnd,
             Modifier.systemBarsPadding(), offset = DpOffset((-16).dp, 16.dp), transformOrigin = TransformOrigin(1f, 0f)
+        )
+        LiquidMenu(
+            searchMenu, { searchMenu = false }, backdrop, searchEntries, Alignment.TopCenter,
+            Modifier.systemBarsPadding(), offset = DpOffset(0.dp, 16.dp), transformOrigin = TransformOrigin(0.5f, 0f),
+            checkmarkPlacement = CheckmarkPlacement.Gutter
         )
         LiquidPopover(
             popover, { popover = false }, backdrop, Alignment.TopStart,
