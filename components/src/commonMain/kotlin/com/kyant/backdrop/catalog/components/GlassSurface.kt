@@ -1,0 +1,176 @@
+package com.kyant.backdrop.catalog.components
+
+import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.runtime.staticCompositionLocalOf
+import com.kyant.backdrop.backdrops.LayerBackdrop
+import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.ReadOnlyComposable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.isSpecified
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
+import com.kyant.backdrop.Backdrop
+import com.kyant.backdrop.drawBackdrop
+import com.kyant.backdrop.effects.blur
+import com.kyant.backdrop.effects.lens
+import com.kyant.backdrop.effects.vibrancy
+import com.kyant.backdrop.highlight.Highlight
+import com.kyant.backdrop.shadow.Shadow
+
+/** iOS 26 system colors used by the glass components. */
+/** Forces the dark (true) or light (false) glass appearance for a subtree, e.g. video player chrome, which is always dark on iOS. Null follows the system theme. */
+val LocalGlassDarkAppearance = staticCompositionLocalOf<Boolean?> { null }
+
+@Composable
+@ReadOnlyComposable
+fun isGlassDark(): Boolean = LocalGlassDarkAppearance.current ?: isSystemInDarkTheme()
+
+object GlassColors {
+    val Blue = Color(0xFF0088FF)
+    val BlueDark = Color(0xFF0091FF)
+    val Red = Color(0xFFFF383C)
+    val RedDark = Color(0xFFFF4245)
+    val Green = Color(0xFF34C759)
+
+    @Composable
+    @ReadOnlyComposable
+    fun accent(): Color = if (isGlassDark()) BlueDark else Blue
+
+    @Composable
+    fun red(): Color = if (isGlassDark()) RedDark else Red
+
+    @Composable
+    @ReadOnlyComposable
+    fun destructive(): Color = if (isGlassDark()) RedDark else Red
+
+    @Composable
+    @ReadOnlyComposable
+    fun label(): Color = if (isGlassDark()) Color.White else Color.Black
+
+    @Composable
+    @ReadOnlyComposable
+    fun secondaryLabel(): Color =
+        if (isGlassDark()) Color(0xFFEBEBF5).copy(alpha = 0.6f)
+        else Color(0xFF3C3C43).copy(alpha = 0.6f)
+
+    @Composable
+    @ReadOnlyComposable
+    fun separator(): Color =
+        if (isGlassDark()) Color(0xFF545458).copy(alpha = 0.6f)
+        else Color(0xFF3C3C43).copy(alpha = 0.29f)
+
+    @Composable
+    @ReadOnlyComposable
+    fun fill(): Color =
+        if (isGlassDark()) Color(0xFF787880).copy(alpha = 0.36f)
+        else Color(0xFF787880).copy(alpha = 0.2f)
+}
+
+/**
+ * The "regular" Liquid Glass material: a blurred, refracted backdrop with a specular rim
+ * and a soft drop shadow, optionally tinted.
+ */
+@Composable
+fun Modifier.liquidGlass(
+    backdrop: Backdrop,
+    shape: () -> Shape,
+    tint: Color = Color.Unspecified,
+    surfaceColor: Color = Color.Unspecified,
+    blurRadius: Dp = 2.dp,
+    refractionHeight: Dp = 12.dp,
+    refractionAmount: Dp = 24.dp,
+    shadow: Boolean = true,
+): Modifier {
+    val glass = LocalLiquidGlassStyle.current
+    val isLightTheme = !isGlassDark()
+    return drawBackdrop(
+        backdrop = backdrop,
+        shape = shape,
+        effects = {
+            vibrancy()
+            blur((blurRadius.toPx()) * glass.blur)
+            lens((refractionHeight.toPx()) * glass.refraction, (refractionAmount.toPx()) * glass.refraction, chromaticAberration = true)
+        },
+        highlight = { Highlight.Default },
+        shadow = if (shadow) {
+            { Shadow(radius = 24.dp, color = Color.Black.copy(alpha = if (isLightTheme) 0.12f else 0.3f)) }
+        } else {
+            null
+        },
+        onDrawSurface = {
+            if (tint.isSpecified) {
+                drawRect(tint, blendMode = androidx.compose.ui.graphics.BlendMode.Hue)
+                drawRect(tint.copy(alpha = (0.75f * glass.opacity).coerceIn(0f, 1f)))
+            }
+            drawGlassFill(surfaceColor, tint, isLightTheme, glass.opacity)
+        }
+    )
+}
+
+/**
+ * Fill of the regular material. Untinted glass gets the same neutral 40 % fill as the tab bars, so a button
+ * beside a bar (search circle, X beside the search field) reads as the same material instead of a brighter one.
+ */
+internal fun glassSurfaceFill(surfaceColor: Color, tint: Color, isLightTheme: Boolean, opacity: Float): Color {
+    val surface = if (surfaceColor.isSpecified) surfaceColor
+    else if (tint.isSpecified) Color.Transparent
+    else if (isLightTheme) Color(0xFFFAFAFA).copy(alpha = 0.4f)
+    else Color(0xFF121212).copy(alpha = 0.4f)
+    return surface.copy(alpha = (surface.alpha * opacity).coerceIn(0f, 1f))
+}
+
+/**
+ * iOS 26 dark regular glass: content behind is dimmed, then lifted, so over black it reads as the native
+ * (25, 25, 25) and over colour it darkens instead of turning into a flat grey film.
+ */
+internal fun DrawScope.drawDarkGlass(opacity: Float, dim: Float = 0.35f, lift: Float = 0.1f) {
+    drawRect(Color.Black.copy(alpha = (dim * opacity).coerceIn(0f, 1f)))
+    drawRect(Color.White.copy(alpha = (lift * opacity).coerceIn(0f, 1f)), blendMode = androidx.compose.ui.graphics.BlendMode.Plus)
+}
+
+/** Draws the regular-material fill: [glassSurfaceFill], or [drawDarkGlass] for untinted dark glass. */
+internal fun DrawScope.drawGlassFill(surfaceColor: Color, tint: Color, isLightTheme: Boolean, opacity: Float) {
+    if (!isLightTheme && !surfaceColor.isSpecified && !tint.isSpecified) drawDarkGlass(opacity)
+    else drawRect(glassSurfaceFill(surfaceColor, tint, isLightTheme, opacity))
+}
+
+/**
+ * The thicker panel material used by sheets, alerts, menus and popovers: more blur, lighter
+ * refraction and a translucent fill so text stays legible over any content.
+ */
+@Composable
+fun Modifier.liquidGlassPanel(
+    backdrop: Backdrop,
+    shape: () -> Shape,
+    containerColor: Color = Color.Unspecified,
+    blurRadius: Dp = 12.dp,
+    refractionHeight: Dp = 16.dp,
+    refractionAmount: Dp = 32.dp,
+    exportedBackdrop: LayerBackdrop? = null,
+): Modifier {
+    val glass = LocalLiquidGlassStyle.current
+    val isLightTheme = !isGlassDark()
+    val surface = if (containerColor.isSpecified) containerColor
+    else if (isLightTheme) Color(0xFFFAFAFA).copy(alpha = 0.6f)
+    else Color.Unspecified
+    return drawBackdrop(
+        backdrop = backdrop,
+        shape = shape,
+        effects = {
+            vibrancy()
+            blur((blurRadius.toPx()) * glass.blur)
+            lens((refractionHeight.toPx()) * glass.refraction, (refractionAmount.toPx()) * glass.refraction, depthEffect = true)
+        },
+        highlight = { Highlight.Plain },
+        shadow = { Shadow(radius = 40.dp, color = Color.Black.copy(alpha = if (isLightTheme) 0.14f else 0.4f)) },
+        exportedBackdrop = exportedBackdrop,
+        onDrawSurface = {
+            // Dark panels (menus, popovers, alerts) measure ~(24, 26, 24) over black on iOS 26.
+            if (surface.isSpecified) drawRect(surface.copy(alpha = (surface.alpha * glass.opacity).coerceIn(0f, 1f)))
+            else drawDarkGlass(glass.opacity, dim = 0.45f, lift = 0.095f)
+        }
+    )
+}

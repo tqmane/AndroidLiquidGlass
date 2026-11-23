@@ -65,7 +65,8 @@ fun LiquidBottomTabs(
     modifier: Modifier = Modifier,
     content: @Composable RowScope.() -> Unit
 ) {
-    val isLightTheme = !isSystemInDarkTheme()
+    val glass = LocalLiquidGlassStyle.current
+    val isLightTheme = !isGlassDark()
     val accentColor =
         if (isLightTheme) Color(0xFF0088FF)
         else Color(0xFF0091FF)
@@ -85,7 +86,7 @@ fun LiquidBottomTabs(
         }
 
         val offsetAnimation = remember { Animatable(0f) }
-        val panelOffset by remember(density) {
+        val panelOffset by remember(density, constraints.maxWidth) {
             derivedStateOf {
                 val fraction = (offsetAnimation.value / constraints.maxWidth).fastCoerceIn(-1f, 1f)
                 with(density) {
@@ -99,7 +100,7 @@ fun LiquidBottomTabs(
         var currentIndex by remember(selectedTabIndex) {
             mutableIntStateOf(selectedTabIndex())
         }
-        val dampedDragAnimation = remember(animationScope) {
+        val dampedDragAnimation = remember(animationScope, tabWidth) {
             DampedDragAnimation(
                 animationScope = animationScope,
                 initialValue = selectedTabIndex().toFloat(),
@@ -168,8 +169,8 @@ fun LiquidBottomTabs(
                     shape = { Capsule() },
                     effects = {
                         vibrancy()
-                        blur(8f.dp.toPx())
-                        lens(24f.dp.toPx(), 24f.dp.toPx())
+                        blur((8f.dp.toPx()) * glass.blur)
+                        lens((24f.dp.toPx()) * glass.refraction, (24f.dp.toPx()) * glass.refraction)
                     },
                     layerBlock = {
                         val progress = dampedDragAnimation.pressProgress
@@ -177,7 +178,7 @@ fun LiquidBottomTabs(
                         scaleX = scale
                         scaleY = scale
                     },
-                    onDrawSurface = { drawRect(containerColor) }
+                    onDrawSurface = { if (isLightTheme) drawRect(containerColor) else drawDarkGlass(1f) }
                 )
                 .then(interactiveHighlight.modifier)
                 .height(64f.dp)
@@ -206,17 +207,17 @@ fun LiquidBottomTabs(
                         effects = {
                             val progress = dampedDragAnimation.pressProgress
                             vibrancy()
-                            blur(8f.dp.toPx())
+                            blur((8f.dp.toPx()) * glass.blur)
                             lens(
-                                24f.dp.toPx() * progress,
-                                24f.dp.toPx() * progress
+                                (24f.dp.toPx() * progress) * glass.refraction,
+                                (24f.dp.toPx() * progress) * glass.refraction
                             )
                         },
                         highlight = {
                             val progress = dampedDragAnimation.pressProgress
                             Highlight.Default.copy(alpha = progress)
                         },
-                        onDrawSurface = { drawRect(containerColor) }
+                        onDrawSurface = { if (isLightTheme) drawRect(containerColor) else drawDarkGlass(1f) }
                     )
                     .then(interactiveHighlight.modifier)
                     .height(56f.dp)
@@ -244,8 +245,8 @@ fun LiquidBottomTabs(
                     effects = {
                         val progress = dampedDragAnimation.pressProgress
                         lens(
-                            10f.dp.toPx() * progress,
-                            14f.dp.toPx() * progress,
+                            (10f.dp.toPx() * progress) * glass.refraction,
+                            (14f.dp.toPx() * progress) * glass.refraction,
                             chromaticAberration = true
                         )
                     },

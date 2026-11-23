@@ -1,0 +1,7 @@
+jdk:
+  - openjdk21
+before_install:
+  - yes | sdkmanager --licenses >/dev/null || true
+install:
+  - chmod +x ./gradlew
+  - ./gradlew :backdrop:publishToMavenLocal :components:publishToMavenLocal -x check --no-configuration-cache

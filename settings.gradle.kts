@@ -24,5 +24,6 @@ dependencyResolutionManagement {
 
 rootProject.name = "Glass"
 include(":backdrop")
+include(":components")
 include(":app")
 include(":androidApp")

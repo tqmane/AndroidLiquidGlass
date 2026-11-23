@@ -77,11 +77,18 @@ kotlin {
     }
 }
 
-mavenPublishing {
-    publishToMavenCentral()
-    signAllPublications()
+// JitPack sets JITPACK/GROUP/VERSION; it builds without signing keys and publishes to its own repository.
+val jitpack = System.getenv("JITPACK") == "true"
+val publishGroup = if (jitpack) System.getenv("GROUP") else "io.github.kyant0"
+val publishVersion = if (jitpack) System.getenv("VERSION") else "2.0.1"
 
-    coordinates("io.github.kyant0", "backdrop", "2.0.1")
+mavenPublishing {
+    if (!jitpack) {
+        publishToMavenCentral()
+        signAllPublications()
+    }
+
+    coordinates(publishGroup, "backdrop", publishVersion)
 
     pom {
         name.set("Backdrop")

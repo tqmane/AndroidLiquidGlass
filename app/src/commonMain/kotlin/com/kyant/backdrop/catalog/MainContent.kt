@@ -1,5 +1,11 @@
 package com.kyant.backdrop.catalog
 
+import com.kyant.backdrop.catalog.destinations.VideoPlayerContent
+import com.kyant.backdrop.catalog.destinations.TabsSidebarContent
+import com.kyant.backdrop.catalog.destinations.GlassSettingsContent
+import com.kyant.backdrop.catalog.components.LocalLiquidGlassStyle
+import com.kyant.backdrop.catalog.components.LiquidGlassStyle
+import androidx.compose.runtime.remember
 import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.Composable
@@ -14,6 +20,16 @@ import com.kyant.backdrop.catalog.destinations.BottomTabsContent
 import com.kyant.backdrop.catalog.destinations.ButtonsContent
 import com.kyant.backdrop.catalog.destinations.ControlCenterContent
 import com.kyant.backdrop.catalog.destinations.DialogContent
+import com.kyant.backdrop.catalog.destinations.SegmentedControlContent
+import com.kyant.backdrop.catalog.destinations.StepperContent
+import com.kyant.backdrop.catalog.destinations.PageControlContent
+import com.kyant.backdrop.catalog.destinations.ProgressContent
+import com.kyant.backdrop.catalog.destinations.SheetContent
+import com.kyant.backdrop.catalog.destinations.AlertContent
+import com.kyant.backdrop.catalog.destinations.MenuContent
+import com.kyant.backdrop.catalog.destinations.ToolbarContent
+import com.kyant.backdrop.catalog.destinations.SearchContent
+import com.kyant.backdrop.catalog.destinations.GlassMaterialsContent
 import com.kyant.backdrop.catalog.destinations.GlassPlaygroundContent
 import com.kyant.backdrop.catalog.destinations.HomeContent
 import com.kyant.backdrop.catalog.destinations.LazyScrollContainerContent
@@ -28,9 +44,11 @@ import com.kyant.backdrop.catalog.utils.BackHandler
 @Composable
 fun MainContent() {
     val isLightTheme = !isSystemInDarkTheme()
+    val glassStyle = remember { LiquidGlassStyle() }
 
     CompositionLocalProvider(
-        LocalIndication provides ripple(color = if (isLightTheme) Color.Black else Color.White)
+        LocalIndication provides ripple(color = if (isLightTheme) Color.Black else Color.White),
+        LocalLiquidGlassStyle provides glassStyle
     ) {
         var destination by rememberSaveable { mutableStateOf(CatalogDestination.Home) }
 
@@ -42,6 +60,19 @@ fun MainContent() {
             CatalogDestination.Slider -> SliderContent()
             CatalogDestination.BottomTabs -> BottomTabsContent()
             CatalogDestination.Dialog -> DialogContent()
+            CatalogDestination.SegmentedControl -> SegmentedControlContent()
+            CatalogDestination.Stepper -> StepperContent()
+            CatalogDestination.PageControl -> PageControlContent()
+            CatalogDestination.Progress -> ProgressContent()
+            CatalogDestination.Sheet -> SheetContent()
+            CatalogDestination.Alert -> AlertContent()
+            CatalogDestination.Menu -> MenuContent()
+            CatalogDestination.Toolbar -> ToolbarContent()
+            CatalogDestination.Search -> SearchContent()
+            CatalogDestination.GlassMaterials -> GlassMaterialsContent()
+            CatalogDestination.GlassSettings -> GlassSettingsContent()
+            CatalogDestination.VideoPlayer -> VideoPlayerContent()
+            CatalogDestination.TabsSidebar -> TabsSidebarContent()
 
             CatalogDestination.LockScreen -> LockScreenContent()
             CatalogDestination.ControlCenter -> ControlCenterContent()
