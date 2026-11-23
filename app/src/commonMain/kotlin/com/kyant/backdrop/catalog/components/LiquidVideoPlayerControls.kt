@@ -1,5 +1,8 @@
 package com.kyant.backdrop.catalog.components
 
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.Role
@@ -137,6 +140,8 @@ fun BoxScope.LiquidVideoPlayerControls(
     val chromeAlpha by animateFloatAsState(if (state.scrubbing) 0f else 1f)
     val touch = { lastInteraction++; visible = true }
     val full = state.fullscreen
+    val density = LocalDensity.current
+    var chromeHeight by remember { mutableStateOf(0.dp) }
 
     LaunchedEffect(visible, state.playing, state.scrubbing, lastInteraction, menu) {
         if (visible && state.playing && !state.scrubbing && menu == null) {
@@ -168,6 +173,7 @@ fun BoxScope.LiquidVideoPlayerControls(
         modifier
             .matchParentSize()
             .graphicsLayer { this.alpha = alpha }
+            .onSizeChanged { chromeHeight = with(density) { it.height.toDp() } }
     ) {
         Box(Modifier.matchParentSize().graphicsLayer { this.alpha = chromeAlpha }) {
             if (full) {
@@ -266,7 +272,9 @@ fun BoxScope.LiquidVideoPlayerControls(
                 MenuEntry.Submenu("Subtitles", GlassIcons.Captions, subtitleEntries),
             ) to null
         }
+        val menuMaxHeight = (chromeHeight - edge * 2 - if (full) 12.dp else 42.dp).coerceAtLeast(120.dp)
         LiquidMenu(
+            modifier = Modifier.heightIn(max = menuMaxHeight),
             expanded = menu != null,
             onDismissRequest = close,
             backdrop = backdrop,

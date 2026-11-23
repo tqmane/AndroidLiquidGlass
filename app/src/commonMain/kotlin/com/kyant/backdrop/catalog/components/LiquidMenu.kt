@@ -1,5 +1,7 @@
 package com.kyant.backdrop.catalog.components
 
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import com.kyant.backdrop.catalog.utils.BackHandler
 import androidx.compose.ui.zIndex
 import androidx.compose.animation.Crossfade
@@ -157,7 +159,7 @@ fun BoxScope.LiquidMenu(
         transformOrigin = transformOrigin,
     ) {
         Crossfade(submenu) { open ->
-            Column(Modifier.padding(vertical = 8.dp)) {
+            Column(Modifier.verticalScroll(rememberScrollState()).padding(vertical = 8.dp)) {
                 if (open == null && header != null) {
                     BasicText(header, Modifier.padding(horizontal = 20.dp, vertical = 6.dp), style = TextStyle(GlassColors.secondaryLabel(), 13.sp))
                 }
