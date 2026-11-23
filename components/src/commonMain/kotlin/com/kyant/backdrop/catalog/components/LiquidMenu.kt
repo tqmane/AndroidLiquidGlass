@@ -51,6 +51,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.dismiss
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.paneTitle
+import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -254,6 +255,7 @@ internal fun MenuEntries(
                 enabled = entry.enabled,
                 gutter = gutter,
                 gutterIcon = if (gutter && entry.checked) icons.check else null,
+                checked = entry.checked,
                 onClick = {
                     entry.onClick()
                     onDismissRequest()
@@ -315,6 +317,7 @@ private fun MenuRow(
     bold: Boolean = false,
     gutter: Boolean = false,
     gutterIcon: ImageVector? = null,
+    checked: Boolean = false,
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val pressed by interactionSource.collectIsPressedAsState()
@@ -326,6 +329,7 @@ private fun MenuRow(
             .clip(RoundedRectangle(14.dp))
             .background(if (pressed) GlassColors.fill() else Color.Transparent)
             .clickable(interactionSource, null, enabled = enabled, role = Role.Button, onClick = onClick)
+            .semantics { if (checked) selected = true }
             .padding(horizontal = 12.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
