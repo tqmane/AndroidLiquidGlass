@@ -17,9 +17,9 @@ import androidx.compose.ui.layout.positionInParent
 import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.util.lerp
+import com.kyant.backdrop.backdrops.rememberCombinedBackdrop
 import com.kyant.backdrop.drawBackdrop
 import com.kyant.backdrop.effects.blur
-import com.kyant.backdrop.effects.colorControls
 import com.kyant.backdrop.effects.lens
 import com.kyant.backdrop.effects.vibrancy
 import com.kyant.backdrop.highlight.Highlight
@@ -133,6 +133,7 @@ fun LiquidTopTabBar(
     val indicatorX = remember { Animatable(0f) }
     val indicatorWidth = remember { Animatable(0f) }
     val press = remember { Animatable(0f) }
+    val barBackdrop = rememberLayerBackdrop()
     var dragX by remember { mutableStateOf<Float?>(null) }
     val currentSelected by rememberUpdatedState(selectedKey)
     val currentOnSelect by rememberUpdatedState(onSelect)
@@ -171,6 +172,7 @@ fun LiquidTopTabBar(
                     scaleX = s
                     scaleY = s
                 },
+                exportedBackdrop = barBackdrop,
                 onDrawSurface = { if (dark) drawDarkGlass(glass.opacity) else drawRect(containerColor.copy(alpha = containerColor.alpha * glass.opacity)) }
             )
         )
@@ -237,14 +239,10 @@ fun LiquidTopTabBar(
                         .width(with(density) { indicatorWidth.value.toDp() })
                         .fillMaxHeight()
                         .drawBackdrop(
-                            // Samples the page, not the bar, so the held pill is a clear lens like the bottom tab pill;
-                            // at rest it carries the bar's blur and tint so it reads as part of the bar.
-                            backdrop = backdrop,
+                            // As in the bottom tab pill: refracts the bar glass, and the page where it overhangs the bar.
+                            backdrop = rememberCombinedBackdrop(backdrop, barBackdrop),
                             shape = { Capsule() },
                             effects = {
-                                val rest = 1f - press.value
-                                colorControls(saturation = lerp(1f, 1.5f, rest))
-                                if (rest > 0f) blur(8.dp.toPx() * glass.blur * rest)
                                 lens(
                                     10.dp.toPx() * press.value * glass.refraction,
                                     14.dp.toPx() * press.value * glass.refraction,
@@ -265,17 +263,11 @@ fun LiquidTopTabBar(
                                 scaleY = s * (1f - abs(v) * 0.25f)
                             },
                             onDrawSurface = {
-                                val rest = 1f - press.value
-                                if (dark) drawDarkGlass(glass.opacity * rest)
-                                else drawRect(containerColor.copy(alpha = containerColor.alpha * glass.opacity * rest))
                                 drawRect(
-                                    if (dark) Color.White.copy(0.1f) else Color.Black.copy(0.08f),
-                                    alpha = rest
+                                    if (dark) Color.White.copy(0.1f) else Color.Black.copy(0.1f),
+                                    alpha = 1f - press.value
                                 )
-                                // While held the pill is a clear lens that still reads as glass on a dark bar.
-                                drawRect(
-                                    if (dark) Color.White.copy(0.06f * press.value) else Color.Black.copy(0.03f * press.value)
-                                )
+                                drawRect(Color.Black.copy(alpha = 0.03f * press.value))
                             }
                         )
                 )
