@@ -40,6 +40,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.TransformOrigin
+import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.boundsInRoot
 import androidx.compose.ui.layout.onGloballyPositioned
@@ -222,6 +223,8 @@ fun BoxScope.LiquidContextMenu(
                         scaleX = lerp(0.3f, 1f, p)
                         scaleY = lerp(0.2f, 1f, p)
                         alpha = p.coerceIn(0f, 1f)
+                        // Per-draw alpha: an offscreen alpha layer drops the glass outline clip and flashes a rectangle.
+                        compositingStrategy = CompositingStrategy.ModulateAlpha
                     }
                     .liquidGlassPanel(backdrop, { RoundedRectangle(26.dp) })
                     .clickable(interactionSource = null, indication = null) {}
