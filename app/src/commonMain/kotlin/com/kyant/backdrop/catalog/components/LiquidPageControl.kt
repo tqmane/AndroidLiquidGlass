@@ -108,9 +108,13 @@ fun LiquidPageControl(
                     val down = awaitFirstDown()
                     interacting = true
                     var dragged = false
+                    var releasedAt: Offset? = null
                     while (true) {
                         val change = awaitPointerEvent().changes.firstOrNull { it.id == down.id } ?: break
-                        if (!change.pressed) break
+                        if (!change.pressed) {
+                            releasedAt = change.position
+                            break
+                        }
                         if (!dragged && abs(change.position.x - down.position.x) > viewConfiguration.touchSlop) dragged = true
                         if (dragged) {
                             change.consume()
@@ -119,7 +123,8 @@ fun LiquidPageControl(
                         }
                     }
                     interacting = false
-                    if (!dragged) {
+                    val up = releasedAt
+                    if (!dragged && up != null && up.x in 0f..size.width.toFloat() && up.y in 0f..size.height.toFloat()) {
                         val target = if (down.position.x < size.width / 2f) currentPageState - 1 else currentPageState + 1
                         currentOnPageChange(target.coerceIn(0, pageCount - 1))
                     }
