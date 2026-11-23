@@ -147,7 +147,7 @@ fun LiquidBottomTabs(
                 pressedScale = (pillHeight.value + 22f) / pillHeight.value,
                 onDragStarted = { dragPosition[0] = startAt(targetValue) },
                 onDragStopped = {
-                    val targetIndex = targetValue.fastRoundToInt().fastCoerceIn(0, tabsCount - 1)
+                    val targetIndex = valueAt(dragPosition[0]).fastRoundToInt().fastCoerceIn(0, tabsCount - 1)
                     currentIndex = targetIndex
                     animateToValue(targetIndex.toFloat())
                     animationScope.launch {
