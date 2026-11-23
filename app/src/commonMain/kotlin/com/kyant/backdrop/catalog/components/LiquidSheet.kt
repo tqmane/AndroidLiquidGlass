@@ -1,5 +1,10 @@
 package com.kyant.backdrop.catalog.components
 
+import androidx.compose.ui.unit.Velocity
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.input.nestedscroll.NestedScrollSource
+import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import com.kyant.backdrop.catalog.utils.BackHandler
 import androidx.compose.ui.zIndex
 import androidx.compose.animation.core.Animatable
@@ -129,11 +134,44 @@ fun BoxScope.LiquidSheet(
 
             val inset = lerp(8f, 0f, expansion).dp
             val sheetHeight = with(density) { (maxH - minOf(offsetY.value, lowestTop)).toDp() } - inset
+            suspend fun settle(velocity: Float) {
+                val projected = offsetY.value + velocity * 0.18f
+                if (projected > lowestTop + (maxH - lowestTop) * 0.5f) {
+                    currentOnDismiss()
+                } else {
+                    val target = stops.minBy { abs(it - projected) }
+                    offsetY.animateTo(target, spring(0.86f, 300f), velocity)
+                }
+            }
             val draggableState = rememberDraggableState { delta ->
                 scope.launch {
                     val target = offsetY.value + delta
                     val resisted = if (target < highestTop) offsetY.value + delta * 0.25f else target
                     offsetY.snapTo(resisted)
+                }
+            }
+
+            val nestedScroll = remember(stops) {
+                object : NestedScrollConnection {
+                    override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
+                        if (available.y >= 0f || offsetY.value <= highestTop) return Offset.Zero
+                        val next = maxOf(highestTop, offsetY.value + available.y)
+                        val consumed = next - offsetY.value
+                        scope.launch { offsetY.snapTo(next) }
+                        return Offset(0f, consumed)
+                    }
+
+                    override fun onPostScroll(consumed: Offset, available: Offset, source: NestedScrollSource): Offset {
+                        if (available.y <= 0f || source != NestedScrollSource.UserInput) return Offset.Zero
+                        scope.launch { offsetY.snapTo(offsetY.value + available.y) }
+                        return Offset(0f, available.y)
+                    }
+
+                    override suspend fun onPreFling(available: Velocity): Velocity {
+                        if (stops.any { abs(it - offsetY.value) < 0.5f }) return Velocity.Zero
+                        settle(available.y)
+                        return available
+                    }
                 }
             }
 
@@ -158,16 +196,9 @@ fun BoxScope.LiquidSheet(
                     .draggable(
                         draggableState,
                         Orientation.Vertical,
-                        onDragStopped = { velocity ->
-                            val projected = offsetY.value + velocity * 0.18f
-                            if (projected > lowestTop + (maxH - lowestTop) * 0.5f) {
-                                currentOnDismiss()
-                            } else {
-                                val target = stops.minBy { abs(it - projected) }
-                                offsetY.animateTo(target, spring(0.86f, 300f), velocity)
-                            }
-                        }
+                        onDragStopped = { velocity -> settle(velocity) }
                     )
+                    .nestedScroll(nestedScroll)
             ) {
                 if (showGrabber) {
                     Box(

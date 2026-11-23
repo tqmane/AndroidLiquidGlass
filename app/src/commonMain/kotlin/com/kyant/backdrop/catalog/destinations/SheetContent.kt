@@ -36,7 +36,7 @@ fun SheetContent() {
         }
         LiquidSheet(sheet, { sheet = false }, backdrop) { SheetBody(backdrop, "Details") { sheet = false } }
         LiquidSheet(mediumOnly, { mediumOnly = false }, backdrop, detents = listOf(SheetDetent.Medium)) {
-            SheetBody(backdrop, "Medium", scrollable = true) { mediumOnly = false }
+            SheetBody(backdrop, "Medium") { mediumOnly = false }
         }
         LiquidSheet(largeSheet, { largeSheet = false }, backdrop, detents = listOf(SheetDetent.Large)) {
             SheetBody(backdrop, "Large") { largeSheet = false }
@@ -45,14 +45,14 @@ fun SheetContent() {
 }
 
 @Composable
-private fun ColumnScope.SheetBody(backdrop: LayerBackdrop, title: String, scrollable: Boolean = false, onClose: () -> Unit) {
+private fun ColumnScope.SheetBody(backdrop: LayerBackdrop, title: String, onClose: () -> Unit) {
     Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
         LiquidIconButton(GlassIcons.Close, "Close", onClose, backdrop)
         BasicText(title, Modifier.weight(1f), style = TextStyle(GlassColors.label(), 17.sp, FontWeight.SemiBold, textAlign = androidx.compose.ui.text.style.TextAlign.Center))
         LiquidIconButton(GlassIcons.Check, "Done", onClose, backdrop, tint = GlassColors.accent())
     }
     Column(
-        Modifier.then(if (scrollable) Modifier.weight(1f, fill = false).verticalScroll(rememberScrollState()) else Modifier).padding(16.dp).fillMaxWidth().clip(RoundedRectangle(26.dp)).background(GlassColors.fill().copy(alpha = 0.3f))
+        Modifier.weight(1f, fill = false).verticalScroll(rememberScrollState()).padding(16.dp).fillMaxWidth().clip(RoundedRectangle(26.dp)).background(GlassColors.fill().copy(alpha = 0.3f))
     ) {
         listOf("Recently added", "Downloads", "Favorites", "Shared with you").forEachIndexed { i, label ->
             if (i > 0) Box(Modifier.padding(start = 16.dp).fillMaxWidth().height(1.dp).background(GlassColors.separator()))
