@@ -19,6 +19,7 @@ import androidx.compose.ui.semantics.role
 import androidx.compose.ui.util.lerp
 import com.kyant.backdrop.drawBackdrop
 import com.kyant.backdrop.effects.blur
+import com.kyant.backdrop.effects.colorControls
 import com.kyant.backdrop.effects.lens
 import com.kyant.backdrop.effects.vibrancy
 import com.kyant.backdrop.highlight.Highlight
@@ -232,15 +233,7 @@ fun LiquidTopTabBar(
                 val density = LocalDensity.current
                 Box(
                     Modifier
-                        .graphicsLayer {
-                            translationX = indicatorX.value
-                            // Like the bottom tab pill, the held pill overhangs the bar by 7 dp above and below
-                            // (38 -> 60 dp here), squashed along the drag like it.
-                            val s = lerp(1f, (size.height + 22.dp.toPx()) / size.height, press.value)
-                            val v = (indicatorX.velocity / 10_000f).coerceIn(-0.2f, 0.2f)
-                            scaleX = s / (1f - abs(v) * 0.75f)
-                            scaleY = s * (1f - abs(v) * 0.25f)
-                        }
+                        .graphicsLayer { translationX = indicatorX.value }
                         .width(with(density) { indicatorWidth.value.toDp() })
                         .fillMaxHeight()
                         .drawBackdrop(
@@ -250,7 +243,7 @@ fun LiquidTopTabBar(
                             shape = { Capsule() },
                             effects = {
                                 val rest = 1f - press.value
-                                vibrancy()
+                                colorControls(saturation = lerp(1f, 1.5f, rest))
                                 if (rest > 0f) blur(8.dp.toPx() * glass.blur * rest)
                                 lens(
                                     10.dp.toPx() * press.value * glass.refraction,
@@ -261,6 +254,16 @@ fun LiquidTopTabBar(
                             highlight = { Highlight.Default.copy(alpha = press.value) },
                             shadow = { Shadow(alpha = press.value) },
                             innerShadow = { InnerShadow(radius = 8.dp * press.value, alpha = press.value) },
+                            // Scaled through layerBlock so the backdrop is sampled unscaled under the swollen pill;
+                            // scaling an outer layer would magnify the page and the pill would read as an opaque slab.
+                            // Like the bottom tab pill it overhangs the bar by 7 dp above and below (38 -> 60 dp),
+                            // squashed along the drag.
+                            layerBlock = {
+                                val s = lerp(1f, (size.height + 22.dp.toPx()) / size.height, press.value)
+                                val v = (indicatorX.velocity / 10_000f).coerceIn(-0.2f, 0.2f)
+                                scaleX = s / (1f - abs(v) * 0.75f)
+                                scaleY = s * (1f - abs(v) * 0.25f)
+                            },
                             onDrawSurface = {
                                 val rest = 1f - press.value
                                 if (dark) drawDarkGlass(glass.opacity * rest)
