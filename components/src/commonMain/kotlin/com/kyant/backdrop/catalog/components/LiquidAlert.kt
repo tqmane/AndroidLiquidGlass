@@ -58,6 +58,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -140,6 +142,8 @@ fun BoxScope.LiquidAlert(
                     compositingStrategy = CompositingStrategy.ModulateAlpha
                 }
                 .liquidGlassPanel(backdrop, { RoundedRectangle(34.dp) })
+                // Scrolls when the keyboard leaves less height than the card needs (landscape phones).
+                .verticalScroll(rememberScrollState())
                 .padding(horizontal = 16.dp, vertical = 16.dp)
         ) {
             Column(Modifier.padding(start = 8.dp, end = 8.dp, top = 6.dp, bottom = 18.dp)) {
