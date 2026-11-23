@@ -163,7 +163,7 @@ fun BoxScope.LiquidAlert(
             }
             if (textFields.isNotEmpty()) {
                 AlertTextFields(textFields, visible)
-                Spacer(Modifier.height(16.dp))
+                Spacer(Modifier.height(20.dp))
             }
             val onAction: (AlertAction) -> Unit = { it.onClick(); onDismissRequest() }
             if (actions.size == 2) {
@@ -185,9 +185,17 @@ private fun AlertTextFields(fields: List<AlertTextField>, visible: Boolean) {
     val first = remember { FocusRequester() }
     val focusManager = LocalFocusManager.current
     LaunchedEffect(visible) { if (visible) first.requestFocus() else focusManager.clearFocus() }
-    Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    // iOS 26: one field is a capsule; several share one rounded group split by inset separators.
+    Column(
+        Modifier.fillMaxWidth()
+            .clip(if (fields.size == 1) Capsule() else RoundedRectangle(20.dp))
+            .background(GlassColors.fill())
+    ) {
         fields.forEachIndexed { i, field ->
             val last = i == fields.lastIndex
+            if (i > 0) {
+                Box(Modifier.padding(horizontal = 16.dp).fillMaxWidth().height(0.5.dp).background(GlassColors.separator()))
+            }
             BasicTextField(
                 field.value,
                 field.onValueChange,
@@ -203,8 +211,7 @@ private fun AlertTextFields(fields: List<AlertTextField>, visible: Boolean) {
                 keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) }),
                 decorationBox = { inner ->
                     Box(
-                        Modifier.fillMaxWidth().height(44.dp).clip(Capsule()).background(GlassColors.fill())
-                            .padding(horizontal = 16.dp),
+                        Modifier.fillMaxWidth().height(48.dp).padding(horizontal = 16.dp),
                         contentAlignment = Alignment.CenterStart
                     ) {
                         if (field.value.isEmpty()) {

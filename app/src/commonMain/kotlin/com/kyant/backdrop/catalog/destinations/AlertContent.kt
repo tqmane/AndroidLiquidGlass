@@ -61,13 +61,13 @@ fun AlertContent() {
             listOf(AlertAction("Delete", AlertActionStyle.Destructive), AlertAction("Archive"), AlertAction("Cancel", AlertActionStyle.Cancel))
         )
         LiquidAlert(
-            rename, { rename = false }, backdrop, "New Album", "Enter a name for this album.",
-            listOf(AlertAction("Cancel", AlertActionStyle.Cancel), AlertAction("Save", AlertActionStyle.Preferred)),
+            rename, { rename = false }, backdrop, "Enter Name", "Enter a name to continue.",
+            listOf(AlertAction("Cancel", AlertActionStyle.Cancel), AlertAction("OK")),
             textFields = listOf(AlertTextField(name, { name = it }, "Name"))
         )
         LiquidAlert(
-            login, { login = false }, backdrop, "Sign In", "Enter your username and password.",
-            listOf(AlertAction("Cancel", AlertActionStyle.Cancel), AlertAction("Sign In", AlertActionStyle.Preferred)),
+            login, { login = false }, backdrop, "Log In", "Enter your username and password.",
+            listOf(AlertAction("Cancel", AlertActionStyle.Cancel), AlertAction("OK")),
             textFields = listOf(AlertTextField(user, { user = it }, "Username"), AlertTextField(password, { password = it }, "Password", secure = true))
         )
         LiquidActionSheet(
