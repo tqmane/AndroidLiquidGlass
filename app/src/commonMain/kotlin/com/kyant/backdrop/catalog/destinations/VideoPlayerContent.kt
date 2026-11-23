@@ -37,7 +37,7 @@ fun VideoPlayerContent() {
         LiquidVideoPlayer(
             state,
             Modifier.fillMaxSize().background(Color.Black),
-            captionText = "Night over the mountains",
+            captionText = ::caption,
             onClose = { state.fullscreen = false }
         ) { NightSkyFrame() }
         return
@@ -57,7 +57,7 @@ fun VideoPlayerContent() {
         LiquidVideoPlayer(
             state,
             Modifier.padding(horizontal = 12.dp).fillMaxWidth().aspectRatio(16f / 9f),
-            captionText = "Night over the mountains"
+            captionText = ::caption
         ) { NightSkyFrame() }
         BasicText(
             "Night over the mountains",
@@ -103,3 +103,5 @@ private fun NightSkyFrame() {
         ridge(0.86f, 0.12f, 11, Color(0xFF121A2C))
     }
 }
+
+private fun caption(language: String) = if (language == "Japanese") "山の上の夜" else "Night over the mountains"

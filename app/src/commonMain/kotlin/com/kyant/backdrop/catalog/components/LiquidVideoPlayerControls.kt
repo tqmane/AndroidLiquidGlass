@@ -106,7 +106,7 @@ fun rememberVideoPlayerState(duration: Float = 596f): VideoPlayerState {
 fun LiquidVideoPlayer(
     state: VideoPlayerState,
     modifier: Modifier = Modifier,
-    captionText: String? = null,
+    captionText: ((language: String) -> String)? = null,
     onClose: (() -> Unit)? = null,
     frame: @Composable BoxScope.() -> Unit,
 ) {
@@ -130,7 +130,7 @@ fun BoxScope.LiquidVideoPlayerControls(
     state: VideoPlayerState,
     backdrop: Backdrop,
     modifier: Modifier = Modifier,
-    captionText: String? = null,
+    captionText: ((language: String) -> String)? = null,
     onClose: (() -> Unit)? = null,
     skipInterval: Float = 10f,
 ) {
@@ -156,9 +156,10 @@ fun BoxScope.LiquidVideoPlayerControls(
             .matchParentSize()
             .pointerInput(Unit) { detectTapGestures { visible = !visible } }
     )
-    if (captionText != null && state.captions != null) {
+    val captionLanguage = state.captions
+    if (captionText != null && captionLanguage != null) {
         BasicText(
-            captionText,
+            captionText(captionLanguage),
             Modifier
                 .align(Alignment.BottomCenter)
                 .then(if (full) Modifier.safeDrawingPadding() else Modifier)
