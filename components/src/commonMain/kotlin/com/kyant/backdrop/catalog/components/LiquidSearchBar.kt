@@ -1,5 +1,8 @@
 package com.kyant.backdrop.catalog.components
 
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.composed
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.input.pointer.pointerInput
@@ -120,12 +123,17 @@ fun LiquidSearchBar(
             Spacer(Modifier.width(8.dp))
             Box(Modifier.weight(1f), contentAlignment = Alignment.CenterStart) {
                 if (query.isEmpty()) {
-                    BasicText(placeholder, style = TextStyle(secondary, 17.sp))
+                    // Read out by the field itself, so accessibility services focus the editable node.
+                    BasicText(placeholder, Modifier.clearAndSetSemantics {}, style = TextStyle(secondary, 17.sp))
                 }
                 BasicTextField(
                     value = query,
                     onValueChange = onQueryChange,
-                    modifier = Modifier.fillMaxWidth().focusRequester(focusRequester).onFocusChanged { focused = it.isFocused },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .focusRequester(focusRequester)
+                        .onFocusChanged { focused = it.isFocused }
+                        .semantics { if (query.isEmpty()) contentDescription = placeholder },
                     singleLine = true,
                     textStyle = TextStyle(GlassColors.label(), 17.sp),
                     cursorBrush = SolidColor(GlassColors.accent()),
@@ -189,8 +197,14 @@ fun SearchFieldInline(
         GlassIcon(searchIcon, secondary, Modifier.size(17.dp))
         Spacer(Modifier.width(6.dp))
         Box(Modifier.weight(1f), contentAlignment = Alignment.CenterStart) {
-            if (query.isEmpty()) BasicText(placeholder, style = TextStyle(secondary, 17.sp))
-            BasicTextField(query, onQueryChange, Modifier.fillMaxWidth().focusRequester(focusRequester), singleLine = true, textStyle = TextStyle(GlassColors.label(), 17.sp), cursorBrush = SolidColor(GlassColors.accent()))
+            if (query.isEmpty()) BasicText(placeholder, Modifier.clearAndSetSemantics {}, style = TextStyle(secondary, 17.sp))
+            BasicTextField(
+                query, onQueryChange,
+                Modifier
+                    .fillMaxWidth()
+                    .focusRequester(focusRequester)
+                    .semantics { if (query.isEmpty()) contentDescription = placeholder },
+                singleLine = true, textStyle = TextStyle(GlassColors.label(), 17.sp), cursorBrush = SolidColor(GlassColors.accent()))
         }
     }
 }
