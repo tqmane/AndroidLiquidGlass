@@ -13,6 +13,7 @@ import androidx.compose.ui.graphics.GraphicsLayerScope
 import androidx.compose.ui.graphics.isSpecified
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.DpOffset
 import com.kyant.backdrop.Backdrop
 import com.kyant.backdrop.drawBackdrop
 import com.kyant.backdrop.effects.blur
@@ -27,6 +28,21 @@ val LocalGlassDarkAppearance = staticCompositionLocalOf<Boolean?> { null }
 
 /** Accent override for a glass subtree. Null retains each control's system color. */
 val LocalGlassAccent = staticCompositionLocalOf<Color?> { null }
+
+/** Drop shadow of the glass surfaces in a subtree (buttons, button groups, toolbar capsules). Null uses [glassShadow]'s iOS 26 default. */
+val LocalGlassShadow = staticCompositionLocalOf<Shadow?> { null }
+
+/**
+ * Drop shadow of regular glass: [LocalGlassShadow], else iOS 26's soft toolbar shadow
+ * (measured on an iPhone toolbar capsule: no x offset, 2 pt down, 6 pt blur, 8 % black).
+ */
+@Composable
+@ReadOnlyComposable
+fun glassShadow(): Shadow = LocalGlassShadow.current ?: Shadow(
+    radius = 6.dp,
+    offset = DpOffset(0.dp, 2.dp),
+    color = Color.Black.copy(alpha = if (isGlassDark()) 0.2f else 0.08f)
+)
 
 @Composable
 @ReadOnlyComposable
@@ -79,7 +95,7 @@ object GlassColors {
 
 /**
  * The "regular" Liquid Glass material: a blurred, refracted backdrop with a specular rim
- * and a soft drop shadow, optionally tinted.
+ * and a soft drop shadow ([shadowStyle], see [glassShadow]), optionally tinted.
  */
 @Composable
 fun Modifier.liquidGlass(
@@ -92,6 +108,7 @@ fun Modifier.liquidGlass(
     refractionAmount: Dp = 24.dp,
     shadow: Boolean = true,
     layerBlock: (GraphicsLayerScope.() -> Unit)? = null,
+    shadowStyle: Shadow = glassShadow(),
 ): Modifier {
     val glass = LocalLiquidGlassStyle.current
     val isLightTheme = !isGlassDark()
@@ -106,7 +123,7 @@ fun Modifier.liquidGlass(
         },
         highlight = { Highlight.Default },
         shadow = if (shadow) {
-            { Shadow(radius = 24.dp, color = Color.Black.copy(alpha = if (isLightTheme) 0.12f else 0.3f)) }
+            { shadowStyle }
         } else {
             null
         },

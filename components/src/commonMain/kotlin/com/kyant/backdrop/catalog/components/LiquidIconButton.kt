@@ -39,6 +39,7 @@ import androidx.compose.ui.util.lerp
 import com.kyant.backdrop.Backdrop
 import com.kyant.backdrop.catalog.utils.InteractiveHighlight
 import com.kyant.backdrop.drawBackdrop
+import com.kyant.backdrop.shadow.Shadow
 import com.kyant.backdrop.effects.blur
 import com.kyant.backdrop.effects.lens
 import com.kyant.backdrop.effects.vibrancy
@@ -110,11 +111,12 @@ fun LiquidButtonGroup(
     modifier: Modifier = Modifier,
     height: Dp = 44.dp,
     tint: Color = Color.Unspecified,
+    shadow: Shadow = glassShadow(),
     content: @Composable RowScope.() -> Unit,
 ) {
     Row(
         modifier
-            .liquidGlass(backdrop, { Capsule() }, tint = tint)
+            .liquidGlass(backdrop, { Capsule() }, tint = tint, shadowStyle = shadow)
             .height(height)
             .padding(horizontal = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -155,6 +157,7 @@ fun LiquidGlassContainer(
     modifier: Modifier = Modifier,
     tint: Color = Color.Unspecified,
     surfaceColor: Color = Color.Unspecified,
+    shadow: Shadow? = glassShadow(),
     content: @Composable () -> Unit,
 ) {
     val glass = LocalLiquidGlassStyle.current
@@ -182,6 +185,7 @@ fun LiquidGlassContainer(
                     blur((2f.dp.toPx()) * glass.blur)
                     lens((12f.dp.toPx()) * glass.refraction, (24f.dp.toPx()) * glass.refraction)
                 },
+                shadow = { shadow },
                 layerBlock = {
                     val (scale, translation) = pressTransform(interactiveHighlight, size, density)
                     translationX = translation.x

@@ -25,6 +25,7 @@ import androidx.compose.ui.util.lerp
 import com.kyant.backdrop.Backdrop
 import com.kyant.backdrop.catalog.utils.InteractiveHighlight
 import com.kyant.backdrop.drawBackdrop
+import com.kyant.backdrop.shadow.Shadow
 import com.kyant.backdrop.effects.blur
 import com.kyant.backdrop.effects.lens
 import com.kyant.backdrop.effects.vibrancy
@@ -43,6 +44,7 @@ fun LiquidButton(
     isInteractive: Boolean = true,
     tint: Color = Color.Unspecified,
     surfaceColor: Color = Color.Unspecified,
+    shadow: Shadow? = glassShadow(),
     content: @Composable RowScope.() -> Unit
 ) {
     val glass = LocalLiquidGlassStyle.current
@@ -68,6 +70,7 @@ fun LiquidButton(
                     blur((2f.dp.toPx()) * glass.blur)
                     lens((12f.dp.toPx()) * glass.refraction, (24f.dp.toPx()) * glass.refraction)
                 },
+                shadow = { shadow },
                 layerBlock = if (isInteractive) {
                     {
                         val width = size.width
