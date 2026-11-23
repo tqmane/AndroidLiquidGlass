@@ -67,6 +67,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.zIndex
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.input.pointer.pointerInput
@@ -182,6 +183,8 @@ fun LiquidTopTabBar(
         if (onToggleSidebar != null) {
             Box(
                 Modifier
+                    // Kept above the held pill when it swells over the toggle.
+                    .zIndex(1f)
                     .fillMaxHeight()
                     .clip(Capsule())
                     .clickable(role = Role.Button, onClick = onToggleSidebar)
@@ -234,8 +237,9 @@ fun LiquidTopTabBar(
                     Modifier
                         .graphicsLayer {
                             translationX = indicatorX.value
-                            // Same lift as the bottom tab pill (56 -> 78 dp), squashed along the drag like it.
-                            val s = lerp(1f, 78f / 56f, press.value)
+                            // Like the bottom tab pill, the held pill overhangs the bar by 7 dp above and below
+                            // (38 -> 60 dp here), squashed along the drag like it.
+                            val s = lerp(1f, (size.height + 22.dp.toPx()) / size.height, press.value)
                             val v = (indicatorX.velocity / 10_000f).coerceIn(-0.2f, 0.2f)
                             scaleX = s / (1f - abs(v) * 0.75f)
                             scaleY = s * (1f - abs(v) * 0.25f)
