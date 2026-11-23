@@ -1,5 +1,6 @@
 package com.kyant.backdrop.catalog.components
 
+import kotlinx.coroutines.launch
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -231,6 +232,7 @@ fun LiquidSegmentedControl(
             },
             onDragStopped = {
                 val wasDragged = dragDistance > touchSlop
+                animationScope.launch { dragDistance = 0f }
                 isDragging = false
                 if (wasDragged) {
                     val targetIndex = nearestEnabledSegmentIndex(
