@@ -1,5 +1,8 @@
 package com.kyant.backdrop.catalog.components
 
+import androidx.compose.foundation.layout.width
+import androidx.compose.ui.unit.isSpecified
+import androidx.compose.ui.unit.Dp
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -23,6 +26,7 @@ internal val LocalLiquidBottomTabScale =
 fun RowScope.LiquidBottomTab(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    width: Dp = Dp.Unspecified,
     content: @Composable ColumnScope.() -> Unit
 ) {
     val scale = LocalLiquidBottomTabScale.current
@@ -36,7 +40,7 @@ fun RowScope.LiquidBottomTab(
                 onClick = onClick
             )
             .fillMaxHeight()
-            .weight(1f)
+            .then(if (width.isSpecified) Modifier.width(width) else Modifier.weight(1f))
             .graphicsLayer {
                 val scale = scale()
                 scaleX = scale

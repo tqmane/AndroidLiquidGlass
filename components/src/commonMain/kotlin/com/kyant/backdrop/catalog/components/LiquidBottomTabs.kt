@@ -1,5 +1,7 @@
 package com.kyant.backdrop.catalog.components
 
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.ui.layout.layout
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.width
@@ -72,6 +74,7 @@ fun LiquidBottomTabs(
     pillHeight: Dp = 56f.dp,
     leadingWidth: Dp = 0f.dp,
     leading: @Composable () -> Unit = {},
+    tabWidths: List<Dp>? = null,
     content: @Composable RowScope.() -> Unit
 ) {
     val glass = LocalLiquidGlassStyle.current
@@ -87,8 +90,22 @@ fun LiquidBottomTabs(
         contentAlignment = Alignment.CenterStart
     ) {
         val density = LocalDensity.current
-        val tabWidth = with(density) {
-            (constraints.maxWidth.toFloat() - 8f.dp.toPx() - leadingWidth.toPx()) / tabsCount
+        // Tabs share the bar equally unless [tabWidths] gives each its own width; the pill follows the widths.
+        val widths = with(density) {
+            val equal = (constraints.maxWidth.toFloat() - 8f.dp.toPx() - leadingWidth.toPx()) / tabsCount
+            List(tabsCount) { tabWidths?.getOrNull(it)?.toPx() ?: equal }
+        }
+        val widthsState = rememberUpdatedState(widths)
+        fun widthAt(value: Float): Float {
+            val w = widthsState.value
+            val i = value.toInt().fastCoerceIn(0, tabsCount - 1)
+            return lerp(w[i], w[(i + 1).coerceAtMost(tabsCount - 1)], value - i)
+        }
+        fun startAt(value: Float): Float {
+            val w = widthsState.value
+            val i = value.toInt().fastCoerceIn(0, tabsCount - 1)
+            val start = (0 until i).sumOf { w[it].toDouble() }.toFloat()
+            return start + w[i] * (value - i)
         }
 
         val offsetAnimation = remember { Animatable(0f) }
@@ -106,7 +123,7 @@ fun LiquidBottomTabs(
         var currentIndex by remember(selectedTabIndex) {
             mutableIntStateOf(selectedTabIndex())
         }
-        val dampedDragAnimation = remember(animationScope, tabWidth) {
+        val dampedDragAnimation = remember(animationScope, widths) {
             DampedDragAnimation(
                 animationScope = animationScope,
                 initialValue = selectedTabIndex().toFloat(),
@@ -129,7 +146,7 @@ fun LiquidBottomTabs(
                 },
                 onDrag = { _, dragAmount ->
                     updateValue(
-                        (targetValue + dragAmount.x / tabWidth * if (isLtr) 1f else -1f)
+                        (targetValue + dragAmount.x / widthAt(targetValue) * if (isLtr) 1f else -1f)
                             .fastCoerceIn(0f, (tabsCount - 1).toFloat())
                     )
                     animationScope.launch {
@@ -159,8 +176,8 @@ fun LiquidBottomTabs(
                 position = { size, offset ->
                     val lead = with(density) { leadingWidth.toPx() }
                     Offset(
-                        if (isLtr) lead + (dampedDragAnimation.value + 0.5f) * tabWidth + panelOffset
-                        else size.width - lead - (dampedDragAnimation.value + 0.5f) * tabWidth + panelOffset,
+                        if (isLtr) lead + startAt(dampedDragAnimation.value) + widthAt(dampedDragAnimation.value) / 2f + panelOffset
+                        else size.width - lead - startAt(dampedDragAnimation.value) - widthAt(dampedDragAnimation.value) / 2f + panelOffset,
                         size.height / 2f
                     )
                 }
@@ -248,8 +265,8 @@ fun LiquidBottomTabs(
                 .padding(start = 4f.dp + leadingWidth, end = 4f.dp)
                 .graphicsLayer {
                     translationX =
-                        if (isLtr) dampedDragAnimation.value * tabWidth + panelOffset
-                        else size.width - (dampedDragAnimation.value + 1f) * tabWidth + panelOffset
+                        if (isLtr) startAt(dampedDragAnimation.value) + panelOffset
+                        else -startAt(dampedDragAnimation.value) + panelOffset
                 }
                 .then(interactiveHighlight.gestureModifier)
                 .then(dampedDragAnimation.modifier)
@@ -297,7 +314,11 @@ fun LiquidBottomTabs(
                     }
                 )
                 .height(pillHeight)
-                .fillMaxWidth(1f / tabsCount)
+                .layout { measurable, constraints ->
+                    val w = widthAt(dampedDragAnimation.value).fastRoundToInt()
+                    val placeable = measurable.measure(constraints.copy(minWidth = w, maxWidth = w))
+                    layout(placeable.width, placeable.height) { placeable.place(0, 0) }
+                }
         )
     }
 }

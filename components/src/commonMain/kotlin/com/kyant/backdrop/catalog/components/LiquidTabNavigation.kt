@@ -1,5 +1,6 @@
 package com.kyant.backdrop.catalog.components
 
+import androidx.compose.ui.unit.isSpecified
 import androidx.compose.ui.input.key.type
 import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.input.key.key
@@ -101,7 +102,15 @@ data class LiquidTabItem(
     val title: String,
     val icon: ImageVector,
     val search: Boolean = false,
+    /** Overrides the bar's preset width for this tab ([LiquidTopTabBarDefaults]). */
+    val width: Dp = Dp.Unspecified,
 )
+
+/** Preset tab widths of [LiquidTopTabBar]; override them per bar with its parameters or per tab with [LiquidTabItem.width]. */
+object LiquidTopTabBarDefaults {
+    val TextTabWidth: Dp = 82.dp
+    val IconTabWidth: Dp = 48.dp
+}
 
 /** A sidebar group; a null [title] is the ungrouped top block (normally the tab bar's tabs). */
 @Immutable
@@ -126,8 +135,10 @@ fun LiquidTopTabBar(
     onToggleSidebar: (() -> Unit)? = null,
     selectedColor: Color = GlassColors.accent(),
     sidebarIcon: ImageVector = GlassIcons.SidebarLeft,
-    tabWidth: Dp = 92.dp,
+    tabWidth: Dp = LiquidTopTabBarDefaults.TextTabWidth,
+    iconTabWidth: Dp = LiquidTopTabBarDefaults.IconTabWidth,
 ) {
+    val widths = tabs.map { if (it.width.isSpecified) it.width else if (it.search) iconTabWidth else tabWidth }
     // LiquidBottomTabs keys its state on the lambda's identity, so the lambda must be stable and read a State.
     val selectedIndex = rememberUpdatedState(tabs.indexOfFirst { it.key == selectedKey }.coerceAtLeast(0))
     val readSelectedIndex = remember { { selectedIndex.value } }
@@ -142,7 +153,8 @@ fun LiquidTopTabBar(
         },
         backdrop = backdrop,
         tabsCount = tabs.size,
-        modifier = modifier.width(leadingWidth + tabWidth * tabs.size + 8.dp),
+        modifier = modifier.width(leadingWidth + widths.fold(0.dp) { a, b -> a + b } + 8.dp),
+        tabWidths = widths,
         accentColor = selectedColor,
         height = 46.dp,
         pillHeight = 38.dp,
@@ -160,10 +172,11 @@ fun LiquidTopTabBar(
             }
         }
     ) {
-        tabs.forEach { tab ->
+        tabs.forEachIndexed { i, tab ->
             LiquidBottomTab(
                 { onSelect(tab.key) },
-                Modifier.semantics {
+                width = widths[i],
+                modifier = Modifier.semantics {
                     this.selected = tab.key == selectedKey
                     contentDescription = tab.title
                 }
