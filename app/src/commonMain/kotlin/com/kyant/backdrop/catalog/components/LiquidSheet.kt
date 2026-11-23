@@ -107,10 +107,19 @@ fun BoxScope.LiquidSheet(
         BoxWithConstraints(Modifier.matchParentSize()) {
             val maxH = constraints.maxHeight.toFloat()
             val usable = maxH - topInset
-            val stops = remember(detents, maxH, topInset) {
+            val formSheet = maxWidth >= 600.dp
+            val formHeight = with(density) { 366.dp.toPx() }
+            val formMargin = with(density) { 24.dp.toPx() }
+            val formGap = if (formSheet) ((maxH - formHeight) / 2f).coerceAtLeast(formMargin) else 0f
+            val stops = remember(detents, maxH, topInset, formSheet) {
                 detents.map { d ->
                     when (d) {
-                        is SheetDetent.Fraction -> maxH - usable * d.fraction.coerceIn(0.1f, 1f)
+                        is SheetDetent.Fraction -> {
+                            val f = d.fraction.coerceIn(0.1f, 1f)
+                            if (!formSheet) maxH - usable * f
+                            else if (f >= 1f) topInset + formMargin
+                            else maxOf(topInset + formMargin, maxH - formGap - formHeight * f / 0.5f)
+                        }
                     }
                 }.sortedDescending()
             }
@@ -147,8 +156,8 @@ fun BoxScope.LiquidSheet(
                     .clickable(interactionSource = null, indication = null) { currentOnDismiss() }
             )
 
-            val inset = lerp(8f, 0f, expansion).dp
-            val sheetHeight = with(density) { (maxH - minOf(offsetY.value, lowestTop)).toDp() } - inset
+            val inset = if (formSheet) 0.dp else lerp(8f, 0f, expansion).dp
+            val sheetHeight = with(density) { (maxH - formGap - minOf(offsetY.value, lowestTop)).toDp() } - inset
             suspend fun settle(velocity: Float) {
                 val projected = offsetY.value + velocity * 0.18f
                 if (projected > lowestTop + (maxH - lowestTop) * 0.5f) {
@@ -197,8 +206,10 @@ fun BoxScope.LiquidSheet(
                         dismiss { currentOnDismiss(); true }
                     }
                     .offset { IntOffset(0, (offsetY.value - minOf(offsetY.value, lowestTop)).roundToInt() + minOf(offsetY.value, lowestTop).roundToInt()) }
-                    .padding(horizontal = inset)
-                    .fillMaxWidth()
+                    .then(
+                        if (formSheet) Modifier.align(Alignment.TopCenter).width(580.dp)
+                        else Modifier.padding(horizontal = inset).fillMaxWidth()
+                    )
                     .height(sheetHeight)
                     .liquidGlassPanel(
                         backdrop = backdrop,
@@ -226,7 +237,7 @@ fun BoxScope.LiquidSheet(
                             .background(if (isLightTheme) Color(0xFF3C3C43).copy(alpha = 0.3f) else Color(0xFFEBEBF5).copy(alpha = 0.3f))
                     )
                 }
-                val sheetScope = remember(this, sheetBackdrop) { LiquidSheetScope(this, sheetBackdrop, expansionState) }
+                val sheetScope = remember(this, sheetBackdrop, formSheet) { LiquidSheetScope(this, sheetBackdrop, expansionState, formSheet) }
                 sheetScope.content()
             }
         }
@@ -239,6 +250,8 @@ class LiquidSheetScope internal constructor(
     columnScope: ColumnScope,
     val backdrop: Backdrop,
     private val expansionState: State<Float>,
+    /** True on regular-width windows (tablets), where the sheet is a centered iPad-style form sheet. */
+    val isFormSheet: Boolean = false,
 ) : ColumnScope by columnScope {
     val expansion: Float get() = expansionState.value
 }
