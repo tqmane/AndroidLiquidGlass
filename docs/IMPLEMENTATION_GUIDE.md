@@ -131,7 +131,25 @@ glassStyle.reset()
 
 Presets: `LiquidGlassStyle.Clear` (stronger lens, low blur, low opacity) and `LiquidGlassStyle.Tinted` (more blur and opacity). The multipliers scale the lens height and amount, the blur radius, and the surface and tint alpha in `liquidGlass` / `liquidGlassPanel`. New glass modifiers must read `LocalLiquidGlassStyle.current` and apply the same scaling, or they will ignore the setting. The catalog's `GlassSettingsContent` is the reference UI.
 
-## 5. Adding a new component (checklist)
+## 5. Tablets and iPad (regular width)
+
+iPadOS 26 presents several components differently from iPhone. The catalog switches at a window width of **600 dp** or more, measured with `BoxWithConstraints` on the component's own container (not the screen).
+
+| Component | Phone (compact) | Tablet (regular, >= 600 dp) |
+|---|---|---|
+| `LiquidSheet` | Bottom sheet, full width, medium/large detents | Centered form sheet, 580 dp wide; medium is 366 dp tall, large reaches 24 dp below the top inset; all four corners rounded |
+| Toolbar sheet header | X (left) and check (right) glass icon buttons | Grey `Cancel` capsule and prominent blue `Done` capsule (`LiquidBorderedButton`) |
+| `LiquidActionSheet` | Bottom panel, includes the Cancel action | Centered 320 dp card, Cancel action hidden (tap outside or Back dismisses) |
+| Toolbar / tab bar demo | Full-width bottom bar | Bottom bar capped at 560 dp wide |
+
+Rules:
+- Read `LiquidSheetScope.isFormSheet` inside sheet content to pick header controls; do not check the screen size yourself.
+- A form sheet is still a backdrop exporter: controls inside it keep using the sheet scope's `backdrop`.
+- Measure width from the layout (`BoxWithConstraints`), never from the display metrics: split screen and freeform windows on Android tablets are narrower than the screen.
+- Check both orientations. In portrait a 13-inch iPad is still regular width, so it keeps the form sheet.
+- Native iPad references show the tab bar as a floating capsule at the top center. The catalog does not move the tab bar to the top; do that in your app's scaffold if you need it.
+
+## 6. Adding a new component (checklist)
 
 1. Get native iOS 26 references in light and dark (iPhone, and iPad when the layout differs). Write down sizes, corner radii, fonts and which buttons exist.
 2. Add the reusable composable in `catalog/components/`. Take `backdrop: Backdrop` as a parameter, use `GlassColors` for colors, use `liquidGlass` / `liquidGlassPanel` for surfaces, and use `LiquidSheetScope.backdrop` / exported backdrops for nested controls.
@@ -139,7 +157,7 @@ Presets: `LiquidGlassStyle.Clear` (stronger lens, low blur, low opacity) and `Li
 4. Build with `./gradlew :app:compileAndroidMain` for a fast check, or `./gradlew :androidApp:assembleDebug` for the APK.
 5. On an emulator, capture light and dark screenshots on a phone and a tablet, and compare them side by side with the iOS references. Check gestures, Back, TalkBack and rotation.
 
-## 6. Pitfalls that already caused bugs
+## 7. Pitfalls that already caused bugs
 
 | Symptom | Cause | Fix |
 | --- | --- | --- |
@@ -154,7 +172,7 @@ Presets: `LiquidGlassStyle.Clear` (stronger lens, low blur, low opacity) and `Li
 | Drag on a control also triggers a tap action | Tap and drag detectors both fire | Commit on release, and ignore the tap when a drag happened (see `LiquidSegmentedControl` and `LiquidStepper`). |
 | Global glass setting has no effect on a new component | Hard-coded blur, lens or alpha | Multiply by `LocalLiquidGlassStyle.current.*` inside the draw lambdas. |
 
-## 7. Build and environment notes
+## 8. Build and environment notes
 
 - Kotlin Multiplatform, Compose Multiplatform. Dependency versions are in `gradle/libs.versions.toml`; min SDK is 21 for `:app` and 23 for `:androidApp` (module `build.gradle.kts`).
 - If Maven Central returns HTTP 429, use the Google mirror `https://maven-central.storage-download.googleapis.com/maven2/`.
