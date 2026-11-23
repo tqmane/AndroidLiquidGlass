@@ -32,6 +32,9 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.SideEffect
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.ui.graphics.TransformOrigin
+import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -361,9 +364,15 @@ fun LiquidAdaptiveTabScaffold(
     sidebarIcon: ImageVector = GlassIcons.SidebarLeft,
     expandedSectionIcon: ImageVector = GlassIcons.ChevronDown,
     collapsedSectionIcon: ImageVector = GlassIcons.ChevronRight,
+    searchQuery: String? = null,
+    onSearchQueryChange: (String) -> Unit = {},
+    searchPlaceholder: String = "Search",
     content: @Composable (PaddingValues) -> Unit,
 ) {
     val backdrop = rememberLayerBackdrop()
+    var ownQuery by rememberSaveable { mutableStateOf("") }
+    val query = searchQuery ?: ownQuery
+    val setQuery: (String) -> Unit = { if (searchQuery == null) ownQuery = it; onSearchQueryChange(it) }
     var sidebarVisible by rememberSaveable { mutableStateOf(false) }
     BoxWithConstraints(modifier.fillMaxSize()) {
         val regular = maxWidth >= RegularWidthBreakpoint
@@ -424,11 +433,58 @@ fun LiquidAdaptiveTabScaffold(
             val selectedBarIndex = barTabs.indexOfFirst { it.key == selectedKey }
             SideEffect { if (selectedBarIndex >= 0) barIndex.intValue = selectedBarIndex }
             val readSelectedIndex = remember { { barIndex.intValue } }
-            Row(
+            // iOS 26: selecting Search shrinks the bar into a circle holding the last tab while the search circle
+            // stretches into the field (~0.2 s); the circle returns to that tab.
+            val searching = searchTab != null && searchTab.key == selectedKey
+            val morph by animateFloatAsState(if (searching) 1f else 0f, spring(1f, 600f, 0.001f))
+            var fieldFocused by remember { mutableStateOf(false) }
+            if (morph > 0f && searchTab != null) {
+                val lastTab = barTabs[barIndex.intValue.coerceIn(0, barTabs.lastIndex)]
+                Row(
+                    Modifier
+                        .align(Alignment.BottomCenter)
+                        .then(if (fieldFocused) Modifier.imePadding() else Modifier)
+                        .systemBarsPadding()
+                        .padding(start = 20.dp, end = 20.dp, bottom = 12.dp)
+                        .graphicsLayer { alpha = morph },
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    if (!fieldFocused) {
+                        LiquidIconButton(
+                            lastTab.icon, lastTab.title, { onSelect(lastTab.key) }, backdrop,
+                            Modifier.graphicsLayer {
+                                transformOrigin = TransformOrigin(0f, 0.5f)
+                                val s = lerp(1.4f, 1f, morph)
+                                scaleX = s
+                                scaleY = s
+                            },
+                            size = 48.dp, iconSize = 22.dp,
+                        )
+                    }
+                    LiquidSearchBar(
+                        query, setQuery, backdrop,
+                        Modifier
+                            .weight(1f)
+                            .onFocusChanged { fieldFocused = it.hasFocus }
+                            .graphicsLayer {
+                                transformOrigin = TransformOrigin(1f, 0.5f)
+                                scaleX = lerp(0.2f, 1f, morph)
+                            },
+                        placeholder = searchPlaceholder,
+                    )
+                }
+            }
+            if (morph < 1f) Row(
                 Modifier
                     .align(Alignment.BottomCenter)
                     .systemBarsPadding()
-                    .padding(start = 20.dp, end = 20.dp, bottom = 12.dp),
+                    .padding(start = 20.dp, end = 20.dp, bottom = 12.dp)
+                    .graphicsLayer {
+                        alpha = 1f - morph
+                        transformOrigin = TransformOrigin(0f, 0.5f)
+                        scaleX = lerp(1f, 0.25f, morph)
+                    },
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
