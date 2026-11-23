@@ -9,6 +9,7 @@ import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.GraphicsLayerScope
 import androidx.compose.ui.graphics.isSpecified
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -90,12 +91,14 @@ fun Modifier.liquidGlass(
     refractionHeight: Dp = 12.dp,
     refractionAmount: Dp = 24.dp,
     shadow: Boolean = true,
+    layerBlock: (GraphicsLayerScope.() -> Unit)? = null,
 ): Modifier {
     val glass = LocalLiquidGlassStyle.current
     val isLightTheme = !isGlassDark()
     return drawBackdrop(
         backdrop = backdrop,
         shape = shape,
+        layerBlock = layerBlock,
         effects = {
             vibrancy()
             blur((blurRadius.toPx()) * glass.blur)

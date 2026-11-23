@@ -1,6 +1,9 @@
 package com.kyant.backdrop.catalog.components
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.text.BasicText
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -70,6 +73,30 @@ fun LiquidIconButton(
             .size(size)
     ) {
         GlassIcon(icon, iconColor, Modifier.size(iconSize))
+    }
+}
+
+/**
+ * iOS 26 text bar button (sheet and navigation bar Cancel / Done): a glass capsule that refracts what is behind it
+ * and swells while held. Give [tint] (e.g. `GlassColors.accent()`) for the prominent confirm button.
+ */
+@Composable
+fun LiquidGlassTextButton(
+    label: String,
+    onClick: () -> Unit,
+    backdrop: Backdrop,
+    modifier: Modifier = Modifier,
+    tint: Color = Color.Unspecified,
+    labelColor: Color = if (tint.isSpecified) Color.White else GlassColors.label(),
+    height: Dp = 44.dp,
+) {
+    LiquidGlassContainer(
+        backdrop = backdrop,
+        onClick = onClick,
+        tint = tint,
+        modifier = modifier.height(height)
+    ) {
+        BasicText(label, Modifier.padding(horizontal = 16.dp), style = TextStyle(labelColor, 17.sp))
     }
 }
 
@@ -181,11 +208,11 @@ fun LiquidGlassContainer(
 
 /**
  * Press growth and drag offset of [LiquidGlassContainer]. iOS 26 interactive glass swells ~27 % while held
- * (native 62 pt search circle), capped for small bar buttons.
+ * (native 62 pt search circle), capped for small bar buttons; wide capsules grow by at most 16 dp across.
  */
-private fun pressTransform(highlight: InteractiveHighlight, size: Size, density: Float): Pair<Float, Offset> {
+internal fun pressTransform(highlight: InteractiveHighlight, size: Size, density: Float): Pair<Float, Offset> {
     val progress = highlight.pressProgress
-    val scale = lerp(1f, 1f + min(12f * density / size.height, 0.27f), progress)
+    val scale = lerp(1f, 1f + min(min(12f * density / size.height, 0.27f), 16f * density / size.width), progress)
     val maxOffset = size.minDimension
     val offset = highlight.offset
     return scale to Offset(maxOffset * tanh(0.05f * offset.x / maxOffset), maxOffset * tanh(0.05f * offset.y / maxOffset))

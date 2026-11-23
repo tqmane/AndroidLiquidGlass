@@ -1,6 +1,6 @@
 package com.kyant.backdrop.catalog.destinations
 
-import com.kyant.backdrop.catalog.components.LiquidBorderedButton
+import com.kyant.backdrop.catalog.components.LiquidGlassTextButton
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -92,11 +92,11 @@ private fun LiquidSheetScope.EditCollectionBody(onClose: () -> Unit) {
     LiquidSheetHeader(
         "Edit collection",
         leading = {
-            if (isFormSheet) LiquidBorderedButton("Cancel", onClose, neutral = true)
+            if (isFormSheet) LiquidGlassTextButton("Cancel", onClose, backdrop)
             else LiquidIconButton(GlassIcons.Close, "Cancel", onClose, backdrop)
         },
         trailing = {
-            if (isFormSheet) LiquidBorderedButton("Done", onClose, prominent = true)
+            if (isFormSheet) LiquidGlassTextButton("Done", onClose, backdrop, tint = GlassColors.accent())
             else LiquidIconButton(GlassIcons.Check, "Done", onClose, backdrop, tint = GlassColors.accent())
         }
     )

@@ -49,6 +49,13 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.kyant.backdrop.Backdrop
+import com.kyant.backdrop.catalog.utils.InteractiveHighlight
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.zIndex
 import com.kyant.shapes.Capsule
 import androidx.compose.foundation.text.BasicText
 
@@ -103,6 +110,10 @@ fun LiquidSearchBar(
     // The whole capsule is the hit target, as on iOS, not just the text field inside it.
     val focusRequester = remember { FocusRequester() }
     val secondary = GlassColors.secondaryLabel()
+    // Interactive glass: the capsule swells and follows the finger while held, like the iOS 26 search field.
+    val animationScope = rememberCoroutineScope()
+    val highlight = remember(animationScope) { InteractiveHighlight(animationScope) }
+    val lifted by remember { derivedStateOf { highlight.pressProgress > 0.01f } }
     // The × circle sticks to the field while held (it swells across the 8 dp gap).
     LiquidGlassEffectContainer(backdrop, modifier, spacing = 8.dp) {
     Row(
@@ -112,8 +123,23 @@ fun LiquidSearchBar(
         Row(
             Modifier
                 .weight(1f)
-                .liquidGlassEffectMember()
-                .liquidGlass(backdrop, { Capsule() })
+                .zIndex(if (lifted) 1f else 0f)
+                .liquidGlassEffectMember({ highlight.pressProgress }) { rect ->
+                    val (scale, translation) = pressTransform(highlight, rect.size, density)
+                    Rect(
+                        rect.center + translation - Offset(rect.width * scale / 2f, rect.height * scale / 2f),
+                        Size(rect.width * scale, rect.height * scale)
+                    )
+                }
+                .liquidGlass(backdrop, { Capsule() }, layerBlock = {
+                    val (scale, translation) = pressTransform(highlight, size, density)
+                    translationX = translation.x
+                    translationY = translation.y
+                    scaleX = scale
+                    scaleY = scale
+                })
+                .then(highlight.modifier)
+                .then(highlight.gestureModifier)
                 .height(48.dp)
                 .focusOnTap(focusRequester)
                 .padding(horizontal = 14.dp),
