@@ -42,6 +42,7 @@ fun LiquidButton(
     surfaceColor: Color = Color.Unspecified,
     content: @Composable RowScope.() -> Unit
 ) {
+    val glass = LocalLiquidGlassStyle.current
     val animationScope = rememberCoroutineScope()
 
     val interactiveHighlight = remember(animationScope) {
@@ -57,8 +58,8 @@ fun LiquidButton(
                 shape = { Capsule() },
                 effects = {
                     vibrancy()
-                    blur(2f.dp.toPx())
-                    lens(12f.dp.toPx(), 24f.dp.toPx())
+                    blur((2f.dp.toPx()) * glass.blur)
+                    lens((12f.dp.toPx()) * glass.refraction, (24f.dp.toPx()) * glass.refraction)
                 },
                 layerBlock = if (isInteractive) {
                     {

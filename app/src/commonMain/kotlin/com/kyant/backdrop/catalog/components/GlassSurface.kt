@@ -75,14 +75,15 @@ fun Modifier.liquidGlass(
     refractionAmount: Dp = 24.dp,
     shadow: Boolean = true,
 ): Modifier {
+    val glass = LocalLiquidGlassStyle.current
     val isLightTheme = !isSystemInDarkTheme()
     return drawBackdrop(
         backdrop = backdrop,
         shape = shape,
         effects = {
             vibrancy()
-            blur(blurRadius.toPx())
-            lens(refractionHeight.toPx(), refractionAmount.toPx(), chromaticAberration = true)
+            blur((blurRadius.toPx()) * glass.blur)
+            lens((refractionHeight.toPx()) * glass.refraction, (refractionAmount.toPx()) * glass.refraction, chromaticAberration = true)
         },
         highlight = { Highlight.Default },
         shadow = if (shadow) {
@@ -96,7 +97,7 @@ fun Modifier.liquidGlass(
                 drawRect(tint.copy(alpha = 0.75f))
             }
             if (surfaceColor.isSpecified) {
-                drawRect(surfaceColor)
+                drawRect(surfaceColor.copy(alpha = (surfaceColor.alpha * glass.opacity).coerceIn(0f, 1f)))
             }
         }
     )
@@ -116,6 +117,7 @@ fun Modifier.liquidGlassPanel(
     refractionAmount: Dp = 32.dp,
     exportedBackdrop: LayerBackdrop? = null,
 ): Modifier {
+    val glass = LocalLiquidGlassStyle.current
     val isLightTheme = !isSystemInDarkTheme()
     val surface = if (containerColor.isSpecified) containerColor
     else if (isLightTheme) Color(0xFFFAFAFA).copy(alpha = 0.6f)
@@ -125,12 +127,12 @@ fun Modifier.liquidGlassPanel(
         shape = shape,
         effects = {
             vibrancy()
-            blur(blurRadius.toPx())
-            lens(refractionHeight.toPx(), refractionAmount.toPx(), depthEffect = true)
+            blur((blurRadius.toPx()) * glass.blur)
+            lens((refractionHeight.toPx()) * glass.refraction, (refractionAmount.toPx()) * glass.refraction, depthEffect = true)
         },
         highlight = { Highlight.Plain },
         shadow = { Shadow(radius = 40.dp, color = Color.Black.copy(alpha = if (isLightTheme) 0.14f else 0.4f)) },
         exportedBackdrop = exportedBackdrop,
-        onDrawSurface = { drawRect(surface) }
+        onDrawSurface = { drawRect(surface.copy(alpha = (surface.alpha * glass.opacity).coerceIn(0f, 1f))) }
     )
 }

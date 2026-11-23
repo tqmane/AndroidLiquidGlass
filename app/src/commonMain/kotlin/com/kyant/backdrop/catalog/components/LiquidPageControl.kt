@@ -56,6 +56,7 @@ fun LiquidPageControl(
     indicatorColor: Color = Color.White.copy(alpha = 0.3f),
     currentIndicatorColor: Color = Color.White,
 ) {
+    val glass = LocalLiquidGlassStyle.current
     if (pageCount <= 0) return
     val pitch = 16.dp
     val dot = 7.dp
@@ -84,8 +85,8 @@ fun LiquidPageControl(
                 shape = { Capsule() },
                 effects = {
                     vibrancy()
-                    blur(4f.dp.toPx())
-                    lens(8f.dp.toPx(), 16f.dp.toPx())
+                    blur((4f.dp.toPx()) * glass.blur)
+                    lens((8f.dp.toPx()) * glass.refraction, (16f.dp.toPx()) * glass.refraction)
                 },
                 highlight = { Highlight.Default.copy(alpha = platter) },
                 shadow = null,

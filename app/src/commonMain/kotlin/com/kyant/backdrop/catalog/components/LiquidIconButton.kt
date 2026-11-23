@@ -120,6 +120,7 @@ fun LiquidGlassContainer(
     tint: Color = Color.Unspecified,
     content: @Composable () -> Unit,
 ) {
+    val glass = LocalLiquidGlassStyle.current
     val animationScope = rememberCoroutineScope()
     val interactiveHighlight = remember(animationScope) { InteractiveHighlight(animationScope) }
     Box(
@@ -129,8 +130,8 @@ fun LiquidGlassContainer(
                 shape = { Capsule() },
                 effects = {
                     vibrancy()
-                    blur(2f.dp.toPx())
-                    lens(12f.dp.toPx(), 24f.dp.toPx())
+                    blur((2f.dp.toPx()) * glass.blur)
+                    lens((12f.dp.toPx()) * glass.refraction, (24f.dp.toPx()) * glass.refraction)
                 },
                 layerBlock = {
                     val progress = interactiveHighlight.pressProgress

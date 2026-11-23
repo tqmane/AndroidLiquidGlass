@@ -51,6 +51,7 @@ fun LiquidToggle(
     backdrop: Backdrop,
     modifier: Modifier = Modifier
 ) {
+    val glass = LocalLiquidGlassStyle.current
     val isLightTheme = !isSystemInDarkTheme()
     val accentColor =
         if (isLightTheme) Color(0xFF34C759)
@@ -157,10 +158,10 @@ fun LiquidToggle(
                     shape = { Capsule() },
                     effects = {
                         val progress = dampedDragAnimation.pressProgress
-                        blur(8f.dp.toPx() * (1f - progress))
+                        blur((8f.dp.toPx() * (1f - progress)) * glass.blur)
                         lens(
-                            5f.dp.toPx() * progress,
-                            10f.dp.toPx() * progress,
+                            (5f.dp.toPx() * progress) * glass.refraction,
+                            (10f.dp.toPx() * progress) * glass.refraction,
                             chromaticAberration = true
                         )
                     },

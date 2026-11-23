@@ -1,5 +1,9 @@
 package com.kyant.backdrop.catalog
 
+import com.kyant.backdrop.catalog.destinations.GlassSettingsContent
+import com.kyant.backdrop.catalog.components.LocalLiquidGlassStyle
+import com.kyant.backdrop.catalog.components.LiquidGlassStyle
+import androidx.compose.runtime.remember
 import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.Composable
@@ -38,9 +42,11 @@ import com.kyant.backdrop.catalog.utils.BackHandler
 @Composable
 fun MainContent() {
     val isLightTheme = !isSystemInDarkTheme()
+    val glassStyle = remember { LiquidGlassStyle() }
 
     CompositionLocalProvider(
-        LocalIndication provides ripple(color = if (isLightTheme) Color.Black else Color.White)
+        LocalIndication provides ripple(color = if (isLightTheme) Color.Black else Color.White),
+        LocalLiquidGlassStyle provides glassStyle
     ) {
         var destination by rememberSaveable { mutableStateOf(CatalogDestination.Home) }
 
@@ -62,6 +68,7 @@ fun MainContent() {
             CatalogDestination.Toolbar -> ToolbarContent()
             CatalogDestination.Search -> SearchContent()
             CatalogDestination.GlassMaterials -> GlassMaterialsContent()
+            CatalogDestination.GlassSettings -> GlassSettingsContent()
 
             CatalogDestination.LockScreen -> LockScreenContent()
             CatalogDestination.ControlCenter -> ControlCenterContent()

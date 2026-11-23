@@ -18,6 +18,7 @@ enum class CatalogDestination {
     Toolbar,
     Search,
     GlassMaterials,
+    GlassSettings,
 
     LockScreen,
     ControlCenter,

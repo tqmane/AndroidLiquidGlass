@@ -54,6 +54,7 @@ fun LiquidSlider(
     backdrop: Backdrop,
     modifier: Modifier = Modifier
 ) {
+    val glass = LocalLiquidGlassStyle.current
     val isLightTheme = !isSystemInDarkTheme()
     val accentColor =
         if (isLightTheme) Color(0xFF0088FF)
@@ -166,10 +167,10 @@ fun LiquidSlider(
                     shape = { Capsule() },
                     effects = {
                         val progress = dampedDragAnimation.pressProgress
-                        blur(8f.dp.toPx() * (1f - progress))
+                        blur((8f.dp.toPx() * (1f - progress)) * glass.blur)
                         lens(
-                            10f.dp.toPx() * progress,
-                            14f.dp.toPx() * progress,
+                            (10f.dp.toPx() * progress) * glass.refraction,
+                            (14f.dp.toPx() * progress) * glass.refraction,
                             chromaticAberration = true
                         )
                     },

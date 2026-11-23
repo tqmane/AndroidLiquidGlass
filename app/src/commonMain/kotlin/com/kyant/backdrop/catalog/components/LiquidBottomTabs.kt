@@ -65,6 +65,7 @@ fun LiquidBottomTabs(
     modifier: Modifier = Modifier,
     content: @Composable RowScope.() -> Unit
 ) {
+    val glass = LocalLiquidGlassStyle.current
     val isLightTheme = !isSystemInDarkTheme()
     val accentColor =
         if (isLightTheme) Color(0xFF0088FF)
@@ -168,8 +169,8 @@ fun LiquidBottomTabs(
                     shape = { Capsule() },
                     effects = {
                         vibrancy()
-                        blur(8f.dp.toPx())
-                        lens(24f.dp.toPx(), 24f.dp.toPx())
+                        blur((8f.dp.toPx()) * glass.blur)
+                        lens((24f.dp.toPx()) * glass.refraction, (24f.dp.toPx()) * glass.refraction)
                     },
                     layerBlock = {
                         val progress = dampedDragAnimation.pressProgress
@@ -206,10 +207,10 @@ fun LiquidBottomTabs(
                         effects = {
                             val progress = dampedDragAnimation.pressProgress
                             vibrancy()
-                            blur(8f.dp.toPx())
+                            blur((8f.dp.toPx()) * glass.blur)
                             lens(
-                                24f.dp.toPx() * progress,
-                                24f.dp.toPx() * progress
+                                (24f.dp.toPx() * progress) * glass.refraction,
+                                (24f.dp.toPx() * progress) * glass.refraction
                             )
                         },
                         highlight = {
@@ -244,8 +245,8 @@ fun LiquidBottomTabs(
                     effects = {
                         val progress = dampedDragAnimation.pressProgress
                         lens(
-                            10f.dp.toPx() * progress,
-                            14f.dp.toPx() * progress,
+                            (10f.dp.toPx() * progress) * glass.refraction,
+                            (14f.dp.toPx() * progress) * glass.refraction,
                             chromaticAberration = true
                         )
                     },

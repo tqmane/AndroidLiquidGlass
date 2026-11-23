@@ -56,6 +56,7 @@ fun BoxScope.LiquidContextMenu(
     entries: List<MenuEntry>,
     preview: @Composable () -> Unit,
 ) {
+    val glass = LocalLiquidGlassStyle.current
     BackHandler(expanded) { onDismissRequest() }
     Box(Modifier.matchParentSize().zIndex(1f)) {
         val progress = rememberPresentation(expanded) ?: return
@@ -73,7 +74,7 @@ fun BoxScope.LiquidContextMenu(
                 .drawBackdrop(
                     backdrop = backdrop,
                     shape = { RoundedRectangle(0.dp) },
-                    effects = { blur(18f.dp.toPx() * p.coerceIn(0f, 1f)) },
+                    effects = { blur((18f.dp.toPx() * p.coerceIn(0f, 1f)) * glass.blur) },
                     highlight = null,
                     shadow = null,
                     onDrawSurface = { drawRect(Color.Black.copy(alpha = 0.12f * p.coerceIn(0f, 1f))) }

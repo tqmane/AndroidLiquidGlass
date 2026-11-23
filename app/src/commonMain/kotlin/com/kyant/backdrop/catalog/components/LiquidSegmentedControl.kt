@@ -165,6 +165,7 @@ fun LiquidSegmentedControl(
     sizing: SegmentSizing = SegmentSizing.Equal,
     backdrop: Backdrop? = null,
 ) {
+    val glass = LocalLiquidGlassStyle.current
     if (segments.isEmpty()) return
 
     val glassAvailable = backdrop != null
@@ -429,10 +430,10 @@ fun LiquidSegmentedControl(
                         shape = { Capsule() },
                         effects = {
                             val progress = dragAnimation.pressProgress
-                            blur(8.dp.toPx() * (1f - progress))
+                            blur((8.dp.toPx() * (1f - progress)) * glass.blur)
                             lens(
-                                5.dp.toPx() * progress,
-                                10.dp.toPx() * progress,
+                                (5.dp.toPx() * progress) * glass.refraction,
+                                (10.dp.toPx() * progress) * glass.refraction,
                                 chromaticAberration = true,
                             )
                         },
