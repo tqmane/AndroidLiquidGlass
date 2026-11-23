@@ -143,6 +143,18 @@ fun BoxScope.LiquidContextMenu(
     entries: List<MenuEntry>,
     state: LiquidContextMenuState? = null,
     preview: @Composable () -> Unit,
+) = LiquidContextMenu(expanded, onDismissRequest, backdrop, anchorBounds, entries, state, LiquidMenuIcons(), preview)
+
+@Composable
+fun BoxScope.LiquidContextMenu(
+    expanded: Boolean,
+    onDismissRequest: () -> Unit,
+    backdrop: Backdrop,
+    anchorBounds: Rect,
+    entries: List<MenuEntry>,
+    state: LiquidContextMenuState? = null,
+    icons: LiquidMenuIcons,
+    preview: @Composable () -> Unit,
 ) {
     val glass = LocalLiquidGlassStyle.current
     BackHandler(expanded) { onDismissRequest() }
@@ -232,10 +244,10 @@ fun BoxScope.LiquidContextMenu(
             ) {
                 val open = submenu
                 if (open == null) {
-                    MenuEntries(entries, onDismissRequest) { submenu = it }
+                    MenuEntries(entries, onDismissRequest, icons) { submenu = it }
                 } else {
-                    MenuEntries(listOf(MenuEntry.Action(open.title, GlassIcons.ChevronDown) { submenu = null }), {}) {}
-                    MenuEntries(open.entries, onDismissRequest) { submenu = it }
+                    MenuEntries(listOf(MenuEntry.Action(open.title, icons.back) { submenu = null }), {}, icons) {}
+                    MenuEntries(open.entries, onDismissRequest, icons) { submenu = it }
                 }
             }
         }

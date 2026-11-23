@@ -21,6 +21,7 @@ enum class CatalogDestination {
     GlassSettings,
     VideoPlayer,
     TabsSidebar,
+    CustomGlass,
 
     LockScreen,
     ControlCenter,

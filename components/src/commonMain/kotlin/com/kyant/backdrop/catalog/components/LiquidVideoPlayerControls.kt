@@ -110,7 +110,22 @@ fun rememberVideoPlayerState(duration: Float = 596f): VideoPlayerState {
     return state
 }
 
-/** An iOS 26 AVKit-style player: [frame] is the video surface, sampled as the backdrop of the glass chrome. */
+/** Icons for the inline and fullscreen video player chrome. */
+data class LiquidVideoPlayerIcons(
+    val close: ImageVector = GlassIcons.Close,
+    val airPlay: ImageVector = GlassIcons.AirPlay,
+    val speed: ImageVector = GlassIcons.Gauge,
+    val captions: ImageVector = GlassIcons.Captions,
+    val fullscreen: ImageVector = GlassIcons.Expand,
+    val skipBack: ImageVector = GlassIcons.GoBackward,
+    val play: ImageVector = GlassIcons.Play,
+    val pause: ImageVector = GlassIcons.Pause,
+    val skipForward: ImageVector = GlassIcons.GoForward,
+    val more: ImageVector = GlassIcons.Ellipsis,
+    val audioTrack: ImageVector = GlassIcons.Waveform,
+    val menu: LiquidMenuIcons = LiquidMenuIcons(),
+)
+
 @Composable
 fun LiquidVideoPlayer(
     state: VideoPlayerState,
@@ -118,12 +133,23 @@ fun LiquidVideoPlayer(
     captionText: ((language: String) -> String)? = null,
     onClose: (() -> Unit)? = null,
     frame: @Composable BoxScope.() -> Unit,
+) = LiquidVideoPlayer(state, modifier, captionText, onClose, LiquidVideoPlayerIcons(), frame)
+
+/** An iOS 26 AVKit-style player: [frame] is the video surface, sampled as the backdrop of the glass chrome. */
+@Composable
+fun LiquidVideoPlayer(
+    state: VideoPlayerState,
+    modifier: Modifier = Modifier,
+    captionText: ((language: String) -> String)? = null,
+    onClose: (() -> Unit)? = null,
+    icons: LiquidVideoPlayerIcons,
+    frame: @Composable BoxScope.() -> Unit,
 ) {
     val backdrop = rememberLayerBackdrop()
     Box(modifier) {
         Box(Modifier.matchParentSize().clipToBounds().layerBackdrop(backdrop), content = frame)
         CompositionLocalProvider(LocalGlassDarkAppearance provides true) {
-            LiquidVideoPlayerControls(state, backdrop, captionText = captionText, onClose = onClose)
+            LiquidVideoPlayerControls(state, backdrop, captionText = captionText, onClose = onClose, icons = icons)
         }
     }
 }
@@ -144,6 +170,7 @@ fun BoxScope.LiquidVideoPlayerControls(
     captionText: ((language: String) -> String)? = null,
     onClose: (() -> Unit)? = null,
     skipInterval: Float = 10f,
+    icons: LiquidVideoPlayerIcons = LiquidVideoPlayerIcons(),
 ) {
     var visible by remember { mutableStateOf(true) }
     var lastInteraction by remember { mutableStateOf(0) }
@@ -194,18 +221,18 @@ fun BoxScope.LiquidVideoPlayerControls(
             if (full) {
                 Row(Modifier.align(Alignment.TopStart).padding(edge), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                     if (onClose != null) {
-                        LiquidIconButton(GlassIcons.Close, "Close", { touch(); onClose() }, backdrop, size = 44.dp, iconSize = 20.dp, iconColor = Color.White, surfaceColor = PlayerGlassFill)
+                        LiquidIconButton(icons.close, "Close", { touch(); onClose() }, backdrop, size = 44.dp, iconSize = 20.dp, iconColor = Color.White, surfaceColor = PlayerGlassFill)
                     }
-                    LiquidIconButton(GlassIcons.AirPlay, "AirPlay", { touch() }, backdrop, size = 44.dp, iconSize = 20.dp, iconColor = Color.White, surfaceColor = PlayerGlassFill)
+                    LiquidIconButton(icons.airPlay, "AirPlay", { touch() }, backdrop, size = 44.dp, iconSize = 20.dp, iconColor = Color.White, surfaceColor = PlayerGlassFill)
                 }
                 LiquidButtonGroup(backdrop, Modifier.align(Alignment.BottomEnd).padding(end = edge, bottom = edge + ScrubberBarFull + 10.dp), height = 42.dp) {
-                    LiquidGroupItem(GlassIcons.Gauge, "Playback speed", { touch(); menu = PlayerMenu.Speed }, color = Color.White)
-                    LiquidGroupItem(GlassIcons.Captions, "Subtitles", { touch(); menu = PlayerMenu.Subtitles }, color = Color.White)
+                    LiquidGroupItem(icons.speed, "Playback speed", { touch(); menu = PlayerMenu.Speed }, color = Color.White)
+                    LiquidGroupItem(icons.captions, "Subtitles", { touch(); menu = PlayerMenu.Subtitles }, color = Color.White)
                 }
             } else {
                 LiquidButtonGroup(backdrop, Modifier.align(Alignment.TopStart).padding(edge), height = 40.dp) {
-                    LiquidGroupItem(GlassIcons.Expand, "Full screen", { touch(); state.fullscreen = true }, color = Color.White)
-                    LiquidGroupItem(GlassIcons.AirPlay, "AirPlay", { touch() }, color = Color.White)
+                    LiquidGroupItem(icons.fullscreen, "Full screen", { touch(); state.fullscreen = true }, color = Color.White)
+                    LiquidGroupItem(icons.airPlay, "AirPlay", { touch() }, color = Color.White)
                 }
             }
             Row(
@@ -214,9 +241,9 @@ fun BoxScope.LiquidVideoPlayerControls(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 val small = if (full) 64.dp else 56.dp
-                SkipButton(GlassIcons.GoBackward, "Skip back ${skipInterval.toInt()} seconds", skipInterval, small, backdrop) { touch(); state.skip(-skipInterval) }
+                SkipButton(icons.skipBack, "Skip back ${skipInterval.toInt()} seconds", skipInterval, small, backdrop) { touch(); state.skip(-skipInterval) }
                 LiquidIconButton(
-                    if (state.playing) GlassIcons.Pause else GlassIcons.Play,
+                    if (state.playing) icons.pause else icons.play,
                     if (state.playing) "Pause" else "Play",
                     {
                         touch()
@@ -229,7 +256,7 @@ fun BoxScope.LiquidVideoPlayerControls(
                     iconColor = Color.White,
                     surfaceColor = PlayerGlassFill
                 )
-                SkipButton(GlassIcons.GoForward, "Skip forward ${skipInterval.toInt()} seconds", skipInterval, small, backdrop) { touch(); state.skip(skipInterval) }
+                SkipButton(icons.skipForward, "Skip forward ${skipInterval.toInt()} seconds", skipInterval, small, backdrop) { touch(); state.skip(skipInterval) }
             }
         }
 
@@ -255,7 +282,7 @@ fun BoxScope.LiquidVideoPlayerControls(
                         .semantics { contentDescription = "More" }
                         .clickable(role = Role.Button) { touch(); menu = PlayerMenu.More }
                         .padding(horizontal = 2.dp)
-                ) { GlassIcon(GlassIcons.Ellipsis, Color.White, Modifier.width(18.dp).height(18.dp)) }
+                ) { GlassIcon(icons.more, Color.White, Modifier.width(18.dp).height(18.dp)) }
             }
         }
 
@@ -288,15 +315,15 @@ fun BoxScope.LiquidVideoPlayerControls(
                 },
                 subtitle = state.captionStyle
             ),
-        ) + if (full) listOf(MenuEntry.Submenu("Audio Track", GlassIcons.Waveform, audioEntries, subtitle = state.audioTrack)) else emptyList()
+        ) + if (full) listOf(MenuEntry.Submenu("Audio Track", icons.audioTrack, audioEntries, subtitle = state.audioTrack)) else emptyList()
         val (entries, header) = when (menu) {
             PlayerMenu.Speed -> speedEntries to "Playback Speed"
             PlayerMenu.Audio -> audioEntries to "Audio Track"
             PlayerMenu.Subtitles -> subtitleEntries to "Subtitles"
             PlayerMenu.More, null -> listOf(
-                MenuEntry.Submenu("Playback Speed", GlassIcons.Gauge, speedEntries),
-                MenuEntry.Submenu("Audio Track", GlassIcons.Waveform, audioEntries),
-                MenuEntry.Submenu("Subtitles", GlassIcons.Captions, subtitleEntries),
+                MenuEntry.Submenu("Playback Speed", icons.speed, speedEntries),
+                MenuEntry.Submenu("Audio Track", icons.audioTrack, audioEntries),
+                MenuEntry.Submenu("Subtitles", icons.captions, subtitleEntries),
             ) to null
         }
         val bottomGap = edge + (if (full) ScrubberBarFull + 10.dp else ScrubberBarInline + 4.dp)
@@ -313,6 +340,7 @@ fun BoxScope.LiquidVideoPlayerControls(
             transformOrigin = TransformOrigin(1f, 1f),
             width = 250.dp,
             header = header,
+            icons = icons.menu,
         )
     }
 }
@@ -376,7 +404,23 @@ fun LiquidScrubber(state: VideoPlayerState, modifier: Modifier = Modifier, thick
 
 /** Speaker glass button that expands into a volume slider capsule; a tap on the speaker mutes. */
 @Composable
-fun LiquidVolumeControl(state: VideoPlayerState, backdrop: Backdrop, modifier: Modifier = Modifier, onInteraction: () -> Unit = {}) {
+fun LiquidVolumeControl(state: VideoPlayerState, backdrop: Backdrop, modifier: Modifier = Modifier, onInteraction: () -> Unit = {}) =
+    LiquidVolumeControl(state, backdrop, modifier, LiquidVolumeIcons(), onInteraction)
+
+/** Icons for the expanded volume slider's speaker button. */
+data class LiquidVolumeIcons(
+    val speaker: ImageVector = GlassIcons.Speaker,
+    val muted: ImageVector = GlassIcons.SpeakerSlash,
+)
+
+@Composable
+fun LiquidVolumeControl(
+    state: VideoPlayerState,
+    backdrop: Backdrop,
+    modifier: Modifier = Modifier,
+    icons: LiquidVolumeIcons,
+    onInteraction: () -> Unit = {},
+) {
     var expanded by remember { mutableStateOf(false) }
     val width by animateFloatAsState(if (expanded) 180f else 44f)
     Row(
@@ -405,7 +449,7 @@ fun LiquidVolumeControl(state: VideoPlayerState, backdrop: Backdrop, modifier: M
                 },
             contentAlignment = Alignment.Center
         ) {
-            GlassIcon(if (state.muted || state.volume == 0f) GlassIcons.SpeakerSlash else GlassIcons.Speaker, Color.White, Modifier.width(20.dp).height(20.dp))
+            GlassIcon(if (state.muted || state.volume == 0f) icons.muted else icons.speaker, Color.White, Modifier.width(20.dp).height(20.dp))
         }
         if (expanded && width > 120f) {
             Canvas(

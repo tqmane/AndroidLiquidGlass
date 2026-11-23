@@ -42,6 +42,7 @@ fun HomeContent(onNavigate: (CatalogDestination) -> Unit) {
 
         Column {
             Subtitle("Liquid glass components")
+            ListItem({ onNavigate(CatalogDestination.CustomGlass) }, "Custom accent & icons")
             ListItem({ onNavigate(CatalogDestination.Buttons) }, "Buttons")
             ListItem({ onNavigate(CatalogDestination.Toggle) }, "Toggle")
             ListItem({ onNavigate(CatalogDestination.Slider) }, "Slider")

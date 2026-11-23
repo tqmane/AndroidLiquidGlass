@@ -125,6 +125,7 @@ fun LiquidTopTabBar(
     modifier: Modifier = Modifier,
     onToggleSidebar: (() -> Unit)? = null,
     selectedColor: Color = GlassColors.accent(),
+    sidebarIcon: ImageVector = GlassIcons.SidebarLeft,
 ) {
     val glass = LocalLiquidGlassStyle.current
     val dark = isGlassDark()
@@ -192,7 +193,7 @@ fun LiquidTopTabBar(
                     .semantics { contentDescription = "Show sidebar" }
                     .padding(horizontal = 11.dp),
                 contentAlignment = Alignment.Center
-            ) { GlassIcon(GlassIcons.SidebarLeft, GlassColors.label(), Modifier.size(22.dp)) }
+            ) { GlassIcon(sidebarIcon, GlassColors.label(), Modifier.size(22.dp)) }
         }
         Box(
             Modifier
@@ -330,6 +331,9 @@ fun LiquidSidebar(
     onToggleSidebar: (() -> Unit)? = null,
     collapsibleSections: Boolean = true,
     selectedColor: Color = GlassColors.accent(),
+    sidebarIcon: ImageVector = GlassIcons.SidebarLeft,
+    expandedSectionIcon: ImageVector = GlassIcons.ChevronDown,
+    collapsedSectionIcon: ImageVector = GlassIcons.ChevronRight,
 ) {
     val collapsed = rememberSaveable(saver = listSaver<MutableList<String>, String>({ it.toList() }, { it.toMutableStateList() })) {
         mutableStateListOf()
@@ -361,7 +365,7 @@ fun LiquidSidebar(
                         .clickable(role = Role.Button, onClick = onToggleSidebar)
                         .semantics { contentDescription = "Hide sidebar" },
                     contentAlignment = Alignment.Center
-                ) { GlassIcon(GlassIcons.SidebarLeft, GlassColors.label(), Modifier.size(22.dp)) }
+                ) { GlassIcon(sidebarIcon, GlassColors.label(), Modifier.size(22.dp)) }
             }
         }
         Column(Modifier.verticalScroll(rememberScrollState())) {
@@ -389,7 +393,7 @@ fun LiquidSidebar(
                         )
                         if (collapsibleSections) {
                             GlassIcon(
-                                if (open) GlassIcons.ChevronDown else GlassIcons.ChevronRight,
+                                if (open) expandedSectionIcon else collapsedSectionIcon,
                                 GlassColors.label(),
                                 Modifier.size(15.dp)
                             )
@@ -484,6 +488,9 @@ fun LiquidAdaptiveTabScaffold(
     modifier: Modifier = Modifier,
     sidebarSections: List<LiquidSidebarSection> = listOf(LiquidSidebarSection(null, tabs)),
     selectedColor: Color = GlassColors.accent(),
+    sidebarIcon: ImageVector = GlassIcons.SidebarLeft,
+    expandedSectionIcon: ImageVector = GlassIcons.ChevronDown,
+    collapsedSectionIcon: ImageVector = GlassIcons.ChevronRight,
     content: @Composable (PaddingValues) -> Unit,
 ) {
     val backdrop = rememberLayerBackdrop()
@@ -500,7 +507,10 @@ fun LiquidAdaptiveTabScaffold(
                     LiquidSidebar(
                         sidebarSections, selectedKey, onSelect, backdrop, m,
                         onToggleSidebar = { sidebarVisible = false },
-                        selectedColor = selectedColor
+                        selectedColor = selectedColor,
+                        sidebarIcon = sidebarIcon,
+                        expandedSectionIcon = expandedSectionIcon,
+                        collapsedSectionIcon = collapsedSectionIcon,
                     )
                 }
             ) { start ->
@@ -523,7 +533,8 @@ fun LiquidAdaptiveTabScaffold(
                             .padding(top = 8.dp)
                             .graphicsLayer { alpha = barAlpha.coerceIn(0f, 1f) },
                         onToggleSidebar = { sidebarVisible = true },
-                        selectedColor = selectedColor
+                        selectedColor = selectedColor,
+                        sidebarIcon = sidebarIcon,
                     )
                 }
             }
@@ -592,6 +603,7 @@ fun LiquidSplitView(
     title: String,
     modifier: Modifier = Modifier,
     selectedColor: Color = GlassColors.accent(),
+    sidebarIcon: ImageVector = GlassIcons.SidebarLeft,
     content: @Composable (PaddingValues) -> Unit,
 ) {
     val backdrop = rememberLayerBackdrop()
@@ -610,7 +622,8 @@ fun LiquidSplitView(
                     title = title,
                     onToggleSidebar = { sidebarVisible = false },
                     collapsibleSections = false,
-                    selectedColor = selectedColor
+                    selectedColor = selectedColor,
+                    sidebarIcon = sidebarIcon,
                 )
             }
         ) { start ->
@@ -626,7 +639,7 @@ fun LiquidSplitView(
             val toggleAlpha by animateFloatAsState(if (sidebarVisible) 0f else 1f)
             if (toggleAlpha > 0f) {
                 LiquidIconButton(
-                    GlassIcons.SidebarLeft, "Show sidebar", { sidebarVisible = true }, backdrop,
+                    sidebarIcon, "Show sidebar", { sidebarVisible = true }, backdrop,
                     Modifier
                         .systemBarsPadding()
                         .padding(start = 16.dp, top = 9.dp)

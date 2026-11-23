@@ -24,6 +24,9 @@ import com.kyant.backdrop.shadow.Shadow
 /** Forces the dark (true) or light (false) glass appearance for a subtree, e.g. video player chrome, which is always dark on iOS. Null follows the system theme. */
 val LocalGlassDarkAppearance = staticCompositionLocalOf<Boolean?> { null }
 
+/** Accent override for a glass subtree. Null retains each control's system color. */
+val LocalGlassAccent = staticCompositionLocalOf<Color?> { null }
+
 @Composable
 @ReadOnlyComposable
 fun isGlassDark(): Boolean = LocalGlassDarkAppearance.current ?: isSystemInDarkTheme()
@@ -37,7 +40,11 @@ object GlassColors {
 
     @Composable
     @ReadOnlyComposable
-    fun accent(): Color = if (isGlassDark()) BlueDark else Blue
+    fun accent(): Color = LocalGlassAccent.current ?: if (isGlassDark()) BlueDark else Blue
+
+    @Composable
+    @ReadOnlyComposable
+    internal fun toggleAccent(): Color = LocalGlassAccent.current ?: if (isGlassDark()) Color(0xFF30D158) else Green
 
     @Composable
     fun red(): Color = if (isGlassDark()) RedDark else Red

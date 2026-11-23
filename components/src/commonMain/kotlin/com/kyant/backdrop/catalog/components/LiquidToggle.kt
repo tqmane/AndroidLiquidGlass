@@ -53,9 +53,7 @@ fun LiquidToggle(
 ) {
     val glass = LocalLiquidGlassStyle.current
     val isLightTheme = !isGlassDark()
-    val accentColor =
-        if (isLightTheme) Color(0xFF34C759)
-        else Color(0xFF30D158)
+    val accentColor = GlassColors.toggleAccent()
     val trackColor =
         if (isLightTheme) Color(0xFF787878).copy(0.2f)
         else Color(0xFF787880).copy(0.36f)
