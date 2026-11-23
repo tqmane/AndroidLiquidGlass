@@ -107,6 +107,16 @@ fun LiquidBottomTabs(
             val start = (0 until i).sumOf { w[it].toDouble() }.toFloat()
             return start + w[i] * (value - i)
         }
+        // Inverse of startAt, so a drag maps the pill's position to a value independently of how the moves are split.
+        fun valueAt(start: Float): Float {
+            val w = widthsState.value
+            var left = 0f
+            for (i in 0 until tabsCount - 1) {
+                if (start < left + w[i]) return (i + (start - left) / w[i]).fastCoerceIn(0f, (tabsCount - 1).toFloat())
+                left += w[i]
+            }
+            return (tabsCount - 1).toFloat()
+        }
 
         val offsetAnimation = remember { Animatable(0f) }
         val panelOffset by remember(density, constraints.maxWidth) {
@@ -146,8 +156,7 @@ fun LiquidBottomTabs(
                 },
                 onDrag = { _, dragAmount ->
                     updateValue(
-                        (targetValue + dragAmount.x / widthAt(targetValue) * if (isLtr) 1f else -1f)
-                            .fastCoerceIn(0f, (tabsCount - 1).toFloat())
+                        valueAt(startAt(targetValue) + dragAmount.x * if (isLtr) 1f else -1f)
                     )
                     animationScope.launch {
                         offsetAnimation.snapTo(offsetAnimation.value + dragAmount.x)
