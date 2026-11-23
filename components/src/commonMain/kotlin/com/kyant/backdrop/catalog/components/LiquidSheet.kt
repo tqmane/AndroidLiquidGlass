@@ -180,13 +180,16 @@ fun BoxScope.LiquidSheet(
 
             val inset = if (formSheet) 0.dp else lerp(8f, 0f, expansion).dp
             val sheetHeight = with(density) { (maxH - formGap - minOf(offsetY.value, lowestTop)).toDp() } - inset
-            // Several drag/scroll deltas can arrive in one frame, before a launched snapTo has run, so track the
-            // finger-driven top synchronously instead of re-reading offsetY.value (which would drop deltas).
+            // A snapTo queued behind a running animation hasn't moved offsetY yet, so the next delta in the same frame
+            // must start from the pending top or it is dropped; the pending top is cleared once the snap lands.
             val dragTop = remember { floatArrayOf(Float.NaN) }
             fun currentTop() = dragTop[0].takeUnless { it.isNaN() } ?: offsetY.value
             fun dragTo(next: Float) {
                 dragTop[0] = next
-                scope.launch(start = CoroutineStart.UNDISPATCHED) { offsetY.snapTo(next) }
+                scope.launch(start = CoroutineStart.UNDISPATCHED) {
+                    offsetY.snapTo(next)
+                    if (dragTop[0] == next) dragTop[0] = Float.NaN
+                }
             }
             suspend fun settle(velocity: Float) {
                 val from = currentTop()
