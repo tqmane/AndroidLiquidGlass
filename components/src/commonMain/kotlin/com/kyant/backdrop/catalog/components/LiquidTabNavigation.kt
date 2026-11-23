@@ -152,9 +152,12 @@ fun LiquidTopTabBar(
     }?.key
     val hovered = dragX?.let(::keyAt) ?: selectedKey
 
-    Row(
-        modifier
-            .height(46.dp)
+    // The glass is a sibling behind the row rather than the row itself: drawBackdrop clips its content to the
+    // capsule, and the held pill has to swell past the bar the way it does on iPadOS.
+    Box(modifier.height(46.dp)) {
+        Box(
+            Modifier
+            .matchParentSize()
             .drawBackdrop(
                 backdrop = backdrop,
                 shape = { Capsule() },
@@ -171,7 +174,9 @@ fun LiquidTopTabBar(
                 exportedBackdrop = barBackdrop,
                 onDrawSurface = { if (dark) drawDarkGlass(glass.opacity) else drawRect(containerColor.copy(alpha = containerColor.alpha * glass.opacity)) }
             )
-            .padding(4.dp),
+        )
+        Row(
+            Modifier.fillMaxHeight().padding(4.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         if (onToggleSidebar != null) {
@@ -293,6 +298,7 @@ fun LiquidTopTabBar(
                 }
             }
         }
+    }
     }
 }
 
