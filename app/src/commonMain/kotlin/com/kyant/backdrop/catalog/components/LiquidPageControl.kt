@@ -124,7 +124,9 @@ fun LiquidPageControl(
                     }
                     interacting = false
                     val up = releasedAt
-                    if (!dragged && up != null && up.x in 0f..size.width.toFloat() && up.y in 0f..size.height.toFloat()) {
+                    val slopX = ((viewConfiguration.minimumTouchTargetSize.width.toPx() - size.width) / 2f).coerceAtLeast(0f)
+                    val slopY = ((viewConfiguration.minimumTouchTargetSize.height.toPx() - size.height) / 2f).coerceAtLeast(0f)
+                    if (!dragged && up != null && up.x in -slopX..size.width + slopX && up.y in -slopY..size.height + slopY) {
                         val target = if (down.position.x < size.width / 2f) currentPageState - 1 else currentPageState + 1
                         currentOnPageChange(target.coerceIn(0, pageCount - 1))
                     }
