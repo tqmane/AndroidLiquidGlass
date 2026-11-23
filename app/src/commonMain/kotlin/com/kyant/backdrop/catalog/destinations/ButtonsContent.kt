@@ -30,7 +30,7 @@ import androidx.compose.foundation.layout.Row
 fun ButtonsContent() {
     BackdropDemoScaffold { backdrop ->
         Column(
-            Modifier.verticalScroll(rememberScrollState()).systemBarsPadding().padding(vertical = 16.dp),
+            Modifier.verticalScroll(rememberScrollState()).systemBarsPadding().padding(top = 16.dp, bottom = 88.dp), // clears the scaffold's 56 dp "Pick an image" button + 16 dp margins
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(16f.dp)
         ) {
