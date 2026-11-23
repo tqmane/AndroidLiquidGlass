@@ -101,7 +101,7 @@ fun BoxScope.LiquidSheet(
     BackHandler(visible) { onDismissRequest() }
     Box(Modifier.matchParentSize().zIndex(1f)) {
         val density = LocalDensity.current
-        val isLightTheme = !isSystemInDarkTheme()
+        val isLightTheme = !isGlassDark()
         val topInset = WindowInsets.safeDrawing.getTop(density) + with(density) { 10.dp.toPx() }
         val currentOnDismiss by rememberUpdatedState(onDismissRequest)
 
@@ -287,7 +287,7 @@ fun LiquidSheetScope.SheetSection(
     modifier: Modifier = Modifier,
     content: @Composable ColumnScope.() -> Unit,
 ) {
-    val isLightTheme = !isSystemInDarkTheme()
+    val isLightTheme = !isGlassDark()
     val cell = if (isLightTheme) lerpColor(Color.Black.copy(alpha = 0.05f), Color.White, expansion)
     else lerpColor(Color.Black.copy(alpha = 0.3f), Color(0xFF2C2C2E), expansion)
     GroupedSection(title, cell, modifier, content = content)

@@ -66,7 +66,7 @@ fun LiquidBottomTabs(
     content: @Composable RowScope.() -> Unit
 ) {
     val glass = LocalLiquidGlassStyle.current
-    val isLightTheme = !isSystemInDarkTheme()
+    val isLightTheme = !isGlassDark()
     val accentColor =
         if (isLightTheme) Color(0xFF0088FF)
         else Color(0xFF0091FF)

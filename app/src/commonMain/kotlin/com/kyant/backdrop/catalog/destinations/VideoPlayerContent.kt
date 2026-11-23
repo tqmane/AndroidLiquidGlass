@@ -1,5 +1,7 @@
 package com.kyant.backdrop.catalog.destinations
 
+import androidx.compose.ui.zIndex
+import com.kyant.backdrop.catalog.utils.LockLandscape
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -33,6 +35,7 @@ import kotlin.random.Random
 fun VideoPlayerContent() {
     val state = rememberVideoPlayerState(duration = 60f)
     BackHandler(state.fullscreen) { state.fullscreen = false }
+    LockLandscape(state.fullscreen)
     if (state.fullscreen) {
         LiquidVideoPlayer(
             state,
@@ -56,7 +59,7 @@ fun VideoPlayerContent() {
         )
         LiquidVideoPlayer(
             state,
-            Modifier.padding(horizontal = 12.dp).fillMaxWidth().aspectRatio(16f / 9f),
+            Modifier.zIndex(1f).padding(horizontal = 12.dp).fillMaxWidth().aspectRatio(16f / 9f),
             captionText = ::caption
         ) { NightSkyFrame() }
         BasicText(

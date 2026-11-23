@@ -169,7 +169,7 @@ fun LiquidSegmentedControl(
     if (segments.isEmpty()) return
 
     val glassAvailable = backdrop != null
-    val isLightTheme = !isSystemInDarkTheme()
+    val isLightTheme = !isGlassDark()
     val density = LocalDensity.current
     val isLtr = LocalLayoutDirection.current == LayoutDirection.Ltr
     val animationScope = rememberCoroutineScope()

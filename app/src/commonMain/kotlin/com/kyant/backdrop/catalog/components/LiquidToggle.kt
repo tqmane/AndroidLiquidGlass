@@ -52,7 +52,7 @@ fun LiquidToggle(
     modifier: Modifier = Modifier
 ) {
     val glass = LocalLiquidGlassStyle.current
-    val isLightTheme = !isSystemInDarkTheme()
+    val isLightTheme = !isGlassDark()
     val accentColor =
         if (isLightTheme) Color(0xFF34C759)
         else Color(0xFF30D158)

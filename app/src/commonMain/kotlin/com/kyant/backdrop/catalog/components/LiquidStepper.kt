@@ -58,7 +58,7 @@ fun LiquidStepper(
     step: Int = 1,
     wraps: Boolean = false,
 ) {
-    val isLightTheme = !isSystemInDarkTheme()
+    val isLightTheme = !isGlassDark()
     val wellColor = if (isLightTheme) Color(0xFF767680).copy(alpha = 0.12f) else Color(0xFF767680).copy(alpha = 0.24f)
     val dividerColor = if (isLightTheme) Color(0xFF3C3C43).copy(alpha = 0.18f) else Color(0xFFEBEBF5).copy(alpha = 0.18f)
     val labelColor = GlassColors.label()

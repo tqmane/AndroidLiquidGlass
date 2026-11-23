@@ -1,5 +1,6 @@
 package com.kyant.backdrop.catalog.components
 
+import androidx.compose.runtime.staticCompositionLocalOf
 import com.kyant.backdrop.backdrops.LayerBackdrop
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.Composable
@@ -19,6 +20,13 @@ import com.kyant.backdrop.highlight.Highlight
 import com.kyant.backdrop.shadow.Shadow
 
 /** iOS 26 system colors used by the glass components. */
+/** Forces the dark (true) or light (false) glass appearance for a subtree, e.g. video player chrome, which is always dark on iOS. Null follows the system theme. */
+val LocalGlassDarkAppearance = staticCompositionLocalOf<Boolean?> { null }
+
+@Composable
+@ReadOnlyComposable
+fun isGlassDark(): Boolean = LocalGlassDarkAppearance.current ?: isSystemInDarkTheme()
+
 object GlassColors {
     val Blue = Color(0xFF0088FF)
     val BlueDark = Color(0xFF0091FF)
@@ -28,35 +36,35 @@ object GlassColors {
 
     @Composable
     @ReadOnlyComposable
-    fun accent(): Color = if (isSystemInDarkTheme()) BlueDark else Blue
+    fun accent(): Color = if (isGlassDark()) BlueDark else Blue
 
     @Composable
-    fun red(): Color = if (isSystemInDarkTheme()) RedDark else Red
-
-    @Composable
-    @ReadOnlyComposable
-    fun destructive(): Color = if (isSystemInDarkTheme()) RedDark else Red
+    fun red(): Color = if (isGlassDark()) RedDark else Red
 
     @Composable
     @ReadOnlyComposable
-    fun label(): Color = if (isSystemInDarkTheme()) Color.White else Color.Black
+    fun destructive(): Color = if (isGlassDark()) RedDark else Red
+
+    @Composable
+    @ReadOnlyComposable
+    fun label(): Color = if (isGlassDark()) Color.White else Color.Black
 
     @Composable
     @ReadOnlyComposable
     fun secondaryLabel(): Color =
-        if (isSystemInDarkTheme()) Color(0xFFEBEBF5).copy(alpha = 0.6f)
+        if (isGlassDark()) Color(0xFFEBEBF5).copy(alpha = 0.6f)
         else Color(0xFF3C3C43).copy(alpha = 0.6f)
 
     @Composable
     @ReadOnlyComposable
     fun separator(): Color =
-        if (isSystemInDarkTheme()) Color(0xFF545458).copy(alpha = 0.6f)
+        if (isGlassDark()) Color(0xFF545458).copy(alpha = 0.6f)
         else Color(0xFF3C3C43).copy(alpha = 0.29f)
 
     @Composable
     @ReadOnlyComposable
     fun fill(): Color =
-        if (isSystemInDarkTheme()) Color(0xFF787880).copy(alpha = 0.36f)
+        if (isGlassDark()) Color(0xFF787880).copy(alpha = 0.36f)
         else Color(0xFF787880).copy(alpha = 0.2f)
 }
 
@@ -76,7 +84,7 @@ fun Modifier.liquidGlass(
     shadow: Boolean = true,
 ): Modifier {
     val glass = LocalLiquidGlassStyle.current
-    val isLightTheme = !isSystemInDarkTheme()
+    val isLightTheme = !isGlassDark()
     return drawBackdrop(
         backdrop = backdrop,
         shape = shape,
@@ -118,7 +126,7 @@ fun Modifier.liquidGlassPanel(
     exportedBackdrop: LayerBackdrop? = null,
 ): Modifier {
     val glass = LocalLiquidGlassStyle.current
-    val isLightTheme = !isSystemInDarkTheme()
+    val isLightTheme = !isGlassDark()
     val surface = if (containerColor.isSpecified) containerColor
     else if (isLightTheme) Color(0xFFFAFAFA).copy(alpha = 0.6f)
     else Color(0xFF1C1C1E).copy(alpha = 0.55f)
