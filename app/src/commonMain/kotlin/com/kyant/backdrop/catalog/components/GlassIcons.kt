@@ -111,6 +111,15 @@ object GlassIcons {
         moveTo(9.5f, 4.5f); lineTo(9.5f, 19.5f)
         moveTo(5f, 8f); lineTo(7f, 8f); moveTo(5f, 11f); lineTo(7f, 11f)
     }
+    val Bookmark = stroke("bookmark", 1.8f) {
+        moveTo(6.5f, 3.5f); lineTo(17.5f, 3.5f); lineTo(17.5f, 20.5f); lineTo(12f, 16f); lineTo(6.5f, 20.5f); close()
+    }
+    val Film = stroke("film", 1.6f) {
+        moveTo(3f, 5f); lineTo(21f, 5f); lineTo(21f, 19f); lineTo(3f, 19f); close()
+        moveTo(7f, 5f); lineTo(7f, 19f); moveTo(17f, 5f); lineTo(17f, 19f); moveTo(7f, 12f); lineTo(17f, 12f)
+        moveTo(3f, 8.5f); lineTo(7f, 8.5f); moveTo(3f, 15.5f); lineTo(7f, 15.5f)
+        moveTo(17f, 8.5f); lineTo(21f, 8.5f); moveTo(17f, 15.5f); lineTo(21f, 15.5f)
+    }
     val House = stroke("house", 1.8f) {
         moveTo(3f, 11f); lineTo(12f, 3.5f); lineTo(21f, 11f)
         moveTo(5.5f, 9f); lineTo(5.5f, 20f); lineTo(18.5f, 20f); lineTo(18.5f, 9f)
