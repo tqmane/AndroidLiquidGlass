@@ -111,7 +111,7 @@ fun BoxScope.LiquidContextMenu(
                         val x = left.coerceIn(margin, (container.width - 250.dp.toPx() - margin).coerceAtLeast(margin))
                         val below = top + anchorBounds.height + 12.dp.toPx()
                         val y = if (below + menuHeight > container.height - margin) top - 12.dp.toPx() - menuHeight else below
-                        IntOffset(x.roundToInt(), y.roundToInt())
+                        IntOffset(x.roundToInt(), y.coerceIn(margin, (container.height - menuHeight - margin).coerceAtLeast(margin)).roundToInt())
                     }
                     .onGloballyPositioned { menuHeight = it.size.height }
                     .width(250.dp)
