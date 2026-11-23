@@ -1,5 +1,6 @@
 package com.kyant.backdrop.catalog.destinations
 
+import kotlin.math.abs
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -42,7 +43,14 @@ import com.kyant.shapes.RoundedRectangle
 fun GlassSettingsContent() {
     val style = LocalLiquidGlassStyle.current
     BackdropDemoScaffold { backdrop ->
-        var preset by remember { mutableIntStateOf(0) }
+        val presets = remember { listOf(LiquidGlassStyle(), LiquidGlassStyle.Clear, LiquidGlassStyle.Tinted) }
+        val matched = presets.indexOfFirst {
+            abs(it.refraction - style.refraction) < 0.005f &&
+                abs(it.blur - style.blur) < 0.005f &&
+                abs(it.opacity - style.opacity) < 0.005f
+        }
+        var lastPreset by remember { mutableIntStateOf(matched.coerceAtLeast(0)) }
+        val preset = if (matched >= 0) matched else lastPreset
         var toggle by remember { mutableStateOf(true) }
         var segment by remember { mutableIntStateOf(0) }
         Column(
@@ -58,12 +66,8 @@ fun GlassSettingsContent() {
                 listOf(SegmentItem("Default"), SegmentItem("Clear"), SegmentItem("Tinted")),
                 preset,
                 { index ->
-                    preset = index
-                    val target = when (index) {
-                        1 -> LiquidGlassStyle.Clear
-                        2 -> LiquidGlassStyle.Tinted
-                        else -> LiquidGlassStyle()
-                    }
+                    lastPreset = index
+                    val target = presets[index]
                     style.refraction = target.refraction
                     style.blur = target.blur
                     style.opacity = target.opacity
@@ -77,7 +81,7 @@ fun GlassSettingsContent() {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 LiquidIconButton(GlassIcons.Heart, "Favorite", {}, backdrop)
                 LiquidToggle({ toggle }, { toggle = it }, backdrop)
-                LiquidButton({ style.reset(); preset = 0 }, backdrop) {
+                LiquidButton({ style.reset(); lastPreset = 0 }, backdrop) {
                     BasicText("Reset", style = TextStyle(GlassColors.label(), 15.sp))
                 }
             }
