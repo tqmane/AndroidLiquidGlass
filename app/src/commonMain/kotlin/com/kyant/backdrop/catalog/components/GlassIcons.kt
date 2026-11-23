@@ -104,6 +104,18 @@ object GlassIcons {
     val ArrowDownCircle = stroke("arrow.down.circle") {
         circle(12f, 12f, 9f); moveTo(12f, 7.5f); lineTo(12f, 16f); moveTo(8.5f, 12.5f); lineTo(12f, 16f); lineTo(15.5f, 12.5f)
     }
+    val SidebarLeft = stroke("sidebar.left", 1.8f) {
+        moveTo(5f, 4.5f); lineTo(19f, 4.5f); curveTo(20.4f, 4.5f, 21.5f, 5.6f, 21.5f, 7f); lineTo(21.5f, 17f)
+        curveTo(21.5f, 18.4f, 20.4f, 19.5f, 19f, 19.5f); lineTo(5f, 19.5f); curveTo(3.6f, 19.5f, 2.5f, 18.4f, 2.5f, 17f)
+        lineTo(2.5f, 7f); curveTo(2.5f, 5.6f, 3.6f, 4.5f, 5f, 4.5f); close()
+        moveTo(9.5f, 4.5f); lineTo(9.5f, 19.5f)
+        moveTo(5f, 8f); lineTo(7f, 8f); moveTo(5f, 11f); lineTo(7f, 11f)
+    }
+    val House = stroke("house", 1.8f) {
+        moveTo(3f, 11f); lineTo(12f, 3.5f); lineTo(21f, 11f)
+        moveTo(5.5f, 9f); lineTo(5.5f, 20f); lineTo(18.5f, 20f); lineTo(18.5f, 9f)
+        moveTo(10f, 20f); lineTo(10f, 14f); lineTo(14f, 14f); lineTo(14f, 20f)
+    }
     val Folder = stroke("folder", 1.8f) {
         moveTo(3f, 6f); lineTo(9.5f, 6f); lineTo(11.5f, 8.5f); lineTo(21f, 8.5f); lineTo(21f, 18.5f); lineTo(3f, 18.5f); close()
         moveTo(3f, 10.5f); lineTo(21f, 10.5f)

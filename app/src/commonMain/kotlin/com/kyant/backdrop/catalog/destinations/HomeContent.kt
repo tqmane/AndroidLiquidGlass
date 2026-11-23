@@ -59,6 +59,7 @@ fun HomeContent(onNavigate: (CatalogDestination) -> Unit) {
             ListItem({ onNavigate(CatalogDestination.GlassMaterials) }, "Glass materials")
             ListItem({ onNavigate(CatalogDestination.GlassSettings) }, "Glass settings (refraction, blur, opacity)")
             ListItem({ onNavigate(CatalogDestination.VideoPlayer) }, "Video player controls")
+            ListItem({ onNavigate(CatalogDestination.TabsSidebar) }, "Adaptive tab bar & sidebar (iPad top tabs)")
 
             Subtitle("System UIs")
             ListItem({ onNavigate(CatalogDestination.LockScreen) }, "Lock screen (SDF texture)")
