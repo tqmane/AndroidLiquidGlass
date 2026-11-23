@@ -1,5 +1,11 @@
 package com.kyant.backdrop.catalog.components
 
+import androidx.compose.ui.input.key.type
+import androidx.compose.ui.input.key.onKeyEvent
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.Key
+import androidx.compose.foundation.focusable
 import com.kyant.backdrop.catalog.utils.BackHandler
 import androidx.compose.animation.core.Animatable
 import androidx.compose.foundation.gestures.awaitEachGesture
@@ -188,9 +194,11 @@ fun LiquidTopTabBar(
                         val onIndicator = bounds[currentSelected]?.let { (l, w) -> down.position.x in l..(l + w) } == true
                         scope.launch { press.animateTo(1f, spring(0.6f, 500f)) }
                         var moved = false
+                        var last = down.position
                         while (true) {
                             val event = awaitPointerEvent()
                             val change = event.changes.firstOrNull { it.id == down.id } ?: break
+                            last = change.position
                             if (!change.pressed) break
                             if (onIndicator && (moved || abs(change.position.x - down.position.x) > viewConfiguration.touchSlop)) {
                                 moved = true
@@ -203,7 +211,8 @@ fun LiquidTopTabBar(
                                 }
                             }
                         }
-                        val target = if (moved) dragX?.let(::keyAt) else keyAt(down.position.x)
+                        val inside = last.x in 0f..size.width.toFloat() && last.y in 0f..size.height.toFloat() && keyAt(last.x) == keyAt(down.position.x)
+                        val target = if (moved) dragX?.let(::keyAt) else if (inside) keyAt(down.position.x) else null
                         dragX = null
                         scope.launch { press.animateTo(0f, spring(0.5f, 300f)) }
                         if (target != null) {
@@ -256,6 +265,13 @@ fun LiquidTopTabBar(
                         Modifier
                             .fillMaxHeight()
                             .onPlaced { bounds[tab.key] = it.positionInParent().x to it.size.width.toFloat() }
+                            .onKeyEvent {
+                                if (it.type == KeyEventType.KeyUp && (it.key == Key.Enter || it.key == Key.NumPadEnter || it.key == Key.Spacebar)) {
+                                    onSelect(tab.key)
+                                    true
+                                } else false
+                            }
+                            .focusable()
                             .semantics {
                                 role = Role.Tab
                                 this.selected = tab.key == selectedKey
