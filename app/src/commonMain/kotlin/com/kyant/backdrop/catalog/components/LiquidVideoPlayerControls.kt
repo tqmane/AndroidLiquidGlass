@@ -273,17 +273,18 @@ fun BoxScope.LiquidVideoPlayerControls(
                 MenuEntry.Submenu("Subtitles", GlassIcons.Captions, subtitleEntries),
             ) to null
         }
-        val menuMaxHeight = if (full) (chromeHeight - edge * 3 - ScrubberBarFull - 10.dp).coerceAtLeast(120.dp) else 320.dp
+        val bottomGap = edge + (if (full) ScrubberBarFull + 10.dp else ScrubberBarInline + 4.dp)
+        val menuMaxHeight = (chromeHeight - bottomGap - edge).coerceAtLeast(120.dp)
         LiquidMenu(
             modifier = Modifier.heightIn(max = menuMaxHeight),
             expanded = menu != null,
             onDismissRequest = close,
             backdrop = backdrop,
             entries = entries,
-            alignment = if (full) Alignment.BottomEnd else Alignment.TopEnd,
-            offset = if (full) DpOffset(-edge, -(edge + ScrubberBarFull + 10.dp))
-            else DpOffset(-edge, chromeHeight - edge - ScrubberBarInline / 2),
-            transformOrigin = if (full) TransformOrigin(1f, 1f) else TransformOrigin(1f, 0f),
+            // Stays inside the player: Compose does not deliver touches outside a parent's bounds.
+            alignment = Alignment.BottomEnd,
+            offset = DpOffset(-edge, -bottomGap),
+            transformOrigin = TransformOrigin(1f, 1f),
             width = if (menu == PlayerMenu.More || menu == null) 250.dp else 220.dp,
             header = header,
         )

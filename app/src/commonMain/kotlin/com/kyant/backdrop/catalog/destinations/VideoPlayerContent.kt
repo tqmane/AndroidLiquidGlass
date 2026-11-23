@@ -1,6 +1,5 @@
 package com.kyant.backdrop.catalog.destinations
 
-import androidx.compose.ui.zIndex
 import com.kyant.backdrop.catalog.utils.LockLandscape
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -59,7 +58,7 @@ fun VideoPlayerContent() {
         )
         LiquidVideoPlayer(
             state,
-            Modifier.zIndex(1f).padding(horizontal = 12.dp).fillMaxWidth().aspectRatio(16f / 9f),
+            Modifier.padding(horizontal = 12.dp).fillMaxWidth().aspectRatio(16f / 9f),
             captionText = ::caption
         ) { NightSkyFrame() }
         BasicText(
