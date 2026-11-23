@@ -1,5 +1,6 @@
 package com.kyant.backdrop.catalog.components
 
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.ui.unit.Dp
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.Spacer
@@ -130,10 +131,12 @@ fun BoxScope.LiquidSheet(
             var shown by remember { mutableStateOf(false) }
             val scope = rememberCoroutineScope()
 
+            var detentIndex by remember { mutableIntStateOf(0) }
             LaunchedEffect(visible, stops) {
                 if (visible) {
+                    if (!shown) detentIndex = 0
                     shown = true
-                    offsetY.animateTo(lowestTop, spring(0.86f, 260f))
+                    offsetY.animateTo(stops.getOrElse(detentIndex) { lowestTop }, spring(0.86f, 260f))
                 } else {
                     offsetY.animateTo(maxH, spring(1f, 300f))
                     shown = false
@@ -164,6 +167,7 @@ fun BoxScope.LiquidSheet(
                     currentOnDismiss()
                 } else {
                     val target = stops.minBy { abs(it - projected) }
+                    detentIndex = stops.indexOf(target)
                     offsetY.animateTo(target, spring(0.86f, 300f), velocity)
                 }
             }
