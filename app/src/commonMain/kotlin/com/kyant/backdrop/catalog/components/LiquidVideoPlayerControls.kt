@@ -5,6 +5,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.heightIn
@@ -172,7 +173,7 @@ fun BoxScope.LiquidVideoPlayerControls(
             captionText(captionLanguage),
             Modifier
                 .align(Alignment.BottomCenter)
-                .then(if (full) Modifier.symmetricSafeDrawingPadding() else Modifier)
+                .then(if (full) Modifier.cutoutAwarePadding() else Modifier)
                 .padding(bottom = if (full) 76.dp else 56.dp)
                 .background(Color.Black.copy(alpha = if (state.captionStyle == "Default") 0.8f else 0.45f), RoundedRectangle(6.dp))
                 .padding(horizontal = 8.dp, vertical = 2.dp),
@@ -185,7 +186,7 @@ fun BoxScope.LiquidVideoPlayerControls(
     Box(
         modifier
             .matchParentSize()
-            .then(if (full) Modifier.symmetricSafeDrawingPadding() else Modifier)
+            .then(if (full) Modifier.cutoutAwarePadding() else Modifier)
             .graphicsLayer { this.alpha = alpha }
             .onSizeChanged { chromeHeight = with(density) { it.height.toDp() } }
     ) {
@@ -440,16 +441,22 @@ private fun formatTime(seconds: Float): String {
 }
 
 /**
- * Safe-drawing padding with equal left and right insets. A landscape camera cutout only insets one
- * side; AVKit keeps its chrome centered, so both sides take the larger inset.
+ * Safe-drawing padding that overlaps the chrome's own [edge] margin: each side gets the larger of its
+ * inset and [edge] in total, so a landscape camera cutout pushes the chrome in only by the part of the
+ * cutout that the normal margin does not already cover.
  */
 @Composable
-private fun Modifier.symmetricSafeDrawingPadding(): Modifier {
+private fun Modifier.cutoutAwarePadding(edge: Dp = 16.dp): Modifier {
     val insets = WindowInsets.safeDrawing
     val density = LocalDensity.current
     val direction = LocalLayoutDirection.current
     return with(density) {
-        val side = maxOf(insets.getLeft(this, direction), insets.getRight(this, direction)).toDp()
-        padding(start = side, end = side, top = insets.getTop(this).toDp(), bottom = insets.getBottom(this).toDp())
+        fun extra(px: Int) = (px.toDp() - edge).coerceAtLeast(0.dp)
+        padding(
+            start = extra(if (direction == LayoutDirection.Ltr) insets.getLeft(this, direction) else insets.getRight(this, direction)),
+            end = extra(if (direction == LayoutDirection.Ltr) insets.getRight(this, direction) else insets.getLeft(this, direction)),
+            top = extra(insets.getTop(this)),
+            bottom = extra(insets.getBottom(this)),
+        )
     }
 }
