@@ -133,6 +133,14 @@ fun LiquidGlassContainer(
     val interactiveHighlight = remember(animationScope) { InteractiveHighlight(animationScope) }
     Box(
         modifier
+            // Registered before the press layer so the bounds are the laid-out ones and [pressTransform] is applied once.
+            .liquidGlassEffectMember { rect ->
+                val (scale, translation) = pressTransform(interactiveHighlight, rect.size, density)
+                Rect(
+                    rect.center + translation - Offset(rect.width * scale / 2f, rect.height * scale / 2f),
+                    Size(rect.width * scale, rect.height * scale)
+                )
+            }
             .drawBackdrop(
                 backdrop = backdrop,
                 shape = { Capsule() },
@@ -156,13 +164,6 @@ fun LiquidGlassContainer(
                     }
                 }
             )
-            .liquidGlassEffectMember { rect ->
-                val (scale, translation) = pressTransform(interactiveHighlight, rect.size, density)
-                Rect(
-                    rect.center + translation - Offset(rect.width * scale / 2f, rect.height * scale / 2f),
-                    Size(rect.width * scale, rect.height * scale)
-                )
-            }
             .clickable(interactionSource = null, indication = null, role = Role.Button, onClick = onClick)
             .then(interactiveHighlight.modifier)
             .then(interactiveHighlight.gestureModifier),
