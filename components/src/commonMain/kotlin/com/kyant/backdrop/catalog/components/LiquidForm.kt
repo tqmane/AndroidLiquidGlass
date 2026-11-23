@@ -27,7 +27,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.graphics.BlendMode
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.layout.boundsInRoot
 import androidx.compose.ui.layout.onGloballyPositioned
@@ -84,9 +91,9 @@ fun GroupedTextField(
             onDone = { focusManager.clearFocus() }
         ),
         decorationBox = { inner ->
-            Box(Modifier.fillMaxWidth().height(50.dp).padding(horizontal = 16.dp), contentAlignment = Alignment.CenterStart) {
+            Box(Modifier.fillMaxWidth().height(52.dp).padding(horizontal = 16.dp), contentAlignment = Alignment.CenterStart) {
                 if (value.isEmpty()) {
-                    BasicText(placeholder, style = TextStyle(GlassColors.secondaryLabel().copy(alpha = 0.6f), 17.sp), maxLines = 1)
+                    BasicText(placeholder, style = TextStyle(GlassColors.secondaryLabel().copy(alpha = GlassColors.secondaryLabel().alpha * 0.5f), 17.sp), maxLines = 1)
                 }
                 inner()
             }
@@ -123,7 +130,7 @@ fun GroupedPickerCell(
     Row(
         modifier
             .fillMaxWidth()
-            .height(50.dp)
+            .height(52.dp)
             .clickable(role = Role.DropdownList, onClick = onClick)
             .padding(horizontal = 16.dp),
         verticalAlignment = Alignment.CenterVertically
@@ -137,20 +144,38 @@ fun GroupedPickerCell(
     }
 }
 
-/** A multi-line explanatory row in a grouped form, like the footer text cells of a settings screen. */
+/** A multi-line explanatory row in a grouped form; defaults to footnote text in the secondary label color. */
 @Composable
-fun GroupedNoteCell(text: String, modifier: Modifier = Modifier, showSeparator: Boolean = false) {
+fun GroupedNoteCell(
+    text: String,
+    modifier: Modifier = Modifier,
+    color: Color = GlassColors.secondaryLabel(),
+    fontSize: TextUnit = 13.sp,
+    showSeparator: Boolean = false,
+) {
     if (showSeparator) GroupedSeparator()
     BasicText(
         text,
-        modifier.fillMaxWidth().heightIn(min = 44.dp).padding(horizontal = 16.dp, vertical = 12.dp),
-        style = TextStyle(GlassColors.label(), 15.sp, lineHeight = 20.sp)
+        modifier.fillMaxWidth().heightIn(min = 44.dp).padding(horizontal = 16.dp, vertical = 11.dp),
+        style = TextStyle(color, fontSize, lineHeight = fontSize * 1.38f)
     )
 }
 
+/** Fades content out toward the top [height], so a scroll view's rows dissolve under a sheet header like iOS 26's scroll edge effect. */
+fun Modifier.topEdgeFade(height: Dp): Modifier =
+    graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }
+        .drawWithContent {
+            drawContent()
+            drawRect(
+                Brush.verticalGradient(0f to Color.Transparent, 1f to Color.Black, startY = height.toPx() * 0.35f, endY = height.toPx()),
+                blendMode = BlendMode.DstIn
+            )
+        }
+
 /**
- * [LiquidMenu] that opens from an [anchor] (e.g. a [GroupedPickerCell] value) instead of a fixed alignment: below it,
- * right-aligned, or above it when the anchor sits in the lower half of this box.
+ * [LiquidMenu] that opens from an [anchor] (e.g. a [GroupedPickerCell] value) instead of a fixed alignment, right-aligned to it:
+ * downward from the anchor's top edge, covering it like an iOS 26 menu picker, or upward from its bottom edge when the
+ * anchor sits in the lower half of this box.
  */
 @Composable
 fun BoxScope.LiquidAnchoredMenu(
@@ -172,7 +197,8 @@ fun BoxScope.LiquidAnchoredMenu(
     val menuWidth = with(density) { width.toPx() }
     val below = b.center.y < hostSize.height / 2f
     val x = (b.right - menuWidth).coerceIn(gap, (hostSize.width - menuWidth - gap).coerceAtLeast(gap))
-    val y = if (below) b.bottom + gap else -(hostSize.height - b.top + gap)
+    val overlap = with(density) { 4.dp.toPx() }
+    val y = if (below) b.top - overlap else -(hostSize.height - b.bottom - overlap)
     LiquidMenu(
         expanded, onDismissRequest, backdrop, entries,
         alignment = if (below) Alignment.TopStart else Alignment.BottomStart,

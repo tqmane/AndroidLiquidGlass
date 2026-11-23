@@ -345,6 +345,12 @@ fun LiquidSheetScope.LiquidSheetHeader(
     }
 }
 
+/** Section header of an inset-grouped list (15 pt regular). */
+val GroupedSectionTitleStyle: TextStyle = TextStyle(fontSize = 15.sp)
+
+/** Section header of a SwiftUI `Form` in iOS 26 (17 pt semibold). */
+val FormSectionTitleStyle: TextStyle = TextStyle(fontSize = 17.sp, fontWeight = FontWeight.SemiBold)
+
 /** iOS 26 large navigation title (34 pt bold) at the top of a sheet's scrolling content, under a [LiquidSheetHeader]. */
 @Composable
 fun SheetLargeTitle(title: String, modifier: Modifier = Modifier) {
@@ -361,12 +367,13 @@ fun SheetLargeTitle(title: String, modifier: Modifier = Modifier) {
 fun LiquidSheetScope.SheetSection(
     title: String?,
     modifier: Modifier = Modifier,
+    titleStyle: TextStyle = GroupedSectionTitleStyle,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     val isLightTheme = !isGlassDark()
     val cell = if (isLightTheme) lerpPremultiplied(Color.Black.copy(alpha = 0.05f), Color.White, material)
     else Color(0xFF2C2C2E)
-    GroupedSection(title, cell, modifier, content = content)
+    GroupedSection(title, cell, modifier, titleStyle = titleStyle, content = content)
 }
 
 /** Inset-grouped list section (26 dp corners, 15 pt secondary header). */
@@ -376,11 +383,12 @@ fun GroupedSection(
     cellColor: Color,
     modifier: Modifier = Modifier,
     horizontalPadding: Dp = 16.dp,
+    titleStyle: TextStyle = GroupedSectionTitleStyle,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     Column(modifier.fillMaxWidth().padding(horizontal = horizontalPadding)) {
         title?.let {
-            BasicText(it, Modifier.padding(start = 16.dp, top = 14.dp, bottom = 8.dp), style = TextStyle(GlassColors.secondaryLabel(), 15.sp))
+            BasicText(it, Modifier.padding(start = 16.dp, top = 14.dp, bottom = 8.dp), style = titleStyle.merge(TextStyle(GlassColors.secondaryLabel())))
         }
         Column(Modifier.fillMaxWidth().clip(RoundedRectangle(26.dp)).background(cellColor), content = content)
     }
