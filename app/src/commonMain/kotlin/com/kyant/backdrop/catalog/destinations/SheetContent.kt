@@ -49,14 +49,14 @@ fun SheetContent() {
             }
         }
     ) {
-        GroupedSection(null, pageCell, Modifier.padding(horizontal = (-16).dp)) {
+        GroupedSection(null, pageCell, horizontalPadding = 0.dp) {
             GroupedCell("Open sheet", labelColor = GlassColors.accent(), onClick = { browse = true })
             GroupedCell("Open toolbar sheet", labelColor = GlassColors.accent(), showSeparator = true, onClick = { edit = true })
             GroupedCell("Medium-only sheet", labelColor = GlassColors.accent(), showSeparator = true, onClick = { mediumOnly = true })
             GroupedCell("Large-only sheet", labelColor = GlassColors.accent(), showSeparator = true, onClick = { largeOnly = true })
             GroupedCell("Sheet without grabber", labelColor = GlassColors.accent(), showSeparator = true, onClick = { noGrabber = true })
         }
-        GroupedSection("Library", pageCell, Modifier.padding(horizontal = (-16).dp).padding(top = 14.dp)) {
+        GroupedSection("Library", pageCell, Modifier.padding(top = 14.dp), horizontalPadding = 0.dp) {
             GroupedCell("Recently added", icon = GlassIcons.Clock)
             GroupedCell("Downloads", icon = GlassIcons.ArrowDownCircle, showSeparator = true)
             GroupedCell("Favorites", icon = GlassIcons.Heart, showSeparator = true)

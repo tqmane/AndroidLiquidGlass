@@ -1,5 +1,6 @@
 package com.kyant.backdrop.catalog.components
 
+import androidx.compose.ui.unit.Dp
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.Row
@@ -272,7 +273,7 @@ fun LiquidSheetScope.SheetSection(
     val isLightTheme = !isSystemInDarkTheme()
     val cell = if (isLightTheme) lerpColor(Color.Black.copy(alpha = 0.05f), Color.White, expansion)
     else lerpColor(Color.Black.copy(alpha = 0.3f), Color(0xFF2C2C2E), expansion)
-    GroupedSection(title, cell, modifier, content)
+    GroupedSection(title, cell, modifier, content = content)
 }
 
 /** Inset-grouped list section (26 dp corners, 15 pt secondary header). */
@@ -281,9 +282,10 @@ fun GroupedSection(
     title: String?,
     cellColor: Color,
     modifier: Modifier = Modifier,
+    horizontalPadding: Dp = 16.dp,
     content: @Composable ColumnScope.() -> Unit,
 ) {
-    Column(modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
+    Column(modifier.fillMaxWidth().padding(horizontal = horizontalPadding)) {
         title?.let {
             BasicText(it, Modifier.padding(start = 16.dp, top = 14.dp, bottom = 8.dp), style = TextStyle(GlassColors.secondaryLabel(), 15.sp))
         }
