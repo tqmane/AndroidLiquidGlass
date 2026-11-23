@@ -12,6 +12,8 @@ A customizable Liquid Glass effect library for Compose Multiplatform.
 
 ## Components
 
+See the [implementation guide](docs/IMPLEMENTATION_GUIDE.md) for the architecture, every iOS 26 component in the catalog (segmented control, sheets, alerts, menus, video player, ...), and common pitfalls.
+
 The library does not include any high-level components; you will need to create your own.
 Below are some example components:
 
