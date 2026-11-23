@@ -115,21 +115,27 @@ fun BoxScope.LiquidSheet(
             val formSheet = maxWidth >= 600.dp
             val formHeight = with(density) { 366.dp.toPx() }
             val formMargin = with(density) { 24.dp.toPx() }
-            // iPadOS form sheet: large is ~635 pt tall and centered; medium keeps the same bottom edge.
+            // iPadOS form sheet: every detent is centered vertically; large is ~635 pt tall, medium ~366 pt.
             val formLargeHeight = minOf(with(density) { 635.dp.toPx() }, maxH - topInset - 2 * formMargin)
-            val formGap = if (formSheet) ((maxH - formLargeHeight) / 2f).coerceAtLeast(formMargin) else 0f
-            val stops = remember(detents, maxH, topInset, formSheet) {
+            val formMinTop = topInset + formMargin
+            // (top, bottom) of each detent, lowest sheet first.
+            val bounds = remember(detents, maxH, topInset, formSheet) {
                 detents.map { d ->
                     when (d) {
                         is SheetDetent.Fraction -> {
                             val f = d.fraction.coerceIn(0.1f, 1f)
-                            if (!formSheet) maxH - usable * f
-                            else if (f >= 1f) maxH - formGap - formLargeHeight
-                            else maxOf(topInset + formMargin, maxH - formGap - formHeight * f / 0.5f)
+                            if (!formSheet) {
+                                maxH - usable * f to maxH
+                            } else {
+                                val h = if (f >= 1f) formLargeHeight else minOf(formLargeHeight, formHeight * f / 0.5f)
+                                val top = maxOf(formMinTop, (maxH - h) / 2f)
+                                top to top + h
+                            }
                         }
                     }
-                }.sortedDescending()
+                }.sortedByDescending { it.first }
             }
+            val stops = remember(bounds) { bounds.map { it.first } }
             val lowestTop = stops.first()
             val highestTop = stops.last()
             val offsetY = remember { Animatable(maxH) }
@@ -179,7 +185,8 @@ fun BoxScope.LiquidSheet(
             )
 
             val inset = if (formSheet) 0.dp else lerp(8f, 0f, expansion).dp
-            val sheetHeight = with(density) { (maxH - formGap - minOf(offsetY.value, lowestTop)).toDp() } - inset
+            val sheetBottom = lerp(bounds.first().second, bounds.last().second, expansion)
+            val sheetHeight = with(density) { (sheetBottom - minOf(offsetY.value, lowestTop)).toDp() } - inset
             // A snapTo queued behind a running animation hasn't moved offsetY yet, so the next delta in the same frame
             // must start from the pending top or it is dropped; the pending top is cleared once the snap lands.
             val dragTop = remember { floatArrayOf(Float.NaN) }
