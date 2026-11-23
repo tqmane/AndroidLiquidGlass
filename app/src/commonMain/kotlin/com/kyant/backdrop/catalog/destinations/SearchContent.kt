@@ -33,7 +33,7 @@ fun SearchContent() {
             BasicText("Search", Modifier.padding(top = 16.dp, bottom = 12.dp), style = TextStyle(Color.White, 34.sp, FontWeight.Bold))
             Column(Modifier.fillMaxWidth().liquidGlassPanel(backdrop, { RoundedRectangle(26.dp) }).padding(12.dp)) {
                 SearchFieldInline(inline, { inline = it }, Modifier.fillMaxWidth())
-                items.filter { it.contains(query + inline, ignoreCase = true) }.forEach {
+                items.filter { it.contains(query, ignoreCase = true) && it.contains(inline, ignoreCase = true) }.forEach {
                     BasicText(it, Modifier.padding(horizontal = 4.dp, vertical = 12.dp), style = TextStyle(GlassColors.label(), 17.sp))
                 }
             }
