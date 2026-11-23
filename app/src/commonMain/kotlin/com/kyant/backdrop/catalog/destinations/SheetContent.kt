@@ -1,5 +1,6 @@
 package com.kyant.backdrop.catalog.destinations
 
+import com.kyant.backdrop.Backdrop
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -34,18 +35,18 @@ fun SheetContent() {
             DemoButton("Medium-only sheet", backdrop) { mediumOnly = true }
             DemoButton("Large sheet", backdrop) { largeSheet = true }
         }
-        LiquidSheet(sheet, { sheet = false }, backdrop) { SheetBody(backdrop, "Details") { sheet = false } }
+        LiquidSheet(sheet, { sheet = false }, backdrop) { SheetBody(it, "Details") { sheet = false } }
         LiquidSheet(mediumOnly, { mediumOnly = false }, backdrop, detents = listOf(SheetDetent.Medium)) {
-            SheetBody(backdrop, "Medium") { mediumOnly = false }
+            SheetBody(it, "Medium") { mediumOnly = false }
         }
         LiquidSheet(largeSheet, { largeSheet = false }, backdrop, detents = listOf(SheetDetent.Large)) {
-            SheetBody(backdrop, "Large") { largeSheet = false }
+            SheetBody(it, "Large") { largeSheet = false }
         }
     }
 }
 
 @Composable
-private fun ColumnScope.SheetBody(backdrop: LayerBackdrop, title: String, onClose: () -> Unit) {
+private fun ColumnScope.SheetBody(backdrop: Backdrop, title: String, onClose: () -> Unit) {
     Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
         LiquidIconButton(GlassIcons.Close, "Close", onClose, backdrop)
         BasicText(title, Modifier.weight(1f), style = TextStyle(GlassColors.label(), 17.sp, FontWeight.SemiBold, textAlign = androidx.compose.ui.text.style.TextAlign.Center))

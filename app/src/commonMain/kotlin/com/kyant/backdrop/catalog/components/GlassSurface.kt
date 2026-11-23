@@ -1,5 +1,6 @@
 package com.kyant.backdrop.catalog.components
 
+import com.kyant.backdrop.backdrops.LayerBackdrop
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
@@ -113,6 +114,7 @@ fun Modifier.liquidGlassPanel(
     blurRadius: Dp = 12.dp,
     refractionHeight: Dp = 16.dp,
     refractionAmount: Dp = 32.dp,
+    exportedBackdrop: LayerBackdrop? = null,
 ): Modifier {
     val isLightTheme = !isSystemInDarkTheme()
     val surface = if (containerColor.isSpecified) containerColor
@@ -128,6 +130,7 @@ fun Modifier.liquidGlassPanel(
         },
         highlight = { Highlight.Plain },
         shadow = { Shadow(radius = 40.dp, color = Color.Black.copy(alpha = if (isLightTheme) 0.14f else 0.4f)) },
+        exportedBackdrop = exportedBackdrop,
         onDrawSurface = { drawRect(surface) }
     )
 }

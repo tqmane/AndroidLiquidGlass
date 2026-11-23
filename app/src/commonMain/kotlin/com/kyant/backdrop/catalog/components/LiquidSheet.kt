@@ -1,5 +1,6 @@
 package com.kyant.backdrop.catalog.components
 
+import com.kyant.backdrop.backdrops.rememberLayerBackdrop
 import androidx.compose.ui.unit.Velocity
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.input.nestedscroll.nestedScroll
@@ -82,7 +83,7 @@ fun BoxScope.LiquidSheet(
     detents: List<SheetDetent> = listOf(SheetDetent.Medium, SheetDetent.Large),
     showGrabber: Boolean = true,
     title: String = "Sheet",
-    content: @Composable ColumnScope.() -> Unit,
+    content: @Composable ColumnScope.(sheetBackdrop: Backdrop) -> Unit,
 ) {
     BackHandler(visible) { onDismissRequest() }
     Box(Modifier.matchParentSize().zIndex(1f)) {
@@ -104,6 +105,7 @@ fun BoxScope.LiquidSheet(
             val lowestTop = stops.first()
             val highestTop = stops.last()
             val offsetY = remember { Animatable(maxH) }
+            val sheetBackdrop = rememberLayerBackdrop()
             var shown by remember { mutableStateOf(false) }
             val scope = rememberCoroutineScope()
 
@@ -190,7 +192,8 @@ fun BoxScope.LiquidSheet(
                         shape = { RoundedRectangle(lerp(36f, 30f, expansion).dp) },
                         containerColor = if (isLightTheme) Color(0xFFFAFAFA).copy(alpha = lerp(0.62f, 0.94f, expansion))
                         else Color(0xFF1C1C1E).copy(alpha = lerp(0.58f, 0.94f, expansion)),
-                        blurRadius = lerp(10f, 24f, expansion).dp
+                        blurRadius = lerp(10f, 24f, expansion).dp,
+                        exportedBackdrop = sheetBackdrop
                     )
                     .clickable(interactionSource = null, indication = null) {}
                     .draggable(
@@ -210,7 +213,7 @@ fun BoxScope.LiquidSheet(
                             .background(if (isLightTheme) Color(0xFF3C3C43).copy(alpha = 0.3f) else Color(0xFFEBEBF5).copy(alpha = 0.3f))
                     )
                 }
-                content()
+                content(sheetBackdrop)
             }
         }
     }
