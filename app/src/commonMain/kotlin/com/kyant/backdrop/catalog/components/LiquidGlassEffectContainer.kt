@@ -32,6 +32,10 @@ import com.kyant.backdrop.Backdrop
 import com.kyant.backdrop.drawBackdrop
 import com.kyant.backdrop.effects.blur
 import com.kyant.backdrop.effects.vibrancy
+import kotlin.math.PI
+import kotlin.math.abs
+import kotlin.math.acos
+import kotlin.math.atan2
 import kotlin.math.cos
 import kotlin.math.max
 import kotlin.math.min
@@ -118,35 +122,46 @@ internal class LiquidGlassGroup {
     }
 }
 
-/** Adds the neck between two horizontally adjacent capsules [a] (left) and [b] (right). */
+/**
+ * Adds a metaball neck between the facing end caps of two horizontally adjacent capsules [a] (left) and
+ * [b] (right). The neck leaves each cap along its tangent, so the outline stays smooth (no horns), and
+ * its spread grows with proximity: zero at [spacing], a full liquid waist once the caps touch.
+ */
 private fun addBridge(path: Path, a: Rect, b: Rect, spacing: Float) {
     val gap = b.left - a.right
     if (spacing <= 0f || gap >= spacing) return
     if (min(a.bottom, b.bottom) - max(a.top, b.top) < min(a.height, b.height) * 0.5f) return
     val t = ((spacing - gap) / spacing).coerceIn(0f, 1f)
-    val ra = a.height / 2f
-    val rb = b.height / 2f
-    val r = min(ra, rb)
-    // Neck half-thickness: ~0.2 r for the native 8 pt gap in a 20 pt container, 0.6 r once touching.
-    val neck = r * 0.6f * t * t
-    if (neck < 0.5f) return
-    val ca = Offset(a.right - ra, a.center.y)
-    val cb = Offset(b.left + rb, b.center.y)
-    val phi = 0.95f
-    val pa = Offset(ca.x + ra * cos(phi), ca.y - ra * sin(phi))
-    val pb = Offset(cb.x - rb * cos(phi), cb.y - rb * sin(phi))
-    val mid = Offset((a.right + b.left) / 2f, (ca.y + cb.y) / 2f)
-    val k = max(gap, 0f) / 2f + r * 0.35f
-    // Tangent of a circle at angle phi, heading towards the gap.
-    val ta = Offset(sin(phi), cos(phi))
-    path.moveTo(pa.x, pa.y)
-    path.cubicTo(pa.x + ta.x * k, pa.y + ta.y * k, mid.x - k, mid.y - neck, mid.x, mid.y - neck)
-    path.cubicTo(mid.x + k, mid.y - neck, pb.x - ta.x * k, pb.y + ta.y * k, pb.x, pb.y)
-    path.lineTo(pb.x, cb.y + (cb.y - pb.y))
-    val pb2 = Offset(pb.x, cb.y + (cb.y - pb.y))
-    val pa2 = Offset(pa.x, ca.y + (ca.y - pa.y))
-    path.cubicTo(pb2.x - ta.x * k, pb2.y - ta.y * k, mid.x + k, mid.y + neck, mid.x, mid.y + neck)
-    path.cubicTo(mid.x - k, mid.y + neck, pa2.x + ta.x * k, pa2.y - ta.y * k, pa2.x, pa2.y)
+    val r1 = a.height / 2f
+    val r2 = b.height / 2f
+    val c1 = Offset(a.right - r1, a.center.y)
+    val c2 = Offset(b.left + r2, b.center.y)
+    val d = (c2 - c1).getDistance()
+    if (d <= abs(r1 - r2) + 0.5f) return
+    val v = 0.55f * t
+    if (v < 0.02f) return
+    val u1 = if (d < r1 + r2) acos(((r1 * r1 + d * d - r2 * r2) / (2 * r1 * d)).coerceIn(-1f, 1f)) else 0f
+    val u2 = if (d < r1 + r2) acos(((r2 * r2 + d * d - r1 * r1) / (2 * r2 * d)).coerceIn(-1f, 1f)) else 0f
+    val between = atan2(c2.y - c1.y, c2.x - c1.x)
+    val maxSpread = acos(((r1 - r2) / d).coerceIn(-1f, 1f))
+    val a1 = between + u1 + (maxSpread - u1) * v
+    val a2 = between - u1 - (maxSpread - u1) * v
+    val a3 = between + PI.toFloat() - u2 - (PI.toFloat() - u2 - maxSpread) * v
+    val a4 = between - PI.toFloat() + u2 + (PI.toFloat() - u2 - maxSpread) * v
+    fun dir(angle: Float) = Offset(cos(angle), sin(angle))
+    val p1 = c1 + dir(a1) * r1
+    val p2 = c1 + dir(a2) * r1
+    val p3 = c2 + dir(a3) * r2
+    val p4 = c2 + dir(a4) * r2
+    val handle = min(v * 2.4f, (p1 - p3).getDistance() / (r1 + r2)) * min(1f, d * 2f / (r1 + r2))
+    val h1 = p1 + dir(a1 - PI.toFloat() / 2f) * (r1 * handle)
+    val h2 = p2 + dir(a2 + PI.toFloat() / 2f) * (r1 * handle)
+    val h3 = p3 + dir(a3 + PI.toFloat() / 2f) * (r2 * handle)
+    val h4 = p4 + dir(a4 - PI.toFloat() / 2f) * (r2 * handle)
+    path.moveTo(p1.x, p1.y)
+    path.cubicTo(h1.x, h1.y, h3.x, h3.y, p3.x, p3.y)
+    path.lineTo(p4.x, p4.y)
+    path.cubicTo(h4.x, h4.y, h2.x, h2.y, p2.x, p2.y)
     path.close()
 }
 
