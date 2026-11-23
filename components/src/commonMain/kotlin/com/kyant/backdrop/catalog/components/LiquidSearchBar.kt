@@ -1,5 +1,15 @@
 package com.kyant.backdrop.catalog.components
 
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.composed
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandHorizontally
 import androidx.compose.animation.fadeIn
@@ -42,6 +52,20 @@ import com.kyant.backdrop.Backdrop
 import com.kyant.shapes.Capsule
 import androidx.compose.foundation.text.BasicText
 
+/**
+ * Makes the whole capsule the field's hit target. A tap detector rather than `clickable`, so the capsule never
+ * takes keyboard focus itself, and it shows the keyboard for a field that kept focus after the keyboard was hidden.
+ */
+private fun Modifier.focusOnTap(focusRequester: FocusRequester): Modifier = composed {
+    val keyboard = LocalSoftwareKeyboardController.current
+    pointerInput(focusRequester) {
+        detectTapGestures {
+            focusRequester.requestFocus()
+            keyboard?.show()
+        }
+    }
+}
+
 /** Icons for the search field and its focused close button. */
 data class LiquidSearchBarIcons(
     val search: ImageVector = GlassIcons.Search,
@@ -76,6 +100,8 @@ fun LiquidSearchBar(
 ) {
     var focused by remember { mutableStateOf(false) }
     val focusManager = LocalFocusManager.current
+    // The whole capsule is the hit target, as on iOS, not just the text field inside it.
+    val focusRequester = remember { FocusRequester() }
     val secondary = GlassColors.secondaryLabel()
     // The × circle sticks to the field while held (it swells across the 8 dp gap).
     LiquidGlassEffectContainer(backdrop, modifier, spacing = 8.dp) {
@@ -89,6 +115,7 @@ fun LiquidSearchBar(
                 .liquidGlassEffectMember()
                 .liquidGlass(backdrop, { Capsule() })
                 .height(48.dp)
+                .focusOnTap(focusRequester)
                 .padding(horizontal = 14.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -96,12 +123,17 @@ fun LiquidSearchBar(
             Spacer(Modifier.width(8.dp))
             Box(Modifier.weight(1f), contentAlignment = Alignment.CenterStart) {
                 if (query.isEmpty()) {
-                    BasicText(placeholder, style = TextStyle(secondary, 17.sp))
+                    // Read out by the field itself, so accessibility services focus the editable node.
+                    BasicText(placeholder, Modifier.clearAndSetSemantics {}, style = TextStyle(secondary, 17.sp))
                 }
                 BasicTextField(
                     value = query,
                     onValueChange = onQueryChange,
-                    modifier = Modifier.onFocusChanged { focused = it.isFocused },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .focusRequester(focusRequester)
+                        .onFocusChanged { focused = it.isFocused }
+                        .semantics { if (query.isEmpty()) contentDescription = placeholder },
                     singleLine = true,
                     textStyle = TextStyle(GlassColors.label(), 17.sp),
                     cursorBrush = SolidColor(GlassColors.accent()),
@@ -152,19 +184,27 @@ fun SearchFieldInline(
     searchIcon: ImageVector = GlassIcons.Search,
 ) {
     val secondary = GlassColors.secondaryLabel()
+    val focusRequester = remember { FocusRequester() }
     Row(
         modifier
             .height(40.dp)
             .clip(Capsule())
             .background(GlassColors.fill())
+            .focusOnTap(focusRequester)
             .padding(horizontal = 12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         GlassIcon(searchIcon, secondary, Modifier.size(17.dp))
         Spacer(Modifier.width(6.dp))
         Box(Modifier.weight(1f), contentAlignment = Alignment.CenterStart) {
-            if (query.isEmpty()) BasicText(placeholder, style = TextStyle(secondary, 17.sp))
-            BasicTextField(query, onQueryChange, singleLine = true, textStyle = TextStyle(GlassColors.label(), 17.sp), cursorBrush = SolidColor(GlassColors.accent()))
+            if (query.isEmpty()) BasicText(placeholder, Modifier.clearAndSetSemantics {}, style = TextStyle(secondary, 17.sp))
+            BasicTextField(
+                query, onQueryChange,
+                Modifier
+                    .fillMaxWidth()
+                    .focusRequester(focusRequester)
+                    .semantics { if (query.isEmpty()) contentDescription = placeholder },
+                singleLine = true, textStyle = TextStyle(GlassColors.label(), 17.sp), cursorBrush = SolidColor(GlassColors.accent()))
         }
     }
 }

@@ -140,7 +140,8 @@ fun BoxScope.LiquidSheet(
                     shown = true
                     offsetY.animateTo(stops.getOrElse(detentIndex) { lowestTop }, spring(0.86f, 260f))
                 } else {
-                    offsetY.animateTo(maxH, spring(1f, 300f))
+                    // iOS 26 slides a dismissed sheet out in ~0.2 s.
+                    offsetY.animateTo(maxH, spring(1f, 700f))
                     shown = false
                 }
             }

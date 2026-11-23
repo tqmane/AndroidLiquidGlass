@@ -1,5 +1,7 @@
 package com.kyant.backdrop.catalog.components
 
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.ui.layout.layout
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.width
@@ -72,6 +74,7 @@ fun LiquidBottomTabs(
     pillHeight: Dp = 56f.dp,
     leadingWidth: Dp = 0f.dp,
     leading: @Composable () -> Unit = {},
+    tabWidths: List<Dp>? = null,
     content: @Composable RowScope.() -> Unit
 ) {
     val glass = LocalLiquidGlassStyle.current
@@ -87,8 +90,32 @@ fun LiquidBottomTabs(
         contentAlignment = Alignment.CenterStart
     ) {
         val density = LocalDensity.current
-        val tabWidth = with(density) {
-            (constraints.maxWidth.toFloat() - 8f.dp.toPx() - leadingWidth.toPx()) / tabsCount
+        // Tabs share the bar equally unless [tabWidths] gives each its own width; the pill follows the widths.
+        val widths = with(density) {
+            val equal = (constraints.maxWidth.toFloat() - 8f.dp.toPx() - leadingWidth.toPx()) / tabsCount
+            List(tabsCount) { tabWidths?.getOrNull(it)?.toPx() ?: equal }
+        }
+        val widthsState = rememberUpdatedState(widths)
+        fun widthAt(value: Float): Float {
+            val w = widthsState.value
+            val i = value.toInt().fastCoerceIn(0, tabsCount - 1)
+            return lerp(w[i], w[(i + 1).coerceAtMost(tabsCount - 1)], value - i)
+        }
+        fun startAt(value: Float): Float {
+            val w = widthsState.value
+            val i = value.toInt().fastCoerceIn(0, tabsCount - 1)
+            val start = (0 until i).sumOf { w[it].toDouble() }.toFloat()
+            return start + w[i] * (value - i)
+        }
+        // Inverse of startAt, so a drag maps the pill's position to a value independently of how the moves are split.
+        fun valueAt(start: Float): Float {
+            val w = widthsState.value
+            var left = 0f
+            for (i in 0 until tabsCount - 1) {
+                if (start < left + w[i]) return (i + (start - left) / w[i]).fastCoerceIn(0f, (tabsCount - 1).toFloat())
+                left += w[i]
+            }
+            return (tabsCount - 1).toFloat()
         }
 
         val offsetAnimation = remember { Animatable(0f) }
@@ -106,7 +133,10 @@ fun LiquidBottomTabs(
         var currentIndex by remember(selectedTabIndex) {
             mutableIntStateOf(selectedTabIndex())
         }
-        val dampedDragAnimation = remember(animationScope, tabWidth) {
+        // Pill position in px, accumulated synchronously: targetValue only advances once updateValue's coroutine
+        // runs, so moves delivered within one frame would otherwise all start from the same stale value.
+        val dragPosition = remember { floatArrayOf(0f) }
+        val dampedDragAnimation = remember(animationScope, widths) {
             DampedDragAnimation(
                 animationScope = animationScope,
                 initialValue = selectedTabIndex().toFloat(),
@@ -115,9 +145,9 @@ fun LiquidBottomTabs(
                 initialScale = 1f,
                 // 56 -> 78 dp on the bottom bar: the held pill overhangs the bar by 7 dp above and below.
                 pressedScale = (pillHeight.value + 22f) / pillHeight.value,
-                onDragStarted = {},
+                onDragStarted = { dragPosition[0] = startAt(targetValue) },
                 onDragStopped = {
-                    val targetIndex = targetValue.fastRoundToInt().fastCoerceIn(0, tabsCount - 1)
+                    val targetIndex = valueAt(dragPosition[0]).fastRoundToInt().fastCoerceIn(0, tabsCount - 1)
                     currentIndex = targetIndex
                     animateToValue(targetIndex.toFloat())
                     animationScope.launch {
@@ -129,8 +159,12 @@ fun LiquidBottomTabs(
                 },
                 onDrag = { _, dragAmount ->
                     updateValue(
-                        (targetValue + dragAmount.x / tabWidth * if (isLtr) 1f else -1f)
-                            .fastCoerceIn(0f, (tabsCount - 1).toFloat())
+                        valueAt(
+                            // Clamped to the bar, as the pill is, so overshooting an end does not eat the drag back.
+                            (dragPosition[0] + dragAmount.x * if (isLtr) 1f else -1f)
+                                .fastCoerceIn(0f, startAt((tabsCount - 1).toFloat()))
+                                .also { dragPosition[0] = it }
+                        )
                     )
                     animationScope.launch {
                         offsetAnimation.snapTo(offsetAnimation.value + dragAmount.x)
@@ -144,12 +178,14 @@ fun LiquidBottomTabs(
                     currentIndex = index
                 }
         }
+        // Read through a State: this effect outlives recompositions, and a captured lambda would report stale selections.
+        val currentOnTabSelected by rememberUpdatedState(onTabSelected)
         LaunchedEffect(dampedDragAnimation) {
             snapshotFlow { currentIndex }
                 .drop(1)
                 .collectLatest { index ->
                     dampedDragAnimation.animateToValue(index.toFloat())
-                    onTabSelected(index)
+                    currentOnTabSelected(index)
                 }
         }
 
@@ -159,8 +195,8 @@ fun LiquidBottomTabs(
                 position = { size, offset ->
                     val lead = with(density) { leadingWidth.toPx() }
                     Offset(
-                        if (isLtr) lead + (dampedDragAnimation.value + 0.5f) * tabWidth + panelOffset
-                        else size.width - lead - (dampedDragAnimation.value + 0.5f) * tabWidth + panelOffset,
+                        if (isLtr) lead + startAt(dampedDragAnimation.value) + widthAt(dampedDragAnimation.value) / 2f + panelOffset
+                        else size.width - lead - startAt(dampedDragAnimation.value) - widthAt(dampedDragAnimation.value) / 2f + panelOffset,
                         size.height / 2f
                     )
                 }
@@ -248,8 +284,8 @@ fun LiquidBottomTabs(
                 .padding(start = 4f.dp + leadingWidth, end = 4f.dp)
                 .graphicsLayer {
                     translationX =
-                        if (isLtr) dampedDragAnimation.value * tabWidth + panelOffset
-                        else size.width - (dampedDragAnimation.value + 1f) * tabWidth + panelOffset
+                        if (isLtr) startAt(dampedDragAnimation.value) + panelOffset
+                        else -startAt(dampedDragAnimation.value) + panelOffset
                 }
                 .then(interactiveHighlight.gestureModifier)
                 .then(dampedDragAnimation.modifier)
@@ -297,7 +333,11 @@ fun LiquidBottomTabs(
                     }
                 )
                 .height(pillHeight)
-                .fillMaxWidth(1f / tabsCount)
+                .layout { measurable, constraints ->
+                    val w = widthAt(dampedDragAnimation.value).fastRoundToInt()
+                    val placeable = measurable.measure(constraints.copy(minWidth = w, maxWidth = w))
+                    layout(placeable.width, placeable.height) { placeable.place(0, 0) }
+                }
         )
     }
 }

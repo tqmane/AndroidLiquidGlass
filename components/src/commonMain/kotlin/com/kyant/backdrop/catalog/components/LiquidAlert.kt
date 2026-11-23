@@ -105,7 +105,8 @@ fun BoxScope.LiquidAlert(
                     dismiss { onDismissRequest(); true }
                 }
                 .graphicsLayer {
-                    val s = lerp(1.15f, 1f, p)
+                    // iOS 26: shrinks in from 1.08 while fading in, and shrinks slightly away while fading out.
+                    val s = if (visible) lerp(1.08f, 1f, p) else lerp(0.94f, 1f, p)
                     scaleX = s
                     scaleY = s
                     alpha = p.coerceIn(0f, 1f)
@@ -222,10 +223,16 @@ fun BoxScope.LiquidActionSheet(
                     dismiss { onDismissRequest(); true }
                 }
                 .graphicsLayer {
-                    if (regular) {
-                        scaleX = 0.9f + 0.1f * p; scaleY = scaleX
-                        if (anchored) transformOrigin = TransformOrigin(0.5f, if (above) 1f else 0f)
-                    } else translationY = (1f - p) * size.height
+                    // iOS 26: an anchored dialog grows out of its anchor (~0.45 -> 1); the others shrink in from
+                    // slightly larger like an alert. All shrink a little while fading out.
+                    val s = when {
+                        !visible -> lerp(0.94f, 1f, p)
+                        anchored -> lerp(0.45f, 1f, p)
+                        regular -> lerp(1.08f, 1f, p)
+                        else -> lerp(1.1f, 1f, p)
+                    }
+                    scaleX = s; scaleY = s
+                    if (anchored) transformOrigin = TransformOrigin(0.5f, if (above) 1f else 0f)
                     alpha = p.coerceIn(0f, 1f)
                     // Per-draw alpha: an offscreen alpha layer drops the glass outline clip and flashes a rectangle.
                     compositingStrategy = CompositingStrategy.ModulateAlpha
@@ -308,7 +315,8 @@ internal fun rememberPresentation(visible: Boolean): Animatable<Float, *>? {
             shown = true
             progress.animateTo(1f, spring(0.78f, 380f))
         } else {
-            progress.animateTo(0f, spring(1f, 600f))
+            // iOS 26 dismissals take ~0.12 s.
+            progress.animateTo(0f, spring(1f, 900f))
             shown = false
         }
     }
