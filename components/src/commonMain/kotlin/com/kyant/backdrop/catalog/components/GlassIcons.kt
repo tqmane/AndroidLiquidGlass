@@ -56,6 +56,9 @@ object GlassIcons {
     val ChevronLeft = stroke("chevron.left", 2.4f) { moveTo(15f, 4.5f); lineTo(7.5f, 12f); lineTo(15f, 19.5f) }
     val ChevronRight = stroke("chevron.right", 2f) { moveTo(9f, 4.5f); lineTo(16.5f, 12f); lineTo(9f, 19.5f) }
     val ChevronDown = stroke("chevron.down", 2f) { moveTo(5f, 9f); lineTo(12f, 16f); lineTo(19f, 9f) }
+    val ChevronUpDown = stroke("chevron.up.chevron.down", 2f) {
+        moveTo(8f, 9.5f); lineTo(12f, 5.5f); lineTo(16f, 9.5f); moveTo(8f, 14.5f); lineTo(12f, 18.5f); lineTo(16f, 14.5f)
+    }
     val Search = stroke("magnifyingglass", 2.2f) { circle(10.5f, 10.5f, 6f); moveTo(15f, 15f); lineTo(20f, 20f) }
     val Mic = stroke("mic", 2f) {
         moveTo(9f, 6f); arcTo(3f, 3f, 0f, false, true, 15f, 6f); lineTo(15f, 11f)
