@@ -263,7 +263,7 @@ fun LiquidSegmentedControl(
     BoxWithConstraints(
         modifier = modifier
             .then(if (sizing == SegmentSizing.ByContent) Modifier.width(contentWidth) else Modifier)
-            .heightIn(min = LiquidSegmentedControlDefaults.TouchTargetHeight)
+            .heightIn(min = LiquidSegmentedControlDefaults.TouchTargetHeight, max = LiquidSegmentedControlDefaults.TouchTargetHeight)
     ) {
         val availableWidthPx = with(density) { maxWidth.toPx() }
         val trackWidthPx = availableWidthPx.takeIf { it.isFinite() && it > 0f }
