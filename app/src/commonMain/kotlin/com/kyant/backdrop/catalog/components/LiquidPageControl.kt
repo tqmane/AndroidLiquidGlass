@@ -1,5 +1,10 @@
 package com.kyant.backdrop.catalog.components
 
+import kotlin.math.roundToInt
+import kotlin.math.abs
+import androidx.compose.ui.semantics.setProgress
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.Canvas
@@ -68,6 +73,11 @@ fun LiquidPageControl(
             .semantics {
                 stateDescription = "Page ${currentPage + 1} of $pageCount"
                 progressBarRangeInfo = ProgressBarRangeInfo(currentPage.toFloat(), 0f..(pageCount - 1).toFloat(), pageCount - 2)
+                setProgress { value ->
+                    val target = value.roundToInt().coerceIn(0, pageCount - 1)
+                    if (target != currentPageState) currentOnPageChange(target)
+                    true
+                }
             }
             .drawBackdrop(
                 backdrop = backdrop,
@@ -94,30 +104,26 @@ fun LiquidPageControl(
                     val start = 8.dp.toPx()
                     return ((x - start) / pitch.toPx()).toInt().coerceIn(0, pageCount - 1)
                 }
-                detectTapGestures(
-                    onPress = {
-                        interacting = true
-                        tryAwaitRelease()
-                        interacting = false
-                    },
-                    onTap = { offset ->
-                        val center = size.width / 2f
-                        val target = if (offset.x < center) currentPageState - 1 else currentPageState + 1
+                awaitEachGesture {
+                    val down = awaitFirstDown()
+                    interacting = true
+                    var dragged = false
+                    while (true) {
+                        val change = awaitPointerEvent().changes.firstOrNull { it.id == down.id } ?: break
+                        if (!change.pressed) break
+                        if (!dragged && abs(change.position.x - down.position.x) > viewConfiguration.touchSlop) dragged = true
+                        if (dragged) {
+                            change.consume()
+                            val page = pageAt(change.position.x)
+                            if (page != currentPageState) currentOnPageChange(page)
+                        }
+                    }
+                    interacting = false
+                    if (!dragged) {
+                        val target = if (down.position.x < size.width / 2f) currentPageState - 1 else currentPageState + 1
                         currentOnPageChange(target.coerceIn(0, pageCount - 1))
                     }
-                )
-            }
-            .pointerInput(pageCount) {
-                detectHorizontalDragGestures(
-                    onDragStart = { interacting = true },
-                    onDragEnd = { interacting = false },
-                    onDragCancel = { interacting = false },
-                    onHorizontalDrag = { change, _ ->
-                        val start = 8.dp.toPx()
-                        val page = ((change.position.x - start) / pitch.toPx()).toInt().coerceIn(0, pageCount - 1)
-                        if (page != currentPageState) currentOnPageChange(page)
-                    }
-                )
+                }
             }
             .padding(horizontal = 8.dp),
         contentAlignment = Alignment.CenterStart
