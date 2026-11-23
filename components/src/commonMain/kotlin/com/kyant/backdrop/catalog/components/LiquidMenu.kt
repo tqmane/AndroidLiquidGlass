@@ -62,7 +62,7 @@ import com.kyant.backdrop.Backdrop
 import com.kyant.backdrop.backdrops.rememberLayerBackdrop
 import com.kyant.shapes.RoundedRectangle
 
-/** An entry of a [LiquidMenu] / [LiquidContextMenu]. */
+/** An entry of a [LiquidMenu] / [LiquidContextMenu]. [iconTint] colors the row's icon; null uses the title color. */
 sealed interface MenuEntry {
     data class Action(
         val title: String,
@@ -71,6 +71,7 @@ sealed interface MenuEntry {
         val checked: Boolean = false,
         val enabled: Boolean = true,
         val subtitle: String? = null,
+        val iconTint: Color? = null,
         val onClick: () -> Unit = {},
     ) : MenuEntry
 
@@ -79,6 +80,7 @@ sealed interface MenuEntry {
         val icon: ImageVector? = null,
         val entries: List<MenuEntry>,
         val subtitle: String? = null,
+        val iconTint: Color? = null,
     ) : MenuEntry
 
     data object Divider : MenuEntry
@@ -230,6 +232,8 @@ internal fun MenuEntries(
                     entry.destructive -> GlassColors.destructive()
                     else -> GlassColors.label()
                 }.let { if (entry.enabled) it else it.copy(alpha = 0.3f) },
+                iconColor = entry.iconTint?.takeUnless { entry.checked }
+                    ?.let { if (entry.enabled) it else it.copy(alpha = it.alpha * 0.3f) },
                 enabled = entry.enabled,
                 onClick = {
                     entry.onClick()
@@ -243,6 +247,7 @@ internal fun MenuEntries(
                 subtitle = entry.subtitle,
                 trailing = icons.submenu,
                 color = GlassColors.label(),
+                iconColor = entry.iconTint,
                 onClick = { onOpenSubmenu(entry) }
             )
 
@@ -268,6 +273,7 @@ private fun MenuRow(
     icon: ImageVector?,
     color: Color,
     onClick: () -> Unit,
+    iconColor: Color? = null,
     subtitle: String? = null,
     trailing: ImageVector? = null,
     enabled: Boolean = true,
@@ -287,7 +293,7 @@ private fun MenuRow(
         verticalAlignment = Alignment.CenterVertically
     ) {
         if (icon != null) {
-            GlassIcon(icon, color, Modifier.size(19.dp))
+            GlassIcon(icon, iconColor ?: color, Modifier.size(19.dp))
             Spacer(Modifier.width(12.dp))
         } else {
             Spacer(Modifier.width(31.dp))

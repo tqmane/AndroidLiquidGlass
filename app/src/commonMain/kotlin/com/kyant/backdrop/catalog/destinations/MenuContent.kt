@@ -37,11 +37,18 @@ fun MenuContent() {
         var popover by remember { mutableStateOf(false) }
         var favorite by remember { mutableStateOf(false) }
         var sort by remember { mutableStateOf("Date") }
+        var folder by remember { mutableStateOf("Downloads") }
+        val teal = if (isGlassDark()) Color(0xFF40C8E0) else Color(0xFF30B0C7)
         val contextState = rememberLiquidContextMenuState()
         val entries = listOf(
             MenuEntry.Action("Copy", GlassIcons.Copy),
             MenuEntry.Action("Add to Favorites", GlassIcons.Heart, checked = favorite) { favorite = !favorite },
             MenuEntry.Submenu("Sort By", GlassIcons.List, listOf("Date", "Name", "Size").map { MenuEntry.Action(it, checked = sort == it) { sort = it } }),
+            MenuEntry.Submenu(
+                "Save to", GlassIcons.Folder,
+                listOf("iCloud Drive", "Downloads", "Documents").map { MenuEntry.Action(it, GlassIcons.Folder, iconTint = teal) { folder = it } },
+                subtitle = folder
+            ),
             MenuEntry.Divider,
             MenuEntry.Action("Delete", GlassIcons.Trash, destructive = true),
         )
