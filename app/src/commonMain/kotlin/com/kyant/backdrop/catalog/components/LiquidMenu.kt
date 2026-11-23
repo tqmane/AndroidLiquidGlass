@@ -1,5 +1,6 @@
 package com.kyant.backdrop.catalog.components
 
+import androidx.compose.ui.zIndex
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.spring
@@ -87,44 +88,46 @@ fun BoxScope.LiquidGlassPopup(
     paneTitle: String = "Menu",
     content: @Composable ColumnScope.() -> Unit,
 ) {
-    val progress = remember { Animatable(0f) }
-    var shown by remember { mutableStateOf(false) }
-    LaunchedEffect(visible) {
-        if (visible) {
-            shown = true
-            progress.animateTo(1f, spring(0.72f, 420f))
-        } else {
-            progress.animateTo(0f, spring(1f, 700f))
-            shown = false
+    Box(Modifier.matchParentSize().zIndex(1f)) {
+        val progress = remember { Animatable(0f) }
+        var shown by remember { mutableStateOf(false) }
+        LaunchedEffect(visible) {
+            if (visible) {
+                shown = true
+                progress.animateTo(1f, spring(0.72f, 420f))
+            } else {
+                progress.animateTo(0f, spring(1f, 700f))
+                shown = false
+            }
         }
-    }
-    if (!shown && !visible) return
+        if (!shown && !visible) return
 
-    Box(
-        Modifier
-            .matchParentSize()
-            .then(if (dim) Modifier.background(Color.Black.copy(alpha = 0.18f * progress.value.coerceIn(0f, 1f))) else Modifier)
-            .clickable(interactionSource = null, indication = null, onClick = onDismissRequest)
-    )
-    Column(
-        modifier
-            .align(alignment)
-            .offset(offset.x, offset.y)
-            .semantics {
-                this.paneTitle = paneTitle
-                dismiss { onDismissRequest(); true }
-            }
-            .graphicsLayer {
-                val p = progress.value
-                this.transformOrigin = transformOrigin
-                scaleX = lerp(0.3f, 1f, p)
-                scaleY = lerp(0.2f, 1f, p)
-                alpha = p.coerceIn(0f, 1f)
-            }
-            .liquidGlassPanel(backdrop, { RoundedRectangle(cornerRadius) })
-            .clickable(interactionSource = null, indication = null) {},
-        content = content
-    )
+        Box(
+            Modifier
+                .matchParentSize()
+                .then(if (dim) Modifier.background(Color.Black.copy(alpha = 0.18f * progress.value.coerceIn(0f, 1f))) else Modifier)
+                .clickable(interactionSource = null, indication = null, onClick = onDismissRequest)
+        )
+        Column(
+            modifier
+                .align(alignment)
+                .offset(offset.x, offset.y)
+                .semantics {
+                    this.paneTitle = paneTitle
+                    dismiss { onDismissRequest(); true }
+                }
+                .graphicsLayer {
+                    val p = progress.value
+                    this.transformOrigin = transformOrigin
+                    scaleX = lerp(0.3f, 1f, p)
+                    scaleY = lerp(0.2f, 1f, p)
+                    alpha = p.coerceIn(0f, 1f)
+                }
+                .liquidGlassPanel(backdrop, { RoundedRectangle(cornerRadius) })
+                .clickable(interactionSource = null, indication = null) {},
+            content = content
+        )
+    }
 }
 
 /** iOS 26 pull-down menu (`UIMenu` from a bar button). Supports icons, checkmarks, destructive items, dividers and submenus. */

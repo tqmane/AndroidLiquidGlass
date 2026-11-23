@@ -1,5 +1,6 @@
 package com.kyant.backdrop.catalog.components
 
+import androidx.compose.ui.zIndex
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
@@ -66,56 +67,58 @@ fun BoxScope.LiquidAlert(
     actions: List<AlertAction>,
     modifier: Modifier = Modifier,
 ) {
-    val progress = rememberPresentation(visible) ?: return
-    val p = progress.value
-    Box(
-        Modifier
-            .matchParentSize()
-            .background(Color.Black.copy(alpha = 0.2f * p.coerceIn(0f, 1f)))
-            .clickable(interactionSource = null, indication = null) {}
-    )
-    Column(
-        modifier
-            .align(Alignment.Center)
-            .padding(horizontal = 36.dp)
-            .widthIn(max = 320.dp)
-            .fillMaxWidth()
-            .semantics {
-                paneTitle = title
-                dismiss { onDismissRequest(); true }
-            }
-            .graphicsLayer {
-                val s = lerp(1.15f, 1f, p)
-                scaleX = s
-                scaleY = s
-                alpha = p.coerceIn(0f, 1f)
-            }
-            .liquidGlassPanel(backdrop, { RoundedRectangle(34.dp) })
-            .padding(horizontal = 16.dp, vertical = 16.dp)
-    ) {
-        Column(Modifier.padding(start = 8.dp, end = 8.dp, top = 6.dp, bottom = 18.dp)) {
-            BasicText(
-                title,
-                Modifier.fillMaxWidth(),
-                style = TextStyle(GlassColors.label(), 17.sp, FontWeight.SemiBold, textAlign = TextAlign.Start)
-            )
-            if (message != null) {
-                Spacer(Modifier.height(6.dp))
+    Box(Modifier.matchParentSize().zIndex(1f)) {
+        val progress = rememberPresentation(visible) ?: return
+        val p = progress.value
+        Box(
+            Modifier
+                .matchParentSize()
+                .background(Color.Black.copy(alpha = 0.2f * p.coerceIn(0f, 1f)))
+                .clickable(interactionSource = null, indication = null) {}
+        )
+        Column(
+            modifier
+                .align(Alignment.Center)
+                .padding(horizontal = 36.dp)
+                .widthIn(max = 320.dp)
+                .fillMaxWidth()
+                .semantics {
+                    paneTitle = title
+                    dismiss { onDismissRequest(); true }
+                }
+                .graphicsLayer {
+                    val s = lerp(1.15f, 1f, p)
+                    scaleX = s
+                    scaleY = s
+                    alpha = p.coerceIn(0f, 1f)
+                }
+                .liquidGlassPanel(backdrop, { RoundedRectangle(34.dp) })
+                .padding(horizontal = 16.dp, vertical = 16.dp)
+        ) {
+            Column(Modifier.padding(start = 8.dp, end = 8.dp, top = 6.dp, bottom = 18.dp)) {
                 BasicText(
-                    message,
+                    title,
                     Modifier.fillMaxWidth(),
-                    style = TextStyle(GlassColors.label().copy(alpha = 0.8f), 15.sp, textAlign = TextAlign.Start)
+                    style = TextStyle(GlassColors.label(), 17.sp, FontWeight.SemiBold, textAlign = TextAlign.Start)
                 )
+                if (message != null) {
+                    Spacer(Modifier.height(6.dp))
+                    BasicText(
+                        message,
+                        Modifier.fillMaxWidth(),
+                        style = TextStyle(GlassColors.label().copy(alpha = 0.8f), 15.sp, textAlign = TextAlign.Start)
+                    )
+                }
             }
-        }
-        val onAction: (AlertAction) -> Unit = { it.onClick(); onDismissRequest() }
-        if (actions.size == 2) {
-            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                actions.forEach { AlertButton(it, Modifier.weight(1f), onAction) }
-            }
-        } else {
-            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                actions.forEach { AlertButton(it, Modifier.fillMaxWidth(), onAction) }
+            val onAction: (AlertAction) -> Unit = { it.onClick(); onDismissRequest() }
+            if (actions.size == 2) {
+                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    actions.forEach { AlertButton(it, Modifier.weight(1f), onAction) }
+                }
+            } else {
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    actions.forEach { AlertButton(it, Modifier.fillMaxWidth(), onAction) }
+                }
             }
         }
     }
@@ -135,45 +138,47 @@ fun BoxScope.LiquidActionSheet(
     actions: List<AlertAction>,
     modifier: Modifier = Modifier,
 ) {
-    val progress = rememberPresentation(visible) ?: return
-    val p = progress.value
-    Box(
-        Modifier
-            .matchParentSize()
-            .background(Color.Black.copy(alpha = 0.2f * p.coerceIn(0f, 1f)))
-            .clickable(interactionSource = null, indication = null, onClick = onDismissRequest)
-    )
-    Column(
-        modifier
-            .align(Alignment.BottomCenter)
-            .navigationBarsPadding()
-            .padding(10.dp)
-            .fillMaxWidth()
-            .semantics {
-                paneTitle = title ?: "Actions"
-                dismiss { onDismissRequest(); true }
-            }
-            .graphicsLayer {
-                translationY = (1f - p) * size.height
-                alpha = p.coerceIn(0f, 1f)
-            }
-            .liquidGlassPanel(backdrop, { RoundedRectangle(34.dp) })
-            .padding(16.dp)
-    ) {
-        if (title != null || message != null) {
-            Column(Modifier.fillMaxWidth().padding(start = 8.dp, end = 8.dp, top = 4.dp, bottom = 14.dp)) {
-                if (title != null) {
-                    BasicText(title, Modifier.fillMaxWidth(), style = TextStyle(GlassColors.label(), 15.sp, FontWeight.SemiBold, textAlign = TextAlign.Start))
+    Box(Modifier.matchParentSize().zIndex(1f)) {
+        val progress = rememberPresentation(visible) ?: return
+        val p = progress.value
+        Box(
+            Modifier
+                .matchParentSize()
+                .background(Color.Black.copy(alpha = 0.2f * p.coerceIn(0f, 1f)))
+                .clickable(interactionSource = null, indication = null, onClick = onDismissRequest)
+        )
+        Column(
+            modifier
+                .align(Alignment.BottomCenter)
+                .navigationBarsPadding()
+                .padding(10.dp)
+                .fillMaxWidth()
+                .semantics {
+                    paneTitle = title ?: "Actions"
+                    dismiss { onDismissRequest(); true }
                 }
-                if (message != null) {
-                    Spacer(Modifier.height(2.dp))
-                    BasicText(message, Modifier.fillMaxWidth(), style = TextStyle(GlassColors.secondaryLabel(), 13.sp, textAlign = TextAlign.Start))
+                .graphicsLayer {
+                    translationY = (1f - p) * size.height
+                    alpha = p.coerceIn(0f, 1f)
+                }
+                .liquidGlassPanel(backdrop, { RoundedRectangle(34.dp) })
+                .padding(16.dp)
+        ) {
+            if (title != null || message != null) {
+                Column(Modifier.fillMaxWidth().padding(start = 8.dp, end = 8.dp, top = 4.dp, bottom = 14.dp)) {
+                    if (title != null) {
+                        BasicText(title, Modifier.fillMaxWidth(), style = TextStyle(GlassColors.label(), 15.sp, FontWeight.SemiBold, textAlign = TextAlign.Start))
+                    }
+                    if (message != null) {
+                        Spacer(Modifier.height(2.dp))
+                        BasicText(message, Modifier.fillMaxWidth(), style = TextStyle(GlassColors.secondaryLabel(), 13.sp, textAlign = TextAlign.Start))
+                    }
                 }
             }
-        }
-        val onAction: (AlertAction) -> Unit = { it.onClick(); onDismissRequest() }
-        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            actions.forEach { AlertButton(it, Modifier.fillMaxWidth(), onAction) }
+            val onAction: (AlertAction) -> Unit = { it.onClick(); onDismissRequest() }
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                actions.forEach { AlertButton(it, Modifier.fillMaxWidth(), onAction) }
+            }
         }
     }
 }

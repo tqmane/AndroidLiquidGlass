@@ -1,5 +1,6 @@
 package com.kyant.backdrop.catalog.components
 
+import androidx.compose.ui.zIndex
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
@@ -77,105 +78,107 @@ fun BoxScope.LiquidSheet(
     title: String = "Sheet",
     content: @Composable ColumnScope.() -> Unit,
 ) {
-    val density = LocalDensity.current
-    val isLightTheme = !isSystemInDarkTheme()
-    val topInset = WindowInsets.safeDrawing.getTop(density) + with(density) { 10.dp.toPx() }
-    val currentOnDismiss by rememberUpdatedState(onDismissRequest)
+    Box(Modifier.matchParentSize().zIndex(1f)) {
+        val density = LocalDensity.current
+        val isLightTheme = !isSystemInDarkTheme()
+        val topInset = WindowInsets.safeDrawing.getTop(density) + with(density) { 10.dp.toPx() }
+        val currentOnDismiss by rememberUpdatedState(onDismissRequest)
 
-    BoxWithConstraints(Modifier.matchParentSize()) {
-        val maxH = constraints.maxHeight.toFloat()
-        val usable = maxH - topInset
-        val stops = remember(detents, maxH, topInset) {
-            detents.map { d ->
-                when (d) {
-                    is SheetDetent.Fraction -> maxH - usable * d.fraction.coerceIn(0.1f, 1f)
-                }
-            }.sortedDescending()
-        }
-        val lowestTop = stops.first()
-        val highestTop = stops.last()
-        val offsetY = remember { Animatable(maxH) }
-        var shown by remember { mutableStateOf(false) }
-        val scope = rememberCoroutineScope()
-
-        LaunchedEffect(visible, stops) {
-            if (visible) {
-                shown = true
-                offsetY.animateTo(lowestTop, spring(0.86f, 260f))
-            } else {
-                offsetY.animateTo(maxH, spring(1f, 300f))
-                shown = false
-            }
-        }
-        if (!shown && !visible) return@BoxWithConstraints
-
-        val expansion = if (highestTop < lowestTop) {
-            ((lowestTop - offsetY.value) / (lowestTop - highestTop)).coerceIn(0f, 1f)
-        } else {
-            1f
-        }
-        val presence = ((maxH - offsetY.value) / (maxH - lowestTop)).coerceIn(0f, 1f)
-
-        Box(
-            Modifier
-                .fillMaxSize()
-                .background(Color.Black.copy(alpha = lerp(0.12f, 0.3f, expansion) * presence))
-                .clickable(interactionSource = null, indication = null) { currentOnDismiss() }
-        )
-
-        val inset = lerp(8f, 0f, expansion).dp
-        val sheetHeight = with(density) { (maxH - minOf(offsetY.value, lowestTop)).toDp() } - inset
-        val draggableState = rememberDraggableState { delta ->
-            scope.launch {
-                val target = offsetY.value + delta
-                val resisted = if (target < highestTop) offsetY.value + delta * 0.25f else target
-                offsetY.snapTo(resisted)
-            }
-        }
-
-        Column(
-            modifier
-                .semantics {
-                    paneTitle = title
-                    dismiss { currentOnDismiss(); true }
-                }
-                .offset { IntOffset(0, (offsetY.value - minOf(offsetY.value, lowestTop)).roundToInt() + minOf(offsetY.value, lowestTop).roundToInt()) }
-                .padding(horizontal = inset)
-                .fillMaxWidth()
-                .height(sheetHeight)
-                .liquidGlassPanel(
-                    backdrop = backdrop,
-                    shape = { RoundedRectangle(lerp(36f, 30f, expansion).dp) },
-                    containerColor = if (isLightTheme) Color(0xFFFAFAFA).copy(alpha = lerp(0.62f, 0.94f, expansion))
-                    else Color(0xFF1C1C1E).copy(alpha = lerp(0.58f, 0.94f, expansion)),
-                    blurRadius = lerp(10f, 24f, expansion).dp
-                )
-                .clickable(interactionSource = null, indication = null) {}
-                .draggable(
-                    draggableState,
-                    Orientation.Vertical,
-                    onDragStopped = { velocity ->
-                        val projected = offsetY.value + velocity * 0.18f
-                        if (projected > lowestTop + (maxH - lowestTop) * 0.5f) {
-                            currentOnDismiss()
-                        } else {
-                            val target = stops.minBy { abs(it - projected) }
-                            offsetY.animateTo(target, spring(0.86f, 300f), velocity)
-                        }
+        BoxWithConstraints(Modifier.matchParentSize()) {
+            val maxH = constraints.maxHeight.toFloat()
+            val usable = maxH - topInset
+            val stops = remember(detents, maxH, topInset) {
+                detents.map { d ->
+                    when (d) {
+                        is SheetDetent.Fraction -> maxH - usable * d.fraction.coerceIn(0.1f, 1f)
                     }
-                )
-        ) {
-            if (showGrabber) {
-                Box(
-                    Modifier
-                        .padding(top = 5.dp)
-                        .align(Alignment.CenterHorizontally)
-                        .size(36.dp, 5.dp)
-                        .clip(Capsule())
-                        .background(if (isLightTheme) Color(0xFF3C3C43).copy(alpha = 0.3f) else Color(0xFFEBEBF5).copy(alpha = 0.3f))
-                )
+                }.sortedDescending()
             }
-            content()
+            val lowestTop = stops.first()
+            val highestTop = stops.last()
+            val offsetY = remember { Animatable(maxH) }
+            var shown by remember { mutableStateOf(false) }
+            val scope = rememberCoroutineScope()
+
+            LaunchedEffect(visible, stops) {
+                if (visible) {
+                    shown = true
+                    offsetY.animateTo(lowestTop, spring(0.86f, 260f))
+                } else {
+                    offsetY.animateTo(maxH, spring(1f, 300f))
+                    shown = false
+                }
+            }
+            if (!shown && !visible) return@BoxWithConstraints
+
+            val expansion = if (highestTop < lowestTop) {
+                ((lowestTop - offsetY.value) / (lowestTop - highestTop)).coerceIn(0f, 1f)
+            } else {
+                1f
+            }
+            val presence = ((maxH - offsetY.value) / (maxH - lowestTop)).coerceIn(0f, 1f)
+
+            Box(
+                Modifier
+                    .fillMaxSize()
+                    .background(Color.Black.copy(alpha = lerp(0.12f, 0.3f, expansion) * presence))
+                    .clickable(interactionSource = null, indication = null) { currentOnDismiss() }
+            )
+
+            val inset = lerp(8f, 0f, expansion).dp
+            val sheetHeight = with(density) { (maxH - minOf(offsetY.value, lowestTop)).toDp() } - inset
+            val draggableState = rememberDraggableState { delta ->
+                scope.launch {
+                    val target = offsetY.value + delta
+                    val resisted = if (target < highestTop) offsetY.value + delta * 0.25f else target
+                    offsetY.snapTo(resisted)
+                }
+            }
+
+            Column(
+                modifier
+                    .semantics {
+                        paneTitle = title
+                        dismiss { currentOnDismiss(); true }
+                    }
+                    .offset { IntOffset(0, (offsetY.value - minOf(offsetY.value, lowestTop)).roundToInt() + minOf(offsetY.value, lowestTop).roundToInt()) }
+                    .padding(horizontal = inset)
+                    .fillMaxWidth()
+                    .height(sheetHeight)
+                    .liquidGlassPanel(
+                        backdrop = backdrop,
+                        shape = { RoundedRectangle(lerp(36f, 30f, expansion).dp) },
+                        containerColor = if (isLightTheme) Color(0xFFFAFAFA).copy(alpha = lerp(0.62f, 0.94f, expansion))
+                        else Color(0xFF1C1C1E).copy(alpha = lerp(0.58f, 0.94f, expansion)),
+                        blurRadius = lerp(10f, 24f, expansion).dp
+                    )
+                    .clickable(interactionSource = null, indication = null) {}
+                    .draggable(
+                        draggableState,
+                        Orientation.Vertical,
+                        onDragStopped = { velocity ->
+                            val projected = offsetY.value + velocity * 0.18f
+                            if (projected > lowestTop + (maxH - lowestTop) * 0.5f) {
+                                currentOnDismiss()
+                            } else {
+                                val target = stops.minBy { abs(it - projected) }
+                                offsetY.animateTo(target, spring(0.86f, 300f), velocity)
+                            }
+                        }
+                    )
+            ) {
+                if (showGrabber) {
+                    Box(
+                        Modifier
+                            .padding(top = 5.dp)
+                            .align(Alignment.CenterHorizontally)
+                            .size(36.dp, 5.dp)
+                            .clip(Capsule())
+                            .background(if (isLightTheme) Color(0xFF3C3C43).copy(alpha = 0.3f) else Color(0xFFEBEBF5).copy(alpha = 0.3f))
+                    )
+                }
+                content()
+            }
         }
     }
 }
