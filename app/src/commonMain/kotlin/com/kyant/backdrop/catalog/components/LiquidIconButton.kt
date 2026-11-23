@@ -147,7 +147,7 @@ fun LiquidGlassContainer(
                     scaleY = scale
                 },
                 onDrawSurface = {
-                    if (surfaceColor.isSpecified) drawRect(surfaceColor)
+                    if (surfaceColor.isSpecified) drawRect(surfaceColor.copy(alpha = (surfaceColor.alpha * glass.opacity).coerceIn(0f, 1f)))
                     if (tint.isSpecified) {
                         drawRect(tint, blendMode = BlendMode.Hue)
                         drawRect(tint.copy(alpha = 0.75f))
