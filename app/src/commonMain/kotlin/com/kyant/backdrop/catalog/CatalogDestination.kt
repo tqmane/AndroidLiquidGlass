@@ -19,6 +19,7 @@ enum class CatalogDestination {
     Search,
     GlassMaterials,
     GlassSettings,
+    VideoPlayer,
 
     LockScreen,
     ControlCenter,

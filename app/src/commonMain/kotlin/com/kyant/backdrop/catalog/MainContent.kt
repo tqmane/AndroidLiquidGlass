@@ -1,5 +1,6 @@
 package com.kyant.backdrop.catalog
 
+import com.kyant.backdrop.catalog.destinations.VideoPlayerContent
 import com.kyant.backdrop.catalog.destinations.GlassSettingsContent
 import com.kyant.backdrop.catalog.components.LocalLiquidGlassStyle
 import com.kyant.backdrop.catalog.components.LiquidGlassStyle
@@ -69,6 +70,7 @@ fun MainContent() {
             CatalogDestination.Search -> SearchContent()
             CatalogDestination.GlassMaterials -> GlassMaterialsContent()
             CatalogDestination.GlassSettings -> GlassSettingsContent()
+            CatalogDestination.VideoPlayer -> VideoPlayerContent()
 
             CatalogDestination.LockScreen -> LockScreenContent()
             CatalogDestination.ControlCenter -> ControlCenterContent()

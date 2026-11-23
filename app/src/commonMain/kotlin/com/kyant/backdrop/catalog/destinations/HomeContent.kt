@@ -58,6 +58,7 @@ fun HomeContent(onNavigate: (CatalogDestination) -> Unit) {
             ListItem({ onNavigate(CatalogDestination.Search) }, "Search")
             ListItem({ onNavigate(CatalogDestination.GlassMaterials) }, "Glass materials")
             ListItem({ onNavigate(CatalogDestination.GlassSettings) }, "Glass settings (refraction, blur, opacity)")
+            ListItem({ onNavigate(CatalogDestination.VideoPlayer) }, "Video player controls")
 
             Subtitle("System UIs")
             ListItem({ onNavigate(CatalogDestination.LockScreen) }, "Lock screen (SDF texture)")
