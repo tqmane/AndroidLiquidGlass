@@ -1,5 +1,8 @@
 package com.kyant.backdrop.catalog.components
 
+import androidx.compose.ui.draw.drawWithContent
+import kotlinx.coroutines.flow.first
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.animation.core.spring
@@ -61,8 +64,13 @@ import kotlin.math.roundToInt
 @Stable
 class LiquidContextMenuState {
     internal val scale = Animatable(1f)
+    internal var previewDrawn by mutableStateOf(false)
     var bounds by mutableStateOf(Rect.Zero)
         internal set
+}
+
+internal suspend fun LiquidContextMenuState.awaitPreviewDrawn() {
+    withTimeoutOrNull(500) { snapshotFlow { previewDrawn }.first { it } }
 }
 
 @Composable
@@ -89,6 +97,7 @@ fun Modifier.liquidContextMenuSource(
         coroutineScope {
             awaitEachGesture {
                 val down = awaitFirstDown(requireUnconsumed = false)
+                state.previewDrawn = false
                 val timeout = viewConfiguration.longPressTimeoutMillis
                 val swell = launch {
                     delay(timeout / 5)
@@ -100,7 +109,12 @@ fun Modifier.liquidContextMenuSource(
                 if (!ended) {
                     onLongPress()
                     // The source is covered by the lifted preview; restore it underneath.
-                    launch { state.scale.snapTo(ContextMenuPressedScale); delay(120); state.scale.snapTo(1f) }
+                    launch {
+                        state.scale.snapTo(ContextMenuPressedScale)
+                        // Keep the swell until the lifted preview has drawn over it, so no frame shows the rest size.
+                        state.awaitPreviewDrawn()
+                        state.scale.snapTo(1f)
+                    }
                     waitForUpOrCancellation()
                 } else {
                     launch { state.scale.animateTo(1f, spring(0.5f, 500f)) }
@@ -140,12 +154,10 @@ fun BoxScope.LiquidContextMenu(
         var submenu by remember(expanded) { mutableStateOf<MenuEntry.Submenu?>(null) }
         val p = progress.value
         // The preview takes over at the swollen press size and settles back to its own size as the menu grows (iOS 26: ~0.17 s, no overshoot).
-        val lift = remember { Animatable(1f) }
-        LaunchedEffect(expanded) {
-            if (expanded) {
-                lift.snapTo(if (state != null) ContextMenuPressedScale else 1f)
-                lift.animateTo(1f, spring(1f, 600f))
-            } else lift.animateTo(1f, spring(1f, 600f))
+        val lift = remember(expanded) { Animatable(if (expanded && state != null) ContextMenuPressedScale else 1f) }
+        val placed = container != androidx.compose.ui.unit.IntSize.Zero
+        LaunchedEffect(expanded, placed) {
+            if (placed) lift.animateTo(1f, spring(1f, 600f))
         }
 
         Box(
@@ -174,6 +186,12 @@ fun BoxScope.LiquidContextMenu(
                     .align(Alignment.TopStart)
                     .offset { IntOffset(left.roundToInt(), top.roundToInt()) }
                     .size(anchorBounds.width.toDp(), anchorBounds.height.toDp())
+                    .drawWithContent {
+                        if (placed) {
+                            drawContent()
+                            if (expanded && state != null && !state.previewDrawn) state.previewDrawn = true
+                        }
+                    }
                     .graphicsLayer {
                         val s = lift.value
                         scaleX = s
