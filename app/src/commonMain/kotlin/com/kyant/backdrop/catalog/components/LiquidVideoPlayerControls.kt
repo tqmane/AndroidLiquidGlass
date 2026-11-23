@@ -154,7 +154,7 @@ fun BoxScope.LiquidVideoPlayerControls(
     Box(
         Modifier
             .matchParentSize()
-            .pointerInput(Unit) { detectTapGestures { visible = !visible } }
+            .pointerInput(Unit) { detectTapGestures { if (menu != null) menu = null else visible = !visible } }
     )
     val captionLanguage = state.captions
     if (captionText != null && captionLanguage != null) {
