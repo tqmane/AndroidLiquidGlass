@@ -1,5 +1,6 @@
 package com.kyant.backdrop.catalog.components
 
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.ui.unit.Dp
 import androidx.compose.foundation.layout.width
@@ -134,14 +135,17 @@ fun BoxScope.LiquidSheet(
             val scope = rememberCoroutineScope()
 
             var detentIndex by remember { mutableIntStateOf(0) }
+            var dismissVelocity by remember { mutableFloatStateOf(0f) }
             LaunchedEffect(visible, stops) {
                 if (visible) {
                     if (!shown) detentIndex = 0
                     shown = true
                     offsetY.animateTo(stops.getOrElse(detentIndex) { lowestTop }, spring(0.86f, 260f))
                 } else {
-                    // iOS 26 slides a dismissed sheet out in ~0.2 s.
-                    offsetY.animateTo(maxH, spring(1f, 700f))
+                    // iOS 26 slides a dismissed sheet out in ~0.2 s (a 2400 px drop is 26 % down at 50 ms, 80 % at
+                    // 150 ms), keeping the speed of a swipe that dismissed it.
+                    offsetY.animateTo(maxH, spring(1f, 400f), dismissVelocity.coerceAtLeast(0f))
+                    dismissVelocity = 0f
                     shown = false
                 }
             }
@@ -167,11 +171,13 @@ fun BoxScope.LiquidSheet(
             suspend fun settle(velocity: Float) {
                 val projected = offsetY.value + velocity * 0.18f
                 if (projected > lowestTop + (maxH - lowestTop) * 0.5f) {
+                    dismissVelocity = velocity
                     currentOnDismiss()
                 } else {
                     val target = stops.minBy { abs(it - projected) }
                     detentIndex = stops.indexOf(target)
-                    offsetY.animateTo(target, spring(0.86f, 300f), velocity)
+                    // iOS 26 reaches a released detent in ~0.15 s, overshooting it slightly before settling.
+                    offsetY.animateTo(target, spring(0.8f, 400f), velocity)
                 }
             }
             val draggableState = rememberDraggableState { delta ->
