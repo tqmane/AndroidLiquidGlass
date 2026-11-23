@@ -184,8 +184,10 @@ fun LiquidBottomTabs(
             snapshotFlow { currentIndex }
                 .drop(1)
                 .collectLatest { index ->
-                    dampedDragAnimation.animateToValue(index.toFloat())
+                    // Report before animating: a drag that starts while the pill settles cancels this block, and one
+                    // that ends on the same tab leaves currentIndex unchanged, so a deferred report would be lost.
                     currentOnTabSelected(index)
+                    dampedDragAnimation.animateToValue(index.toFloat())
                 }
         }
 
