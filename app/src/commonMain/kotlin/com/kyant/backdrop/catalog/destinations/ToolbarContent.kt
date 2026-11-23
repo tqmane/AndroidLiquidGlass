@@ -54,7 +54,7 @@ fun ToolbarContent() {
             }
             BasicText("Tab bar with search", style = TextStyle(Color.White, 13.sp))
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                LiquidSegmentedTabs(selectedTab, { selectedTab = it }, backdrop, Modifier.weight(1f))
+                LiquidSegmentedTabs({ selectedTab }, { selectedTab = it }, backdrop, Modifier.weight(1f))
                 LiquidIconButton(GlassIcons.Search, "Search", {}, backdrop, size = 62.dp, iconSize = 24.dp)
             }
             Spacer(Modifier.height(64.dp))
@@ -63,9 +63,9 @@ fun ToolbarContent() {
 }
 
 @Composable
-private fun LiquidSegmentedTabs(selected: Int, onSelect: (Int) -> Unit, backdrop: LayerBackdrop, modifier: Modifier) {
+private fun LiquidSegmentedTabs(selected: () -> Int, onSelect: (Int) -> Unit, backdrop: LayerBackdrop, modifier: Modifier) {
     LiquidBottomTabs(
-        selectedTabIndex = { selected },
+        selectedTabIndex = selected,
         onTabSelected = onSelect,
         backdrop = backdrop,
         tabsCount = 3,
