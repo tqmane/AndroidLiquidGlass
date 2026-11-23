@@ -26,6 +26,22 @@ object GlassIcons {
             path(fill = SolidColor(Color.Black), pathBuilder = block)
         }.build()
 
+    private fun mixed(name: String, width: Float = 2f, fillBlock: PathBuilder.() -> Unit, strokeBlock: PathBuilder.() -> Unit): ImageVector =
+        ImageVector.Builder(name, 24.dp, 24.dp, 24f, 24f).apply {
+            path(fill = SolidColor(Color.Black), pathBuilder = fillBlock)
+            path(
+                stroke = SolidColor(Color.Black),
+                strokeLineWidth = width,
+                strokeLineCap = StrokeCap.Round,
+                strokeLineJoin = StrokeJoin.Round,
+                pathBuilder = strokeBlock
+            )
+        }.build()
+
+    private fun PathBuilder.speaker() {
+        moveTo(3f, 9f); lineTo(7f, 9f); lineTo(12f, 4.5f); lineTo(12f, 19.5f); lineTo(7f, 15f); lineTo(3f, 15f); close()
+    }
+
     private fun PathBuilder.circle(cx: Float, cy: Float, r: Float) {
         moveTo(cx - r, cy)
         arcTo(r, r, 0f, isMoreThanHalf = true, isPositiveArc = true, x1 = cx + r, y1 = cy)
@@ -84,4 +100,70 @@ object GlassIcons {
     }
     val Gear = stroke("gearshape") { circle(12f, 12f, 3f); circle(12f, 12f, 8f) }
     val Play = fill("play.fill") { moveTo(7f, 4f); lineTo(20f, 12f); lineTo(7f, 20f); close() }
+    val Clock = stroke("clock") { circle(12f, 12f, 9f); moveTo(12f, 7f); lineTo(12f, 12f); lineTo(15.5f, 14f) }
+    val ArrowDownCircle = stroke("arrow.down.circle") {
+        circle(12f, 12f, 9f); moveTo(12f, 7.5f); lineTo(12f, 16f); moveTo(8.5f, 12.5f); lineTo(12f, 16f); lineTo(15.5f, 12.5f)
+    }
+    val Folder = stroke("folder", 1.8f) {
+        moveTo(3f, 6f); lineTo(9.5f, 6f); lineTo(11.5f, 8.5f); lineTo(21f, 8.5f); lineTo(21f, 18.5f); lineTo(3f, 18.5f); close()
+        moveTo(3f, 10.5f); lineTo(21f, 10.5f)
+    }
+    val Airplane = fill("airplane") {
+        moveTo(21.5f, 12f); lineTo(17f, 10.6f); lineTo(11f, 10.6f); lineTo(7f, 3.5f); lineTo(5f, 3.5f); lineTo(7.8f, 10.6f)
+        lineTo(4.5f, 10.6f); lineTo(3f, 8.5f); lineTo(1.8f, 8.5f); lineTo(2.6f, 12f); lineTo(1.8f, 15.5f); lineTo(3f, 15.5f)
+        lineTo(4.5f, 13.4f); lineTo(7.8f, 13.4f); lineTo(5f, 20.5f); lineTo(7f, 20.5f); lineTo(11f, 13.4f); lineTo(17f, 13.4f); close()
+    }
+    val Book = stroke("book", 1.8f) {
+        moveTo(12f, 6.5f); curveTo(9.5f, 4.8f, 5.5f, 4.8f, 3f, 5.5f); lineTo(3f, 18.5f); curveTo(5.5f, 17.8f, 9.5f, 17.8f, 12f, 19.5f)
+        curveTo(14.5f, 17.8f, 18.5f, 17.8f, 21f, 18.5f); lineTo(21f, 5.5f); curveTo(18.5f, 4.8f, 14.5f, 4.8f, 12f, 6.5f); lineTo(12f, 19.5f)
+    }
+    val Pause = fill("pause.fill") {
+        moveTo(6f, 4f); lineTo(10f, 4f); lineTo(10f, 20f); lineTo(6f, 20f); close()
+        moveTo(14f, 4f); lineTo(18f, 4f); lineTo(18f, 20f); lineTo(14f, 20f); close()
+    }
+    val GoBackward = stroke("gobackward", 2f) {
+        moveTo(12f, 3.5f); arcTo(8.5f, 8.5f, 0f, isMoreThanHalf = true, isPositiveArc = true, x1 = 4.64f, y1 = 7.75f)
+        moveTo(14.5f, 1.3f); lineTo(12f, 3.5f); lineTo(14.5f, 5.7f)
+    }
+    val GoForward = stroke("goforward", 2f) {
+        moveTo(12f, 3.5f); arcTo(8.5f, 8.5f, 0f, isMoreThanHalf = true, isPositiveArc = false, x1 = 19.36f, y1 = 7.75f)
+        moveTo(9.5f, 1.3f); lineTo(12f, 3.5f); lineTo(9.5f, 5.7f)
+    }
+    val Backward = fill("backward.fill") {
+        moveTo(11.5f, 6f); lineTo(11.5f, 18f); lineTo(3f, 12f); close()
+        moveTo(21f, 6f); lineTo(21f, 18f); lineTo(12.5f, 12f); close()
+    }
+    val Forward = fill("forward.fill") {
+        moveTo(12.5f, 6f); lineTo(12.5f, 18f); lineTo(21f, 12f); close()
+        moveTo(3f, 6f); lineTo(3f, 18f); lineTo(11.5f, 12f); close()
+    }
+    val Speaker = mixed("speaker.wave.2.fill", fillBlock = { speaker() }) {
+        moveTo(15.5f, 9f); quadTo(17f, 12f, 15.5f, 15f); moveTo(18f, 6.5f); quadTo(21f, 12f, 18f, 17.5f)
+    }
+    val SpeakerSlash = mixed("speaker.slash.fill", fillBlock = { speaker() }) {
+        moveTo(15f, 9f); lineTo(21f, 15f); moveTo(21f, 9f); lineTo(15f, 15f)
+    }
+    val PictureInPicture = mixed("pip", 1.8f, fillBlock = {
+        moveTo(12f, 12f); lineTo(19f, 12f); lineTo(19f, 17f); lineTo(12f, 17f); close()
+    }) { moveTo(3f, 5f); lineTo(21f, 5f); lineTo(21f, 19f); lineTo(3f, 19f); close() }
+    val AirPlay = mixed("airplayvideo", 1.8f, fillBlock = {
+        moveTo(12f, 14f); lineTo(17f, 20f); lineTo(7f, 20f); close()
+    }) { moveTo(7f, 17f); lineTo(4f, 17f); lineTo(4f, 5f); lineTo(20f, 5f); lineTo(20f, 17f); lineTo(17f, 17f) }
+    val Expand = stroke("arrow.up.left.and.arrow.down.right") {
+        moveTo(4f, 10f); lineTo(4f, 4f); lineTo(10f, 4f); moveTo(4f, 4f); lineTo(10f, 10f)
+        moveTo(20f, 14f); lineTo(20f, 20f); lineTo(14f, 20f); moveTo(20f, 20f); lineTo(14f, 14f)
+    }
+    val Captions = stroke("captions.bubble", 1.8f) {
+        moveTo(4f, 5f); lineTo(20f, 5f); lineTo(20f, 17f); lineTo(10f, 17f); lineTo(6f, 20.5f); lineTo(6f, 17f); lineTo(4f, 17f); close()
+        moveTo(7f, 10f); lineTo(11f, 10f); moveTo(13f, 10f); lineTo(17f, 10f); moveTo(7f, 13.5f); lineTo(15f, 13.5f)
+    }
+    val Gauge = stroke("gauge.with.needle") {
+        moveTo(4f, 17f); arcTo(8.5f, 8.5f, 0f, isMoreThanHalf = false, isPositiveArc = true, x1 = 20f, y1 = 17f)
+        moveTo(12f, 16f); lineTo(15.5f, 10f)
+    }
+    val SunMax = stroke("sun.max") {
+        circle(12f, 12f, 4f)
+        moveTo(12f, 2.5f); lineTo(12f, 4.5f); moveTo(12f, 19.5f); lineTo(12f, 21.5f); moveTo(2.5f, 12f); lineTo(4.5f, 12f); moveTo(19.5f, 12f); lineTo(21.5f, 12f)
+        moveTo(5.3f, 5.3f); lineTo(6.7f, 6.7f); moveTo(17.3f, 17.3f); lineTo(18.7f, 18.7f); moveTo(5.3f, 18.7f); lineTo(6.7f, 17.3f); moveTo(17.3f, 6.7f); lineTo(18.7f, 5.3f)
+    }
 }

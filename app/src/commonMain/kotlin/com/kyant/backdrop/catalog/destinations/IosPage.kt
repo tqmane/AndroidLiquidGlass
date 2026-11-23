@@ -1,5 +1,6 @@
 package com.kyant.backdrop.catalog.destinations
 
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -29,6 +30,8 @@ import com.kyant.shapes.RoundedRectangle
 fun IosPage(
     title: String,
     grouped: Boolean = false,
+    inlineTitle: Boolean = false,
+    overlay: @Composable BoxScope.(backdrop: LayerBackdrop) -> Unit = {},
     content: @Composable ColumnScope.(backdrop: LayerBackdrop) -> Unit,
 ) {
     val isLightTheme = !isSystemInDarkTheme()
@@ -47,13 +50,22 @@ fun IosPage(
                 .systemBarsPadding()
                 .padding(horizontal = 16.dp)
         ) {
-            BasicText(
-                title,
-                Modifier.padding(top = 24.dp, bottom = 16.dp),
-                style = TextStyle(GlassColors.label(), 34.sp, FontWeight.Bold)
-            )
+            if (inlineTitle) {
+                BasicText(
+                    title,
+                    Modifier.fillMaxWidth().padding(top = 12.dp, bottom = 28.dp),
+                    style = TextStyle(GlassColors.label(), 17.sp, FontWeight.SemiBold, textAlign = TextAlign.Center)
+                )
+            } else {
+                BasicText(
+                    title,
+                    Modifier.padding(top = 24.dp, bottom = 16.dp),
+                    style = TextStyle(GlassColors.label(), 34.sp, FontWeight.Bold)
+                )
+            }
             content(backdrop)
         }
+        overlay(backdrop)
     }
 }
 
