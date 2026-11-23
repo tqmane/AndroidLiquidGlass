@@ -307,7 +307,7 @@ fun BoxScope.LiquidVideoPlayerControls(
             alignment = Alignment.BottomEnd,
             offset = DpOffset(-edge, -bottomGap),
             transformOrigin = TransformOrigin(1f, 1f),
-            width = if (menu == PlayerMenu.More || menu == null) 250.dp else 220.dp,
+            width = 250.dp,
             header = header,
         )
     }

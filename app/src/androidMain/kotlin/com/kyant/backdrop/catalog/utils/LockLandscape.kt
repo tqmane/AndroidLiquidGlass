@@ -6,6 +6,9 @@ import android.content.pm.ActivityInfo
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.ui.platform.LocalContext
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
 
 @Composable
 actual fun LockLandscape(enabled: Boolean) {
@@ -17,6 +20,13 @@ actual fun LockLandscape(enabled: Boolean) {
         if (!enabled || activity == null) return@DisposableEffect onDispose {}
         val previous = activity.requestedOrientation
         activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
-        onDispose { activity.requestedOrientation = previous }
+        // Fullscreen playback hides the status and navigation bars, like AVKit; a swipe shows them transiently.
+        val insets = WindowCompat.getInsetsController(activity.window, activity.window.decorView)
+        insets.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+        insets.hide(WindowInsetsCompat.Type.systemBars())
+        onDispose {
+            insets.show(WindowInsetsCompat.Type.systemBars())
+            activity.requestedOrientation = previous
+        }
     }
 }

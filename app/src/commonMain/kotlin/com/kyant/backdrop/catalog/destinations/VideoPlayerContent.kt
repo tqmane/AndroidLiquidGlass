@@ -58,7 +58,7 @@ fun VideoPlayerContent() {
         )
         LiquidVideoPlayer(
             state,
-            Modifier.padding(horizontal = 12.dp).fillMaxWidth().aspectRatio(16f / 9f),
+            Modifier.padding(horizontal = 16.dp).fillMaxWidth().aspectRatio(16f / 9f),
             captionText = ::caption
         ) { NightSkyFrame() }
         BasicText(
