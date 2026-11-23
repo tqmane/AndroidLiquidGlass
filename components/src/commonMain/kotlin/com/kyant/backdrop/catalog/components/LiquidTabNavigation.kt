@@ -124,6 +124,7 @@ fun LiquidTopTabBar(
     backdrop: Backdrop,
     modifier: Modifier = Modifier,
     onToggleSidebar: (() -> Unit)? = null,
+    selectedColor: Color = GlassColors.accent(),
 ) {
     val glass = LocalLiquidGlassStyle.current
     val dark = isGlassDark()
@@ -250,8 +251,10 @@ fun LiquidTopTabBar(
                                 )
                             },
                             highlight = { Highlight.Default.copy(alpha = press.value) },
-                            shadow = { Shadow(alpha = press.value) },
-                            innerShadow = { InnerShadow(radius = 8.dp * press.value, alpha = press.value) },
+                            // The bar is thinner than the bottom tabs, so the full-strength shadows there read as a
+                            // gray slab here; the iPad pill is a clear lens with a bright rim and barely any shade.
+                            shadow = { Shadow(alpha = 0.4f * press.value) },
+                            innerShadow = { InnerShadow(radius = 6.dp * press.value, alpha = 0.35f * press.value) },
                             // Scaled through layerBlock so the backdrop is sampled unscaled under the swollen pill;
                             // scaling an outer layer would magnify the page and the pill would read as an opaque slab.
                             // Like the bottom tab pill it overhangs the bar by 7 dp above and below (38 -> 60 dp),
@@ -267,7 +270,6 @@ fun LiquidTopTabBar(
                                     if (dark) Color.White.copy(0.1f) else Color.Black.copy(0.1f),
                                     alpha = 1f - press.value
                                 )
-                                drawRect(Color.Black.copy(alpha = 0.03f * press.value))
                             }
                         )
                 )
@@ -275,7 +277,7 @@ fun LiquidTopTabBar(
             Row(Modifier.fillMaxHeight(), verticalAlignment = Alignment.CenterVertically) {
                 tabs.forEach { tab ->
                     val active = tab.key == hovered
-                    val color by animateColorAsState(if (active) GlassColors.accent() else GlassColors.label())
+                    val color by animateColorAsState(if (active) selectedColor else GlassColors.label())
                     Box(
                         Modifier
                             .fillMaxHeight()
@@ -327,6 +329,7 @@ fun LiquidSidebar(
     title: String? = null,
     onToggleSidebar: (() -> Unit)? = null,
     collapsibleSections: Boolean = true,
+    selectedColor: Color = GlassColors.accent(),
 ) {
     val collapsed = rememberSaveable(saver = listSaver<MutableList<String>, String>({ it.toList() }, { it.toMutableStateList() })) {
         mutableStateListOf()
@@ -396,7 +399,7 @@ fun LiquidSidebar(
                 if (open) section.items.forEach { item ->
                     val selected = item.key == selectedKey
                     val fill by animateColorAsState(if (selected) GlassColors.fill() else Color.Transparent)
-                    val color = if (selected) GlassColors.accent() else GlassColors.label()
+                    val color = if (selected) selectedColor else GlassColors.label()
                     Row(
                         Modifier
                             .fillMaxWidth()
@@ -480,6 +483,7 @@ fun LiquidAdaptiveTabScaffold(
     onSelect: (String) -> Unit,
     modifier: Modifier = Modifier,
     sidebarSections: List<LiquidSidebarSection> = listOf(LiquidSidebarSection(null, tabs)),
+    selectedColor: Color = GlassColors.accent(),
     content: @Composable (PaddingValues) -> Unit,
 ) {
     val backdrop = rememberLayerBackdrop()
@@ -495,7 +499,8 @@ fun LiquidAdaptiveTabScaffold(
                 sidebar = { m ->
                     LiquidSidebar(
                         sidebarSections, selectedKey, onSelect, backdrop, m,
-                        onToggleSidebar = { sidebarVisible = false }
+                        onToggleSidebar = { sidebarVisible = false },
+                        selectedColor = selectedColor
                     )
                 }
             ) { start ->
@@ -517,7 +522,8 @@ fun LiquidAdaptiveTabScaffold(
                             .systemBarsPadding()
                             .padding(top = 8.dp)
                             .graphicsLayer { alpha = barAlpha.coerceIn(0f, 1f) },
-                        onToggleSidebar = { sidebarVisible = true }
+                        onToggleSidebar = { sidebarVisible = true },
+                        selectedColor = selectedColor
                     )
                 }
             }
@@ -550,7 +556,8 @@ fun LiquidAdaptiveTabScaffold(
                     onTabSelected = { onSelect(barTabs[it].key) },
                     backdrop = backdrop,
                     tabsCount = barTabs.size,
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f),
+                    accentColor = selectedColor
                 ) {
                     barTabs.forEach { tab ->
                         LiquidBottomTab({ onSelect(tab.key) }) {
@@ -563,7 +570,7 @@ fun LiquidAdaptiveTabScaffold(
                     LiquidIconButton(
                         searchTab.icon, searchTab.title, { onSelect(searchTab.key) }, backdrop,
                         size = 64.dp, iconSize = 24.dp,
-                        tint = if (searchTab.key == selectedKey) GlassColors.accent() else Color.Unspecified
+                        tint = if (searchTab.key == selectedKey) selectedColor else Color.Unspecified
                     )
                 }
             }
@@ -584,6 +591,7 @@ fun LiquidSplitView(
     onSelect: (String) -> Unit,
     title: String,
     modifier: Modifier = Modifier,
+    selectedColor: Color = GlassColors.accent(),
     content: @Composable (PaddingValues) -> Unit,
 ) {
     val backdrop = rememberLayerBackdrop()
@@ -601,7 +609,8 @@ fun LiquidSplitView(
                     backdrop, m,
                     title = title,
                     onToggleSidebar = { sidebarVisible = false },
-                    collapsibleSections = false
+                    collapsibleSections = false,
+                    selectedColor = selectedColor
                 )
             }
         ) { start ->
