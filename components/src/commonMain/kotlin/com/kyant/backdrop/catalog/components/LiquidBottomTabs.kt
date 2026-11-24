@@ -75,6 +75,7 @@ fun LiquidBottomTabs(
     leadingWidth: Dp = 0f.dp,
     leading: @Composable () -> Unit = {},
     tabWidths: List<Dp>? = null,
+    highlight: Highlight? = glassHighlight(),
     content: @Composable RowScope.() -> Unit
 ) {
     val glass = LocalLiquidGlassStyle.current
@@ -218,6 +219,7 @@ fun LiquidBottomTabs(
                         blur((8f.dp.toPx()) * glass.blur)
                         lens((24f.dp.toPx()) * glass.refraction, (24f.dp.toPx()) * glass.refraction)
                     },
+                    highlight = highlight?.let { { it } },
                     layerBlock = {
                         val progress = dampedDragAnimation.pressProgress
                         val scale = lerp(1f, 1f + 16f.dp.toPx() / size.width, progress)
@@ -263,9 +265,11 @@ fun LiquidBottomTabs(
                                 (24f.dp.toPx() * progress) * glass.refraction
                             )
                         },
-                        highlight = {
-                            val progress = dampedDragAnimation.pressProgress
-                            Highlight.Default.copy(alpha = progress)
+                        highlight = highlight?.let { h ->
+                            {
+                                val progress = dampedDragAnimation.pressProgress
+                                h.copy(alpha = h.alpha * progress)
+                            }
                         },
                         onDrawSurface = { if (isLightTheme) drawRect(containerColor) else drawDarkGlass(1f) }
                     )
@@ -302,9 +306,11 @@ fun LiquidBottomTabs(
                             chromaticAberration = true
                         )
                     },
-                    highlight = {
-                        val progress = dampedDragAnimation.pressProgress
-                        Highlight.Default.copy(alpha = progress)
+                    highlight = highlight?.let { h ->
+                        {
+                            val progress = dampedDragAnimation.pressProgress
+                            h.copy(alpha = h.alpha * progress)
+                        }
                     },
                     shadow = {
                         val progress = dampedDragAnimation.pressProgress

@@ -67,6 +67,7 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.lerp
 import com.kyant.backdrop.Backdrop
+import com.kyant.backdrop.highlight.Highlight
 import com.kyant.shapes.Capsule
 import com.kyant.shapes.RoundedRectangle
 import kotlinx.coroutines.CoroutineStart
@@ -106,6 +107,7 @@ fun BoxScope.LiquidSheet(
     showGrabber: Boolean = true,
     title: String = "Sheet",
     formSheetMaxHeight: Dp = 635.dp,
+    highlight: Highlight? = glassPanelHighlight(),
     content: @Composable LiquidSheetScope.() -> Unit,
 ) {
     BackHandler(visible) { onDismissRequest() }
@@ -274,7 +276,8 @@ fun BoxScope.LiquidSheet(
                         containerColor = if (isLightTheme) lerpPremultiplied(Color(0xFFFAFAFA).copy(alpha = 0.62f), Color(0xFFF2F2F7), materialState.value)
                         else lerpPremultiplied(Color(0xFF2A2A2A).copy(alpha = 0.72f), Color(0xFF1C1C1E), materialState.value),
                         blurRadius = lerp(10f, 24f, materialState.value).dp,
-                        exportedBackdrop = sheetBackdrop
+                        exportedBackdrop = sheetBackdrop,
+                        highlightStyle = highlight,
                     )
                     .clickable(interactionSource = null, indication = null) {}
                     .draggable(

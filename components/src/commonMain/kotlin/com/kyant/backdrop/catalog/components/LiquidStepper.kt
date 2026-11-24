@@ -115,6 +115,7 @@ private fun androidx.compose.foundation.layout.RowScope.StepperHalf(
     onStep: () -> Unit,
 ) {
     val glass = LocalLiquidGlassStyle.current
+    val activeHighlight = glassHighlight()
     val scope = rememberCoroutineScope()
     val press = remember { Animatable(0f) }
     var pressed by remember { mutableStateOf(false) }
@@ -168,7 +169,7 @@ private fun androidx.compose.foundation.layout.RowScope.StepperHalf(
                         blur((2f.dp.toPx()) * glass.blur)
                         lens((10f.dp.toPx()) * glass.refraction, (18f.dp.toPx()) * glass.refraction, chromaticAberration = true)
                     },
-                    highlight = { Highlight.Default.copy(alpha = press.value) },
+                    highlight = { activeHighlight.copy(alpha = activeHighlight.alpha * press.value) },
                     shadow = { Shadow(radius = 12.dp, color = Color.Black.copy(alpha = 0.12f * press.value)) },
                     layerBlock = {
                         val p = press.value
