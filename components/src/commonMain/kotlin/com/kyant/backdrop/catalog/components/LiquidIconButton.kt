@@ -39,6 +39,7 @@ import androidx.compose.ui.util.lerp
 import com.kyant.backdrop.Backdrop
 import com.kyant.backdrop.catalog.utils.InteractiveHighlight
 import com.kyant.backdrop.drawBackdrop
+import com.kyant.backdrop.highlight.Highlight
 import com.kyant.backdrop.shadow.Shadow
 import com.kyant.backdrop.effects.blur
 import com.kyant.backdrop.effects.lens
@@ -63,12 +64,14 @@ fun LiquidIconButton(
     tint: Color = Color.Unspecified,
     iconColor: Color = if (tint.isSpecified) Color.White else GlassColors.label(),
     surfaceColor: Color = Color.Unspecified,
+    highlight: Highlight? = glassHighlight(),
 ) {
     LiquidGlassContainer(
         backdrop = backdrop,
         onClick = onClick,
         tint = tint,
         surfaceColor = surfaceColor,
+        highlight = highlight,
         modifier = modifier
             .semantics { if (contentDescription != null) this.contentDescription = contentDescription }
             .size(size)
@@ -90,11 +93,13 @@ fun LiquidGlassTextButton(
     tint: Color = Color.Unspecified,
     labelColor: Color = if (tint.isSpecified) Color.White else GlassColors.label(),
     height: Dp = 44.dp,
+    highlight: Highlight? = glassHighlight(),
 ) {
     LiquidGlassContainer(
         backdrop = backdrop,
         onClick = onClick,
         tint = tint,
+        highlight = highlight,
         modifier = modifier.height(height)
     ) {
         BasicText(label, Modifier.padding(horizontal = 16.dp), style = TextStyle(labelColor, 17.sp))
@@ -112,11 +117,12 @@ fun LiquidButtonGroup(
     height: Dp = 44.dp,
     tint: Color = Color.Unspecified,
     shadow: Shadow = glassShadow(),
+    highlight: Highlight? = glassHighlight(),
     content: @Composable RowScope.() -> Unit,
 ) {
     Row(
         modifier
-            .liquidGlass(backdrop, { Capsule() }, tint = tint, shadowStyle = shadow)
+            .liquidGlass(backdrop, { Capsule() }, tint = tint, shadowStyle = shadow, highlightStyle = highlight)
             .height(height)
             .padding(horizontal = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -158,6 +164,7 @@ fun LiquidGlassContainer(
     tint: Color = Color.Unspecified,
     surfaceColor: Color = Color.Unspecified,
     shadow: Shadow? = glassShadow(),
+    highlight: Highlight? = glassHighlight(),
     content: @Composable () -> Unit,
 ) {
     val glass = LocalLiquidGlassStyle.current
@@ -185,6 +192,7 @@ fun LiquidGlassContainer(
                     blur((2f.dp.toPx()) * glass.blur)
                     lens((12f.dp.toPx()) * glass.refraction, (24f.dp.toPx()) * glass.refraction)
                 },
+                highlight = highlight?.let { { it } },
                 shadow = { shadow },
                 layerBlock = {
                     val (scale, translation) = pressTransform(interactiveHighlight, size, density)

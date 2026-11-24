@@ -20,6 +20,7 @@ import com.kyant.backdrop.effects.blur
 import com.kyant.backdrop.effects.lens
 import com.kyant.backdrop.effects.vibrancy
 import com.kyant.backdrop.highlight.Highlight
+import com.kyant.backdrop.highlight.HighlightStyle
 import com.kyant.backdrop.shadow.Shadow
 
 /** iOS 26 system colors used by the glass components. */
@@ -33,6 +34,18 @@ val LocalGlassAccent = staticCompositionLocalOf<Color?> { null }
 val LocalGlassShadow = staticCompositionLocalOf<Shadow?> { null }
 
 /**
+ * Rim highlight of regular glass surfaces (buttons, bars, capsules). Null uses [glassHighlight]'s default,
+ * which blends softly on dark surfaces instead of drawing an additive white edge.
+ */
+val LocalGlassHighlight = staticCompositionLocalOf<Highlight?> { null }
+
+/**
+ * Rim highlight of thicker glass panels (sheets, menus, popovers, alerts). Null uses [glassPanelHighlight]'s
+ * default, which blends subtly into dark sheet surfaces.
+ */
+val LocalGlassPanelHighlight = staticCompositionLocalOf<Highlight?> { null }
+
+/**
  * Drop shadow of regular glass: [LocalGlassShadow], else iOS 26's soft toolbar shadow
  * (measured on an iPhone toolbar capsule: no x offset, 2 pt down, 6 pt blur, 8 % black).
  */
@@ -43,6 +56,44 @@ fun glassShadow(): Shadow = LocalGlassShadow.current ?: Shadow(
     offset = DpOffset(0.dp, 2.dp),
     color = Color.Black.copy(alpha = if (isGlassDark()) 0.2f else 0.08f)
 )
+
+/**
+ * Rim highlight of regular glass: [LocalGlassHighlight], else [Highlight.Default] in light mode and a
+ * softly blended directional rim in dark mode so borders do not blow out against dark backgrounds.
+ */
+@Composable
+@ReadOnlyComposable
+fun glassHighlight(): Highlight = LocalGlassHighlight.current ?: if (isGlassDark()) {
+    Highlight(
+        width = 0.5.dp,
+        alpha = 0.24f,
+        style = HighlightStyle.Default(
+            color = Color.White,
+            blendMode = DrawScope.DefaultBlendMode,
+        ),
+    )
+} else {
+    Highlight.Default
+}
+
+/**
+ * Rim highlight of thicker glass panels: [LocalGlassPanelHighlight], else [Highlight.Plain] in light mode
+ * and a subtle low-contrast hairline in dark mode.
+ */
+@Composable
+@ReadOnlyComposable
+fun glassPanelHighlight(): Highlight = LocalGlassPanelHighlight.current ?: if (isGlassDark()) {
+    Highlight(
+        width = 0.5.dp,
+        alpha = 1f,
+        style = HighlightStyle.Plain(
+            color = Color.White.copy(alpha = 0.08f),
+            blendMode = DrawScope.DefaultBlendMode,
+        ),
+    )
+} else {
+    Highlight.Plain
+}
 
 @Composable
 @ReadOnlyComposable
@@ -109,6 +160,7 @@ fun Modifier.liquidGlass(
     shadow: Boolean = true,
     layerBlock: (GraphicsLayerScope.() -> Unit)? = null,
     shadowStyle: Shadow = glassShadow(),
+    highlightStyle: Highlight? = glassHighlight(),
 ): Modifier {
     val glass = LocalLiquidGlassStyle.current
     val isLightTheme = !isGlassDark()
@@ -121,7 +173,7 @@ fun Modifier.liquidGlass(
             blur((blurRadius.toPx()) * glass.blur)
             lens((refractionHeight.toPx()) * glass.refraction, (refractionAmount.toPx()) * glass.refraction, chromaticAberration = true)
         },
-        highlight = { Highlight.Default },
+        highlight = highlightStyle?.let { { it } },
         shadow = if (shadow) {
             { shadowStyle }
         } else {
@@ -177,6 +229,7 @@ fun Modifier.liquidGlassPanel(
     refractionHeight: Dp = 16.dp,
     refractionAmount: Dp = 32.dp,
     exportedBackdrop: LayerBackdrop? = null,
+    highlightStyle: Highlight? = glassPanelHighlight(),
 ): Modifier {
     val glass = LocalLiquidGlassStyle.current
     val isLightTheme = !isGlassDark()
@@ -191,7 +244,7 @@ fun Modifier.liquidGlassPanel(
             blur((blurRadius.toPx()) * glass.blur)
             lens((refractionHeight.toPx()) * glass.refraction, (refractionAmount.toPx()) * glass.refraction, depthEffect = true)
         },
-        highlight = { Highlight.Plain },
+        highlight = highlightStyle?.let { { it } },
         shadow = { Shadow(radius = 40.dp, color = Color.Black.copy(alpha = if (isLightTheme) 0.14f else 0.4f)) },
         exportedBackdrop = exportedBackdrop,
         onDrawSurface = {
